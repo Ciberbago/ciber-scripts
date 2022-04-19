@@ -1,3 +1,12 @@
+Write-Host "   _____   _   _                              _____                 _             _   _                "
+Write-Host "  / ____| (_) | |                            |_   _|               | |           | | | |               "
+Write-Host " | |       _  | |__     ___   _ __   ______    | |    _ __    ___  | |_    __ _  | | | |   ___   _ __  "
+Write-Host " | |      | | | '_ \   / _ \ | '__| |______|   | |   | '_ \  / __| | __|  / _` | | | | |  / _ \ | '__| "
+Write-Host " | |____  | | | |_) | |  __/ | |              _| |_  | | | | \__ \ | |_  | (_| | | | | | |  __/ | |    "
+Write-Host "  \_____| |_| |_.__/   \___| |_|             |_____| |_| |_| |___/  \__|  \__,_| |_| |_|  \___| |_|    "
+
+pause
+
 #Instalo SSH
 Add-WindowsCapability -Online -Name OpenSSH.Client~~~~0.0.1.0
 Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
