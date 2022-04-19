@@ -7,27 +7,12 @@ Write-Host "  \_____| |_| |_.__/   \___| |_|             |_____| |_| |_| |___/  
 
 pause
 
-#Instalo SSH
-Add-WindowsCapability -Online -Name OpenSSH.Client~~~~0.0.1.0
-Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
-Start-Service sshd
-Set-Service -Name sshd -StartupType 'Automatic'
-
 #Instalo powershell 7
 $WebClient = New-Object System.Net.WebClient
 $WebClient.DownloadFile("https://github.com/PowerShell/PowerShell/releases/download/v7.2.1/PowerShell-7.2.1-win-x64.msi")
 
-#Instalo utileria para habilitar PWSH en ssh
-Install-Module -Name Microsoft.PowerShell.RemotingTools -Force
-
 #Abro PW7
 pwsh
-
-#Habilito pwsh en ssh
-Enable-SSHRemoting -Verbose
-
-#Reinicio el servicio de SSH
-Restart-Service -Name sshd
 
 # Se habilita la instalacion de scripts externos
 
@@ -37,13 +22,13 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManage
 # Opcion util en choco
 choco feature enable -n=useRememberedArgumentsForUpgrades
 
-choco install openjdk jre8 advanced-ipscanner autohotkey eartrumpet bulk-crap-uninstaller cpu-z.install crystaldiskmark crystaldiskinfo.install discord epicgameslauncher everything file-converter handbrake hwinfo insync irfanview --params '/assoc=2' irfanviewplugins lockhunter msiafterburner notepadplusplus obs-studio parsec qbittorrent sharex steam-client teamviewer winaero-tweaker wiztree zerotier-one k-litecodecpackfull dopamine -y
+choco install ffmpeg oraclejdk jre8 advanced-ipscanner autohotkey eartrumpet bulk-crap-uninstaller cpu-z.install crystaldiskmark crystaldiskinfo.install discord epicgameslauncher everything file-converter handbrake hwinfo insync irfanview --params '/assoc=2' irfanviewplugins lockhunter msiafterburner notepadplusplus obs-studio parsec qbittorrent sharex steam-client teamviewer winaero-tweaker wiztree zerotier-one k-litecodecpackfull dopamine -y
 
 #Desinstalar apps incluidas
-Get-appxpackage *Microsoft.Windows.Photos* | remove-appxpackage
+Get-appxpackage Microsoft.Windows.Photos | Remove-appxpackage
 Get-AppxPackage Microsoft.ZuneVideo | Remove-AppxPackage
 DISM /online /disable-feature /featurename:WindowsMediaPlayer
-get-appxpackage *Microsoft.ZuneMusic* | remove-appxpackage
+get-appxpackage Microsoft.ZuneMusic | remove-appxpackage
 
 #Instalar scoop
 iwr -useb get.scoop.sh | iex
@@ -56,3 +41,11 @@ scoop install neofetch
 
 #Instalar git
 scoop install git
+
+#Instalar nanazip desde winget
+winget install m2team.nanazip
+
+#Añade FFMPEG a las variables para los programas que lo necesitan
+$NewPath = "C:\ProgramData\chocolatey\lib\ffmpeg\tools\ffmpeg\bin"
+$Target = [System.EnvironmentVariableTarget]::Machine
+[System.Environment]::SetEnvironmentVariable('Path', $env:Path + ";$NewPath", $Target)
