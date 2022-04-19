@@ -6,7 +6,7 @@ Set-Service -Name sshd -StartupType 'Automatic'
 
 #Instalo powershell 7
 $WebClient = New-Object System.Net.WebClient
-$WebClient.DownloadFile("https://github.com/PowerShell/PowerShell/releases/download/v7.2.1/PowerShell-7.2.1-win-x64.msi","$env:temp\thost.msi")
+$WebClient.DownloadFile("https://github.com/PowerShell/PowerShell/releases/download/v7.2.1/PowerShell-7.2.1-win-x64.msi")
 
 #Instalo utileria para habilitar PWSH en ssh
 Install-Module -Name Microsoft.PowerShell.RemotingTools -Force
@@ -28,9 +28,7 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManage
 # Opcion util en choco
 choco feature enable -n=useRememberedArgumentsForUpgrades
 
-choco install paint.net openjdk jre8 advanced-ipscanner autohotkey eartrumpet bulk-crap-uninstaller cpu-z.install crystaldiskmark crystaldiskinfo.install discord epicgameslauncher everything file-converter handbrake hwinfo insync irfanview --params '/assoc=2' irfanviewplugins lockhunter msiafterburner notepadplusplus obs-studio parsec qbittorrent sharex steam-client teamviewer winaero-tweaker wiztree zerotier-one k-litecodecpackfull dopamine -y
-
-Add-AppPackage -path "https://github.com/M2Team/NanaZip/releases/download/1.0-Preview3/40174MouriNaruto.NanaZip_1.0.46.0_gnj4mf6z9tkrc.msixbundle"
+choco install openjdk jre8 advanced-ipscanner autohotkey eartrumpet bulk-crap-uninstaller cpu-z.install crystaldiskmark crystaldiskinfo.install discord epicgameslauncher everything file-converter handbrake hwinfo insync irfanview --params '/assoc=2' irfanviewplugins lockhunter msiafterburner notepadplusplus obs-studio parsec qbittorrent sharex steam-client teamviewer winaero-tweaker wiztree zerotier-one k-litecodecpackfull dopamine -y
 
 #Desinstalar apps incluidas
 Get-appxpackage *Microsoft.Windows.Photos* | remove-appxpackage
@@ -48,4 +46,4 @@ scoop install pshazz
 scoop install neofetch
 
 #Instalar git
-scoop install git 
+scoop install git
