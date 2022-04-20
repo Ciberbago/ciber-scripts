@@ -87,6 +87,10 @@ $NewPath = "C:\ProgramData\chocolatey\lib\ffmpeg\tools\ffmpeg\bin"
 $Target = [System.EnvironmentVariableTarget]::Machine
 [System.Environment]::SetEnvironmentVariable('Path', $env:Path + ";$NewPath", $Target)
 
+#Copio el perfil de PS5 para PS7
+Write-Host "Copio el perfil de PS5 para PS7" -ForegroundColor Black -BackgroundColor White
+cp $env:USERPROFILE\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1 $env:USERPROFILE\Documents\PowerShell\Microsoft.PowerShell_profile.ps1 
+
 #Windows Update
 Write-Host "Instalo windows update" -ForegroundColor Black -BackgroundColor White
 Install-Module PSWindowsUpdate -Force
