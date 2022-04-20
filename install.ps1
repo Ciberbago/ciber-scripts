@@ -96,4 +96,4 @@ Add-WUServiceManager -MicrosoftUpdate -Confirm:$false
 Write-Host "Actualizo windows update" -ForegroundColor Black -BackgroundColor White
 Get-WindowsUpdate
 Write-Host "Instalo updates" -ForegroundColor Black -BackgroundColor White
-Install-WindowsUpdate -MicrosoftUpdate -AcceptAll
+Install-WindowsUpdate -MicrosoftUpdate -AcceptAll -AutoReboot
