@@ -27,7 +27,10 @@ Start-Sleep 120
 Add-AppxPackage "$env:TEMP\WinGet.msixbundle"
 
 #Instalo powershell 7
-winget install Microsoft.Powershell --force
+winget install Microsoft.Powershell --force --accept-package-agreements --accept-source-agreements
+
+#Recargo las variables de entorno para que PS reconozca PS7
+$env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User") 
 
 #Abro PW7
 pwsh
