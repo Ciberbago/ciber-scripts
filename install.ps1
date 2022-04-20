@@ -7,6 +7,10 @@ Write-Host "  \_____| |_| |_.__/   \___| |_|             |_____| |_| |_| |___/  
 
 pause
 
+#Instalo Winget
+Invoke-WebRequest -Uri "https://github.com/microsoft/winget-cli/releases/download/v1.2.10271/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle" -OutFile "$env:TEMP\WinGet.msixbundle"
+PS C:\Users\Prueba> Add-AppxPackage "$env:TEMP\WinGet.msixbundle"
+
 #Instalo powershell 7
 $WebClient = New-Object System.Net.WebClient
 $WebClient.DownloadFile("https://github.com/PowerShell/PowerShell/releases/download/v7.2.1/PowerShell-7.2.1-win-x64.msi")
