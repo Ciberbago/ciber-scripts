@@ -12,6 +12,10 @@ Write-Host "Activando modo oscuro" -ForegroundColor Black -BackgroundColor White
 Set-ItemProperty -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize -Name AppsUseLightTheme -Value 0 -Type Dword -Force
 Set-ItemProperty -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize -Name SystemUsesLightTheme -Value 0 -Type Dword -Force
 
+#Desactivo la hibernacion
+Write-Host "Desactivando hibernacion" -ForegroundColor Black -BackgroundColor White
+powercfg /h off
+
 #Instalar nuget para poder instalar XAML
 Write-Host "Instalando Nuget" -ForegroundColor Black -BackgroundColor White
 Install-PackageProvider -Name NuGet -Force
