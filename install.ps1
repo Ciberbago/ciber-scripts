@@ -39,10 +39,6 @@ winget install Microsoft.Powershell --force --accept-package-agreements --accept
 Write-Host "Recargando variables de entorno"
 $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User") 
 
-#Abro PW7
-Write-Host "Abriendo PS7"
-pwsh
-
 #Instalar scoop
 Write-Host "Instalando scoop"
 iwr -useb get.scoop.sh | iex
