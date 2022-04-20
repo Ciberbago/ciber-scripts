@@ -88,12 +88,17 @@ Get-appxpackage Microsoft.Windows.Photos | Remove-appxpackage
 Get-AppxPackage Microsoft.ZuneVideo | Remove-AppxPackage
 DISM /online /disable-feature /featurename:WindowsMediaPlayer
 get-appxpackage Microsoft.ZuneMusic | remove-appxpackage
+Get-AppxPackage *Microsoft.WindowsNotepad* | Remove-AppxPackage
 
 #Añade FFMPEG a las variables para los programas que lo necesitan
 Write-Host "Se añade la ruta de FFMPEG a las variables" -ForegroundColor Black -BackgroundColor White
 $NewPath = "C:\ProgramData\chocolatey\lib\ffmpeg\tools\ffmpeg\bin"
 $Target = [System.EnvironmentVariableTarget]::Machine
 [System.Environment]::SetEnvironmentVariable('Path', $env:Path + ";$NewPath", $Target)
+
+#Descarga el archivo de autohotkey
+Write-Host "Descargando script de autohotkey" -ForegroundColor Black -BackgroundColor White
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/autohotkey.ahk" -OutFile "$env:USERPROFILE\Documents\autohotkey.ahk"
 
 #Copio el perfil de PS5 para PS7
 Write-Host "Copio el perfil de PS5 para PS7" -ForegroundColor Black -BackgroundColor White
