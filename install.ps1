@@ -15,7 +15,7 @@ Install-PackageProvider -Name NuGet -RequiredVersion 2.8.5.201 -Force
 Register-PackageSource -Name MyNuGet -Location https://www.nuget.org/api/v2 -ProviderName NuGet
 
 #Instalar otra dependencia para winget
-Install-Package Microsoft.UI.Xaml -Version 2.7.1
+Install-Package Microsoft.UI.Xaml -Force
 
 #Instalar VCLibs para poder instalar winget
 Invoke-WebRequest -Uri "https://aka.ms/Microsoft.VCLibs.x64.14.00.Desktop.appx" -OutFile "$env:TEMP\vclibs.appx"
