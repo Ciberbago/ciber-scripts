@@ -7,6 +7,10 @@ Write-Host "  \_____| |_| |_.__/   \___| |_|             |_____| |_| |_| |___/  
 
 pause
 
+#Instalar VCLibs para poder instalar winget
+Invoke-WebRequest -Uri "https://aka.ms/Microsoft.VCLibs.x64.14.00.Desktop.appx" -OutFile "$env:TEMP\vclibs.appx"
+Add-AppxPackage "$env:TEMP\vclibs.appx"
+
 #Instalo Winget
 Invoke-WebRequest -Uri "https://github.com/microsoft/winget-cli/releases/download/v1.2.10271/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle" -OutFile "$env:TEMP\WinGet.msixbundle"
 Add-AppxPackage "$env:TEMP\WinGet.msixbundle"
