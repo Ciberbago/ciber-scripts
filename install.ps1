@@ -7,6 +7,10 @@ Write-Host "  \_____| |_| |_.__/   \___| |_|             |_____| |_| |_| |___/  
 
 pause
 
+#Activo el modo oscuro
+Write-Host "Activando modo oscuro" -ForegroundColor Black -BackgroundColor White
+Set-ItemProperty -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize -Name AppsUseLightTheme -Value 0 -Type Dword -Force
+Set-ItemProperty -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize -Name SystemUsesLightTheme -Value 0 -Type Dword -Force
 
 #Instalar nuget para poder instalar XAML
 Write-Host "Instalando Nuget" -ForegroundColor Black -BackgroundColor White
@@ -68,7 +72,7 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManage
 Write-Host "Instalando Programas con choco" -ForegroundColor Black -BackgroundColor White
 choco feature enable -n=useRememberedArgumentsForUpgrades
 
-choco install ffmpeg oraclejdk jre8 advanced-ipscanner autohotkey eartrumpet bulk-crap-uninstaller cpu-z.install crystaldiskmark crystaldiskinfo.install discord epicgameslauncher everything file-converter handbrake hwinfo insync irfanview --params '/assoc=2' irfanviewplugins lockhunter msiafterburner notepadplusplus obs-studio parsec qbittorrent sharex steam-client teamviewer winaero-tweaker wiztree zerotier-one k-litecodecpackfull dopamine -y
+choco install ffmpeg oraclejdk jre8 advanced-ipscanner autohotkey eartrumpet bulk-crap-uninstaller cpu-z.install crystaldiskmark crystaldiskinfo.install discord epicgameslauncher everything file-converter handbrake hwinfo insync irfanview --params '/assoc=2' irfanviewplugins lockhunter msiafterburner notepadplusplus obs-studio parsec qbittorrent sharex steam-client teamviewer winaero-tweaker wiztree zerotier-one k-litecodecpackfull dopamine -y --force
 
 #Instalar nanazip desde winget
 Write-Host "Instalando nanazip con winget" -ForegroundColor Black -BackgroundColor White
