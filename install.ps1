@@ -23,6 +23,7 @@ Add-AppxPackage "$env:TEMP\vclibs.appx"
 
 #Instalar Winget
 Invoke-WebRequest -Uri "https://github.com/microsoft/winget-cli/releases/download/v1.2.10271/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle" -OutFile "$env:TEMP\WinGet.msixbundle"
+Start-Sleep 120
 Add-AppxPackage "$env:TEMP\WinGet.msixbundle"
 
 #Instalo powershell 7
