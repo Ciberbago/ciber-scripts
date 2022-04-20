@@ -11,6 +11,9 @@ pause
 Invoke-WebRequest -Uri "https://aka.ms/Microsoft.VCLibs.x64.14.00.Desktop.appx" -OutFile "$env:TEMP\vclibs.appx"
 Add-AppxPackage "$env:TEMP\vclibs.appx"
 
+#Instalar otra dependencia para winget
+Install-Package Microsoft.UI.Xaml -Version 2.7.1
+
 #Instalo Winget
 Invoke-WebRequest -Uri "https://github.com/microsoft/winget-cli/releases/download/v1.2.10271/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle" -OutFile "$env:TEMP\WinGet.msixbundle"
 Add-AppxPackage "$env:TEMP\WinGet.msixbundle"
