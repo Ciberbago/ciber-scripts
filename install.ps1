@@ -9,10 +9,10 @@ pause
 
 
 #Instalar nuget para poder instalar XAML
-Install-PackageProvider -Name NuGet -RequiredVersion 2.8.5.201 -Force
+Install-PackageProvider -Name NuGet -Force
 
 #Registro el repositorio de nuget para poder instalar XAML
-Register-PackageSource -Name MyNuGet -Location https://www.nuget.org/api/v2 -ProviderName NuGet
+Register-PackageSource -Name Nuget -Location https://www.nuget.org/api/v2 -ProviderName NuGet
 
 #Instalar otra dependencia para winget
 Install-Package Microsoft.UI.Xaml -Force
