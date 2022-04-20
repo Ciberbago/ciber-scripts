@@ -35,22 +35,6 @@ $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";"
 #Abro PW7
 pwsh
 
-# Se habilita la instalacion de scripts externos
-
-Set-ExecutionPolicy AllSigned -Force
-Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
-
-# Opcion util en choco
-choco feature enable -n=useRememberedArgumentsForUpgrades
-
-choco install ffmpeg oraclejdk jre8 advanced-ipscanner autohotkey eartrumpet bulk-crap-uninstaller cpu-z.install crystaldiskmark crystaldiskinfo.install discord epicgameslauncher everything file-converter handbrake hwinfo insync irfanview --params '/assoc=2' irfanviewplugins lockhunter msiafterburner notepadplusplus obs-studio parsec qbittorrent sharex steam-client teamviewer winaero-tweaker wiztree zerotier-one k-litecodecpackfull dopamine -y
-
-#Desinstalar apps incluidas
-Get-appxpackage Microsoft.Windows.Photos | Remove-appxpackage
-Get-AppxPackage Microsoft.ZuneVideo | Remove-AppxPackage
-DISM /online /disable-feature /featurename:WindowsMediaPlayer
-get-appxpackage Microsoft.ZuneMusic | remove-appxpackage
-
 #Instalar scoop
 iwr -useb get.scoop.sh | iex
 
@@ -63,8 +47,24 @@ scoop install neofetch
 #Instalar git
 scoop install git
 
+# Se habilita la instalacion de scripts externos
+
+Set-ExecutionPolicy AllSigned -Force
+Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+
+# Opcion util en choco
+choco feature enable -n=useRememberedArgumentsForUpgrades
+
+choco install ffmpeg oraclejdk jre8 advanced-ipscanner autohotkey eartrumpet bulk-crap-uninstaller cpu-z.install crystaldiskmark crystaldiskinfo.install discord epicgameslauncher everything file-converter handbrake hwinfo insync irfanview --params '/assoc=2' irfanviewplugins lockhunter msiafterburner notepadplusplus obs-studio parsec qbittorrent sharex steam-client teamviewer winaero-tweaker wiztree zerotier-one k-litecodecpackfull dopamine -y
+
 #Instalar nanazip desde winget
 winget install m2team.nanazip
+
+#Desinstalar apps incluidas
+Get-appxpackage Microsoft.Windows.Photos | Remove-appxpackage
+Get-AppxPackage Microsoft.ZuneVideo | Remove-AppxPackage
+DISM /online /disable-feature /featurename:WindowsMediaPlayer
+get-appxpackage Microsoft.ZuneMusic | remove-appxpackage
 
 #Añade FFMPEG a las variables para los programas que lo necesitan
 $NewPath = "C:\ProgramData\chocolatey\lib\ffmpeg\tools\ffmpeg\bin"
