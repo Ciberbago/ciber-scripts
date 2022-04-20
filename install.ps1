@@ -41,7 +41,11 @@ $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";"
 
 #Instalar scoop
 Write-Host "Instalando scoop"
-iwr -useb get.scoop.sh | iex
+iwr -useb get.scoop.sh -outfile "$env:TEMP\install.ps1"
+cd $env:TEMP
+set-executionpolicy remotesigned
+.\install.ps1 -RunAsAdmin
+cd ~
 
 #Instalar git
 Write-Host "Instalando git"
