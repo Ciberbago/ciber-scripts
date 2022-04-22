@@ -76,7 +76,7 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManage
 Write-Host "Instalando Programas con choco" -ForegroundColor Black -BackgroundColor White
 choco feature enable -n=useRememberedArgumentsForUpgrades
 
-choco install ffmpeg oraclejdk jre8 advanced-ipscanner autohotkey eartrumpet bulk-crap-uninstaller cpu-z.install crystaldiskmark crystaldiskinfo.install discord epicgameslauncher everything file-converter handbrake hwinfo insync irfanview --params '/assoc=2' irfanviewplugins lockhunter msiafterburner notepadplusplus obs-studio parsec qbittorrent sharex steam-client teamviewer winaero-tweaker wiztree zerotier-one k-litecodecpackfull dopamine -y --force
+choco install polymc ffmpeg advanced-ipscanner autohotkey eartrumpet bulk-crap-uninstaller cpu-z.install crystaldiskmark crystaldiskinfo.install discord epicgameslauncher everything file-converter handbrake hwinfo insync irfanview --params '/assoc=2' irfanviewplugins lockhunter msiafterburner notepadplusplus obs-studio parsec qbittorrent sharex steam-client teamviewer winaero-tweaker wiztree zerotier-one k-litecodecpackfull dopamine -y --force
 
 #Instalar nanazip desde winget
 Write-Host "Instalando nanazip con winget" -ForegroundColor Black -BackgroundColor White
@@ -95,6 +95,11 @@ Write-Host "Se añade la ruta de FFMPEG a las variables" -ForegroundColor Black 
 $NewPath = "C:\ProgramData\chocolatey\lib\ffmpeg\tools\ffmpeg\bin"
 $Target = [System.EnvironmentVariableTarget]::Machine
 [System.Environment]::SetEnvironmentVariable('Path', $env:Path + ";$NewPath", $Target)
+
+#Borro la carpeta de instances en polymc y hago un symlink para el disco D donde están las instancias de MC
+Write-Host "Borro la carpeta de instances en polymc y hago un symlink para el disco D donde están las instancias de MC" -ForegroundColor Black -BackgroundColor White
+Remove-Item $env:Appdata\PolyMC\instances -Recurse
+New-Item -ItemType SymbolicLink -Path "$env:Appdata\PolyMC\instances" -Target "D:\MultiMC\instances"
 
 #Descarga el archivo de autohotkey
 Write-Host "Descargando script de autohotkey" -ForegroundColor Black -BackgroundColor White
