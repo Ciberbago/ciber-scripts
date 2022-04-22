@@ -114,6 +114,10 @@ Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-script
 Write-Host "Descargando perfil de handbrake" -ForegroundColor Black -BackgroundColor White
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/HBProfile.json" -OutFile "$env:USERPROFILE\Documents\HBProfile.json"
 
+#Descarga el archivo de cofig de winaero tweaker
+Write-Host "Descargando perfil de handbrake" -ForegroundColor Black -BackgroundColor White
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/Winaero.ini" -OutFile "$env:USERPROFILE\Documents\Winaero.ini"
+
 #Copio el perfil de PS5 para PS7
 Write-Host "Copio el perfil de PS5 para PS7" -ForegroundColor Black -BackgroundColor White
 cp $env:USERPROFILE\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1 $env:USERPROFILE\Documents\PowerShell\Microsoft.PowerShell_profile.ps1 
