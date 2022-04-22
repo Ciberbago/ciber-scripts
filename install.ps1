@@ -110,6 +110,10 @@ New-Item -ItemType SymbolicLink -Path "$env:Appdata\PolyMC\instances" -Target "D
 Write-Host "Descargando script de autohotkey" -ForegroundColor Black -BackgroundColor White
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/autohotkey.ahk" -OutFile "$env:USERPROFILE\Documents\autohotkey.ahk"
 
+#Descarga el archivo de handbrake para crear el perfil de codificacion eficiente
+Write-Host "Descargando perfil de handbrake" -ForegroundColor Black -BackgroundColor White
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/HBProfile.json" -OutFile "$env:USERPROFILE\Documents\HBProfile.json"
+
 #Copio el perfil de PS5 para PS7
 Write-Host "Copio el perfil de PS5 para PS7" -ForegroundColor Black -BackgroundColor White
 cp $env:USERPROFILE\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1 $env:USERPROFILE\Documents\PowerShell\Microsoft.PowerShell_profile.ps1 
