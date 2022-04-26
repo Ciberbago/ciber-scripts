@@ -101,11 +101,6 @@ $NewPath = "C:\ProgramData\chocolatey\lib\ffmpeg\tools\ffmpeg\bin"
 $Target = [System.EnvironmentVariableTarget]::Machine
 [System.Environment]::SetEnvironmentVariable('Path', $env:Path + ";$NewPath", $Target)
 
-#Borro la carpeta de instances en polymc y hago un symlink para el disco D donde están las instancias de MC
-Write-Host "Borro la carpeta de instances en polymc y hago un symlink para el disco D donde están las instancias de MC" -ForegroundColor Black -BackgroundColor White
-Remove-Item $env:Appdata\PolyMC\instances -Recurse
-New-Item -ItemType SymbolicLink -Path "$env:Appdata\PolyMC\instances" -Target "D:\MultiMC\instances"
-
 #Descarga el archivo de autohotkey
 Write-Host "Descargando script de autohotkey" -ForegroundColor Black -BackgroundColor White
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/autohotkey.ahk" -OutFile "$env:USERPROFILE\Documents\autohotkey.ahk"
@@ -168,3 +163,10 @@ Write-Host "Running O&O Shutup with Recommended Settings" -ForegroundColor Black
     Disable-ScheduledTask -TaskName "Microsoft\Windows\DiskDiagnostic\Microsoft-Windows-DiskDiagnosticDataCollector" | Out-Null
 #Recordatorios
 Write-Host "En lo que se instalan las actualizaciones recuerda instalar QTTabBar, importar settings e importar settings para Winaero" -ForegroundColor Black -BackgroundColor White
+
+#Borro la carpeta de instances en polymc y hago un symlink para el disco D donde están las instancias de MC
+Write-Host "Abre PolyMC y haz la config inicial, luego continua el script" -ForegroundColor Black -BackgroundColor White
+pause
+Write-Host "Borro la carpeta de instances en polymc y hago un symlink para el disco D donde están las instancias de MC" -ForegroundColor Black -BackgroundColor White
+Remove-Item $env:Appdata\PolyMC\instances -Recurse
+New-Item -ItemType SymbolicLink -Path "$env:Appdata\PolyMC\instances" -Target "D:\MultiMC\instances"
