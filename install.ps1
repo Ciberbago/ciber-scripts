@@ -166,7 +166,9 @@ Write-Host "Running O&O Shutup with Recommended Settings" -ForegroundColor Black
     Disable-ScheduledTask -TaskName "Microsoft\Windows\Customer Experience Improvement Program\Consolidator" | Out-Null
     Disable-ScheduledTask -TaskName "Microsoft\Windows\Customer Experience Improvement Program\UsbCeip" | Out-Null
     Disable-ScheduledTask -TaskName "Microsoft\Windows\DiskDiagnostic\Microsoft-Windows-DiskDiagnosticDataCollector" | Out-Null
-    
+#Recordatorios
+Write-Host "En lo que se instalan las actualizaciones recuerda instalar QTTabBar, importar settings e importar settings para Winaero" -ForegroundColor Black -BackgroundColor White
+
 #Windows Update
 Write-Host "Instalo windows update" -ForegroundColor Black -BackgroundColor White
 Install-Module PSWindowsUpdate -Force
