@@ -168,14 +168,3 @@ Write-Host "Running O&O Shutup with Recommended Settings" -ForegroundColor Black
     Disable-ScheduledTask -TaskName "Microsoft\Windows\DiskDiagnostic\Microsoft-Windows-DiskDiagnosticDataCollector" | Out-Null
 #Recordatorios
 Write-Host "En lo que se instalan las actualizaciones recuerda instalar QTTabBar, importar settings e importar settings para Winaero" -ForegroundColor Black -BackgroundColor White
-
-#Windows Update
-Write-Host "Instalo windows update" -ForegroundColor Black -BackgroundColor White
-Install-Module PSWindowsUpdate -Force
-Set-executionpolicy remotesigned
-Write-Host "Añado microsoft updates a los repo" -ForegroundColor Black -BackgroundColor White
-Add-WUServiceManager -MicrosoftUpdate -Confirm:$false
-Write-Host "Actualizo windows update" -ForegroundColor Black -BackgroundColor White
-Get-WindowsUpdate
-Write-Host "Instalo updates" -ForegroundColor Black -BackgroundColor White
-Install-WindowsUpdate -MicrosoftUpdate -AcceptAll -AutoReboot
