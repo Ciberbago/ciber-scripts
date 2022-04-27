@@ -115,7 +115,7 @@ Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-script
 
 #Copio el perfil de PS5 para PS7
 Write-Host "Copio el perfil de PS5 para PS7" -ForegroundColor Black -BackgroundColor White
-cp $env:USERPROFILE\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1 $env:USERPROFILE\Documents\PowerShell\Microsoft.PowerShell_profile.ps1 
+xcopy $env:USERPROFILE\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1 $env:USERPROFILE\Documents\PowerShell\Microsoft.PowerShell_profile.ps1*
 
 #Deshabilito Onedrive
 Write-Host "Deshabilitando OneDrive" -ForegroundColor Black -BackgroundColor White
