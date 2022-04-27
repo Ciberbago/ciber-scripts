@@ -168,5 +168,6 @@ Write-Host "En lo que se instalan las actualizaciones recuerda instalar QTTabBar
 Write-Host "Abre PolyMC y haz la config inicial, luego continua el script" -ForegroundColor Black -BackgroundColor White
 pause
 Write-Host "Borro la carpeta de instances en polymc y hago un symlink para el disco D donde están las instancias de MC" -ForegroundColor Black -BackgroundColor White
+mkdir $env:Appdata\PolyMC
 Remove-Item $env:Appdata\PolyMC\instances -Recurse
 New-Item -ItemType SymbolicLink -Path "$env:Appdata\PolyMC\instances" -Target "D:\MultiMC\instances"
