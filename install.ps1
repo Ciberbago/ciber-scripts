@@ -80,8 +80,43 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManage
 # Opcion util en choco
 Write-Host "Instalando Programas con choco" -ForegroundColor Black -BackgroundColor White
 choco feature enable -n=useRememberedArgumentsForUpgrades
-
-choco install virtualbox temurin8jre temurin17jre ffmpeg advanced-ipscanner autohotkey eartrumpet bulk-crap-uninstaller cpu-z.install crystaldiskmark crystaldiskinfo.install discord epicgameslauncher everything file-converter handbrake hwinfo insync irfanview --params '/assoc=2' irfanviewplugins lockhunter msiafterburner notepadplusplus obs-studio parsec qbittorrent sharex steam-client teamviewer winaero-tweaker wiztree zerotier-one k-litecodecpackfull dopamine -y --force
+$programas = @(
+	"virtualbox"
+	"temurin8jre"
+	"temurin17jre"
+	"ffmpeg"
+	"advanced-ipscanner"
+	"autohotkey"
+	"eartrumpet"
+	"bulk-crap-uninstaller"
+	"cpu-z.install"
+	"crystaldiskmark"
+	"crystaldiskinfo.install"
+	"discord"
+	"epicgameslauncher"
+	"everything"
+	"file-converter"
+	"handbrake"
+	"hwinfo"
+	"insync"
+	"irfanview --params '/assoc=2'"
+	"irfanviewplugins"
+	"lockhunter"
+	"msiafterburner"
+	"notepadplusplus"
+	"obs-studio"
+	"parsec"
+	"qbittorrent"
+	"sharex"
+	"steam-client"
+	"teamviewer"
+	"winaero-tweaker"
+	"wiztree"
+	"zerotier-one"
+	"k-litecodecpackfull"
+	"dopamine"
+)
+choco install $programas -y --force
 
 #Instalar nanazip desde winget
 Write-Host "Instalando nanazip con winget" -ForegroundColor Black -BackgroundColor White
