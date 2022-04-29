@@ -62,42 +62,43 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManage
 Write-Host "Instalando Programas con choco" -ForegroundColor Black -BackgroundColor White
 choco feature enable -n=useRememberedArgumentsForUpgrades
 $programas = @(
-	"virtualbox"
-	"temurin8jre"
-	"temurin17jre"
-	"ffmpeg"
 	"advanced-ipscanner"
 	"autohotkey"
-	"eartrumpet"
 	"bulk-crap-uninstaller"
 	"cpu-z.install"
-	"crystaldiskmark"
 	"crystaldiskinfo.install"
+	"crystaldiskmark"
 	"discord"
+	"dopamine"
+	"eartrumpet"
 	"epicgameslauncher"
 	"everything"
+	"ffmpeg"
 	"file-converter"
 	"handbrake"
 	"hwinfo"
 	"insync"
 	"irfanview --params '/assoc=2'"
 	"irfanviewplugins"
+	"k-litecodecpackfull"
 	"lockhunter"
+	"lossless-cut"
 	"msiafterburner"
 	"notepadplusplus"
 	"obs-studio"
 	"parsec"
+	"powershell-core"
 	"qbittorrent"
 	"sharex"
 	"steam-client"
 	"teamviewer"
+	"temurin17jre"
+	"temurin8jre"
+	"virtualbox"
 	"winaero-tweaker"
 	"wiztree"
 	"zerotier-one"
-	"k-litecodecpackfull"
-	"dopamine"
-	"powershell-core"
-	"lossless-cut"
+
 )
 choco install $programas -y --force
 
@@ -247,11 +248,8 @@ Write-Host "Copio el perfil de PS5 para PS7" -ForegroundColor Black -BackgroundC
 xcopy $env:USERPROFILE\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1 $env:USERPROFILE\Documents\PowerShell\Microsoft.PowerShell_profile.ps1*
 
 #Borro la carpeta de instances en polymc y hago un symlink para el disco D donde están las instancias de MC
-Write-Host "Abre PolyMC y haz la config inicial, luego continua el script" -ForegroundColor Black -BackgroundColor White
-pause
 Write-Host "Borro la carpeta de instances en polymc y hago un symlink para el disco D donde están las instancias de MC" -ForegroundColor Black -BackgroundColor White
 mkdir $env:Appdata\PolyMC
-Remove-Item $env:Appdata\PolyMC\instances -Recurse
 New-Item -ItemType SymbolicLink -Path "$env:Appdata\PolyMC\instances" -Target "D:\MultiMC\instances"
 
 #Recordatorios
