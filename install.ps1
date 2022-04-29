@@ -138,6 +138,7 @@ $Bloatware = @(
 	"Microsoft.MicrosoftStickyNotes"
 	"Microsoft.MicrosoftSolitaireCollection"
 	"Microsoft.Getstarted"
+	"Microsoft.windowscomminicationsapps"
 )
 
 foreach ($Bloat in $Bloatware) {
