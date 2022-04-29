@@ -246,3 +246,5 @@ Write-Host "Borro la carpeta de instances en polymc y hago un symlink para el di
 mkdir $env:Appdata\PolyMC
 Remove-Item $env:Appdata\PolyMC\instances -Recurse
 New-Item -ItemType SymbolicLink -Path "$env:Appdata\PolyMC\instances" -Target "D:\MultiMC\instances"
+
+Write-Host "Prueba de commit"
