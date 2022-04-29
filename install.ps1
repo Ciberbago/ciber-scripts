@@ -140,11 +140,11 @@ $Bloatware = @(
 	"Microsoft.Getstarted"
 )
 
-    foreach ($Bloat in $Bloatware) {
+foreach ($Bloat in $Bloatware) {
         Get-AppxPackage -Name $Bloat| Remove-AppxPackage
         Get-AppxProvisionedPackage -Online | Where-Object DisplayName -like $Bloat | Remove-AppxProvisionedPackage -Online
         Write-Host "Eliminando $Bloat."
-    }
+}
 
 Write-Host "Bloat eliminado"
 
