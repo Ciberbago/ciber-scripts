@@ -82,7 +82,6 @@ $programas = @(
 	"irfanviewplugins"
 	"k-litecodecpackfull"
 	"lockhunter"
-	"lossless-cut"
 	"msiafterburner"
 	"notepadplusplus"
 	"obs-studio"
