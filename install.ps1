@@ -124,7 +124,7 @@ winget install m2team.nanazip
 
 #Desinstalar apps incluidas
 Write-Host "Desinstalando apps incluidas con windows" -ForegroundColor Black -BackgroundColor White
-$bloat = @(
+$Bloatware = @(
 	"Microsoft.MicrosoftOfficeHub"
 	"Microsoft.Windows.Photos"
 	"Microsoft.ZuneVideo"
@@ -139,7 +139,14 @@ $bloat = @(
 	"Microsoft.MicrosoftSolitaireCollection"
 	"Microsoft.Getstarted"
 )
-Get-AppxPackage $bloat | Remove-AppxPackage
+
+    foreach ($Bloat in $Bloatware) {
+        Get-AppxPackage -Name $Bloat| Remove-AppxPackage
+        Get-AppxProvisionedPackage -Online | Where-Object DisplayName -like $Bloat | Remove-AppxProvisionedPackage -Online
+        Write-Host "Eliminando $Bloat."
+    }
+
+Write-Host "Bloat eliminado"
 
 DISM /online /disable-feature /featurename:WindowsMediaPlayer
 
