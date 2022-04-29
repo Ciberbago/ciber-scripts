@@ -124,11 +124,24 @@ winget install m2team.nanazip
 
 #Desinstalar apps incluidas
 Write-Host "Desinstalando apps incluidas con windows" -ForegroundColor Black -BackgroundColor White
-Get-appxpackage Microsoft.Windows.Photos | Remove-appxpackage
-Get-AppxPackage Microsoft.ZuneVideo | Remove-AppxPackage
+$bloat = @(
+	"Microsoft.MicrosoftOfficeHub"
+	"Microsoft.Windows.Photos"
+	"Microsoft.ZuneVideo"
+	"Microsoft.ZuneMusic"
+	"Microsoft.WindowsNotepad"
+	"MicrosoftTeams"
+	"Microsoft.ScreenSketch"
+	"Microsoft.WindowsMaps"
+	"Microsoft.PowerAutomateDesktop"
+	"Microsoft.People"
+	"Microsoft.MicrosoftStickyNotes"
+	"Microsoft.MicrosoftSolitaireCollection"
+	"Microsoft.Getstarted"
+)
+Get-AppxPackage $bloat | Remove-AppxPackage
+
 DISM /online /disable-feature /featurename:WindowsMediaPlayer
-get-appxpackage Microsoft.ZuneMusic | remove-appxpackage
-Get-AppxPackage *Microsoft.WindowsNotepad* | Remove-AppxPackage
 
 #Añade FFMPEG a las variables para los programas que lo necesitan
 Write-Host "Se añade la ruta de FFMPEG a las variables" -ForegroundColor Black -BackgroundColor White
