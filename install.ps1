@@ -78,7 +78,7 @@ $programas = @(
 	"handbrake"
 	"hwinfo"
 	"insync"
-	"irfanview --params '/assoc=2'"
+	"irfanview"
 	"irfanviewplugins"
 	"k-litecodecpackfull"
 	"lockhunter"
