@@ -11,22 +11,11 @@ pause
 # Instalacion de dependencias para winget
 #=================================================================================
 
-#Instalar nuget para poder instalar XAML
-Write-Host "Instalando Nuget" -ForegroundColor Black -BackgroundColor White
-Install-PackageProvider -Name NuGet -Force
-
-#Registro el repositorio de nuget para poder instalar XAML
-Write-Host "Instalando proveedor Nuget" -ForegroundColor Black -BackgroundColor White
-Register-PackageSource -Name Nuget -Location https://www.nuget.org/api/v2 -ProviderName NuGet
-
-#Instalar otra dependencia para winget
-Write-Host "Instalando XAML" -ForegroundColor Black -BackgroundColor White
-Install-Package Microsoft.UI.Xaml -Force
-
-#Instalar VCLibs para poder instalar winget
-Invoke-WebRequest -Uri "https://aka.ms/Microsoft.VCLibs.x64.14.00.Desktop.appx" -OutFile "$env:TEMP\vclibs.appx"
-Write-Host "Instalando VCLibs" -ForegroundColor Black -BackgroundColor White
-Add-AppxPackage "$env:TEMP\vclibs.appx"
+Write-Host "Instalando Winget" -ForegroundColor Black -BackgroundColor White
+Start-Process "ms-appinstaller:?source=https://aka.ms/getwinget"
+$nid = (Get-Process AppInstaller).Id
+Wait-Process -Id $nid
+Write-Host Winget Installed
 
 #=================================================================================
 # Instalacion de SCOOP y programas
@@ -102,14 +91,8 @@ $programas = @(
 choco install $programas -y --force
 
 #=================================================================================
-# Instalacion de WINGET y nanazip
+# Instalacion de nanazip con winget
 #=================================================================================
-
-#Instalar Winget
-Invoke-WebRequest -Uri "https://github.com/microsoft/winget-cli/releases/download/v1.2.10271/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle" -OutFile "$env:TEMP\WinGet.msixbundle"
-Start-Sleep 120
-Write-Host "Instalando Winget" -ForegroundColor Black -BackgroundColor White
-Add-AppxPackage "$env:TEMP\WinGet.msixbundle"
 
 #Instalar nanazip desde winget
 Write-Host "Instalando nanazip con winget" -ForegroundColor Black -BackgroundColor White
