@@ -8,17 +8,17 @@ Write-Host "  \_____| |_| |_.__/   \___| |_|             |_____| |_| |_| |___/  
 pause
 
 #=================================================================================
-# Instalacion de dependencias para winget
+# Instalacion de WINGET
 #=================================================================================
 
 Write-Host "Instalando Winget" -ForegroundColor Black -BackgroundColor White
 Start-Process "ms-appinstaller:?source=https://aka.ms/getwinget"
 $nid = (Get-Process AppInstaller).Id
 Wait-Process -Id $nid
-Write-Host Winget Installed
+Write-Host "Winget instalado" -ForegroundColor Black -BackgroundColor White
 
 #=================================================================================
-# Instalacion de SCOOP y programas
+# Instalacion de SCOOP
 #=================================================================================
 
 #Instalar scoop
@@ -29,6 +29,28 @@ set-executionpolicy remotesigned
 .\install.ps1 -RunAsAdmin
 cd ~
 
+#=================================================================================
+# Instalacion de CHOCOLATEY
+#=================================================================================
+
+# Se habilita la instalacion de scripts externos para instalar chocolatey
+Write-Host "Instalando Chocolatey" -ForegroundColor Black -BackgroundColor White
+Set-ExecutionPolicy AllSigned -Force
+Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+choco feature enable -n=useRememberedArgumentsForUpgrades
+
+#=================================================================================
+# Instalacion de nanazip con WINGET
+#=================================================================================
+
+#Instalar nanazip desde winget
+Write-Host "Instalando nanazip con winget" -ForegroundColor Black -BackgroundColor White
+winget install m2team.nanazip
+
+#=================================================================================
+# Instalacion de programas con SCOOP
+#=================================================================================
+
 #Instalar git, pshazz para terminal bonita y neofetch
 Write-Host "Instalando git" -ForegroundColor Black -BackgroundColor White
 scoop install git pshazz neofetch
@@ -38,18 +60,13 @@ Write-Host "Instalando PolyMC" -ForegroundColor Black -BackgroundColor White
 scoop bucket add games
 scoop bucket add extras
 scoop install polymc
-#=================================================================================
-# Instalacion de CHOCOLATEY y programas
-#=================================================================================
 
-# Se habilita la instalacion de scripts externos para instalar chocolatey
-Write-Host "Instalando Chocolatey" -ForegroundColor Black -BackgroundColor White
-Set-ExecutionPolicy AllSigned -Force
-Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+#=================================================================================
+# Instalacion de programas con CHOCOLATEY
+#=================================================================================
 
 # Opcion util en choco
 Write-Host "Instalando Programas con choco" -ForegroundColor Black -BackgroundColor White
-choco feature enable -n=useRememberedArgumentsForUpgrades
 $programas = @(
 	"advanced-ipscanner"
 	"autohotkey"
@@ -89,14 +106,6 @@ $programas = @(
 
 )
 choco install $programas -y --force
-
-#=================================================================================
-# Instalacion de nanazip con winget
-#=================================================================================
-
-#Instalar nanazip desde winget
-Write-Host "Instalando nanazip con winget" -ForegroundColor Black -BackgroundColor White
-winget install m2team.nanazip
 
 #=================================================================================
 # Debloat y privacidad
