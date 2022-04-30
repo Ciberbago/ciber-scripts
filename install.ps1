@@ -69,6 +69,7 @@ scoop install polymc
 Write-Host "Instalando Programas con choco" -ForegroundColor Black -BackgroundColor White
 $programas = @(
 	"advanced-ipscanner"
+	"amd-ryzen-chipset"
 	"autohotkey"
 	"bulk-crap-uninstaller"
 	"cpu-z.install"
