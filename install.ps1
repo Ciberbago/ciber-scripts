@@ -71,6 +71,7 @@ $programas = @(
 	"advanced-ipscanner"
 	"amd-ryzen-chipset"
 	"autohotkey"
+	"blender"
 	"bulk-crap-uninstaller"
 	"cpu-z.install"
 	"crystaldiskinfo.install"
