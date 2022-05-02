@@ -40,26 +40,32 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManage
 choco feature enable -n=useRememberedArgumentsForUpgrades
 
 #=================================================================================
-# Instalacion de nanazip con WINGET
+# Instalacion de programas con WINGET
 #=================================================================================
 
 #Instalar nanazip desde winget
 Write-Host "Instalando nanazip con winget" -ForegroundColor Black -BackgroundColor White
 winget install m2team.nanazip
+winget install lockhunter
 
 #=================================================================================
 # Instalacion de programas con SCOOP
 #=================================================================================
 
 #Instalar git, pshazz para terminal bonita y neofetch
-Write-Host "Instalando git" -ForegroundColor Black -BackgroundColor White
-scoop install git pshazz neofetch
+Write-Host "Instalando git y utilidades cli" -ForegroundColor Black -BackgroundColor White
+scoop install git pshazz neofetch speedtest-cli
 
-#Instalar polymc
-Write-Host "Instalando PolyMC" -ForegroundColor Black -BackgroundColor White
+#Agregar buckets
+Write-Host "Agregando buckets utiles" -ForegroundColor Black -BackgroundColor White
 scoop bucket add games
 scoop bucket add extras
+scoop bucket add nirsoft
+
+#Instalar programas que ocupan buckets extras
+Write-Host "Instalando programas que ocupan buckets extras" -ForegroundColor Black -BackgroundColor White
 scoop install polymc
+scoop install losslesscut
 
 #=================================================================================
 # Instalacion de programas con CHOCOLATEY
@@ -73,8 +79,8 @@ $programas = @(
 	"autohotkey"
 	"blender"
 	"bulk-crap-uninstaller"
-	"cpu-z.install"
-	"crystaldiskinfo.install"
+	"cpu-z"
+	"crystaldiskinfo"
 	"crystaldiskmark"
 	"discord"
 	"dopamine"
@@ -89,7 +95,6 @@ $programas = @(
 	"irfanview"
 	"irfanviewplugins"
 	"k-litecodecpackfull"
-	"lockhunter"
 	"msiafterburner"
 	"notepadplusplus"
 	"obs-studio"
@@ -105,7 +110,6 @@ $programas = @(
 	"winaero-tweaker"
 	"wiztree"
 	"zerotier-one"
-
 )
 choco install $programas -y --force
 
