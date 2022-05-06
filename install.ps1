@@ -54,7 +54,7 @@ winget install lockhunter
 
 #Instalar git, pshazz para terminal bonita y neofetch
 Write-Host "Instalando git y utilidades cli" -ForegroundColor Black -BackgroundColor White
-scoop install git pshazz neofetch speedtest-cli
+scoop install git pshazz winfetch speedtest-cli
 
 #Agregar buckets
 Write-Host "Agregando buckets utiles" -ForegroundColor Black -BackgroundColor White
