@@ -210,6 +210,20 @@ Disable-ScheduledTask -TaskName "Microsoft\Windows\Customer Experience Improveme
 Disable-ScheduledTask -TaskName "Microsoft\Windows\Customer Experience Improvement Program\UsbCeip" | Out-Null
 Disable-ScheduledTask -TaskName "Microsoft\Windows\DiskDiagnostic\Microsoft-Windows-DiskDiagnosticDataCollector" | Out-Null
 
+#Creo el acceso directo al regedit para HKU
+New-PSDrive -PSProvider Registry -Name HKU -Root HKEY_USERS
+#Hago que la fecha corta tenga el nombre del día y mes
+Set-ItemProperty -Path "HKU:\S-1-5-21-3435970072-2076227087-819996100-1001\Control Panel\International" -Name "sShortDate" -Type String -Value "ddd dd/MMM/yyyy"
+
+#Desactivo sticky keys
+Set-ItemProperty -Path "HKCU:\Control Panel\Accessibility\StickyKeys" -Name "Flags" -Type String -Value "506"
+
+#Activo las extensiones de los archivos
+Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "HideFileExt" -Type Dword -Value "0"
+
+#Activo los archivos ocultos
+Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "Hidden" -Type Dword -Value "1"
+
 #=================================================================================
 #  Variables y ajustes
 #=================================================================================
