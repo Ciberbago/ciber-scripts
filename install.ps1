@@ -89,6 +89,7 @@ $programas = @(
 	"everything"
 	"ffmpeg"
 	"file-converter"
+	"gpu-z"
 	"handbrake"
 	"hwinfo"
 	"insync"
