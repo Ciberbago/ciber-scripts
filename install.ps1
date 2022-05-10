@@ -44,9 +44,10 @@ choco feature enable -n=useRememberedArgumentsForUpgrades
 #=================================================================================
 
 #Instalar nanazip desde winget
-Write-Host "Instalando nanazip con winget" -ForegroundColor Black -BackgroundColor White
+Write-Host "Instalando programas con winget" -ForegroundColor Black -BackgroundColor White
 winget install m2team.nanazip
 winget install lockhunter
+winget install heroic
 
 #=================================================================================
 # Instalacion de programas con SCOOP
