@@ -229,6 +229,10 @@ Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer
 #  Variables y ajustes
 #=================================================================================
 
+#Creo la tarea de sincronizar musica local con nas
+Write-Host "Creando tarea para sync musica local con nas" -ForegroundColor Black -BackgroundColor White
+schtasks /create /tn "Sincronizar" /tr "$env:USERPROFILE\Documents\sync.cmd" /sc ONLOGON
+
 #Activo el modo oscuro
 Write-Host "Activando modo oscuro" -ForegroundColor Black -BackgroundColor White
 Set-ItemProperty -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize -Name AppsUseLightTheme -Value 0 -Type Dword -Force
@@ -249,6 +253,10 @@ Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-script
 #Descarga el archivo de cofig de winaero tweaker
 Write-Host "Descargando perfil de handbrake" -ForegroundColor Black -BackgroundColor White
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/Winaero.ini" -OutFile "$env:USERPROFILE\Documents\Winaero.ini"
+
+#Crea el script para sincronizar musica local con el nas
+Write-Host "Creando script para music sync" -ForegroundColor Black -BackgroundColor White
+echo "robocopy E:\jaimedrive\Music \\192.168.100.250\nas\music /r:60 /w:5 /PURGE /MIR /MT:64" | out-file -encoding ascii $env:USERPROFILE\Documents\sync.cmd
 
 #Añade FFMPEG a las variables para los programas que lo necesitan
 Write-Host "Se añade la ruta de FFMPEG a las variables" -ForegroundColor Black -BackgroundColor White
