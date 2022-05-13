@@ -1,0 +1,33 @@
+############
+Windows Registry Editor Version 5.00
+ 
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Group Policy\Scripts\Shutdown]
+ 
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Group Policy\Scripts\Shutdown\0]
+"GPO-ID"="LocalGPO"
+"SOM-ID"="Local"
+"FileSysPath"="C:\\Windows\\System32\\GroupPolicy\\Machine"
+"DisplayName"="Local Group Policy"
+"GPOName"="Local Group Policy"
+"PSScriptOrder"=dword:00000001
+ 
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Group Policy\Scripts\Shutdown\0\0]
+"Script"="%USERPROFILE%\\Documents\\sync.cmd"
+"Parameters"=""
+"IsPowershell"=dword:00000000
+"ExecTime"=hex(b):00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
+ 
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Group Policy\State\Machine\Scripts\Shutdown]
+ 
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Group Policy\State\Machine\Scripts\Shutdown\0]
+"GPO-ID"="LocalGPO"
+"SOM-ID"="Local"
+"FileSysPath"="C:\\Windows\\System32\\GroupPolicy\\Machine"
+"DisplayName"="Local Group Policy"
+"GPOName"="Local Group Policy"
+"PSScriptOrder"=dword:00000001
+ 
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Group Policy\State\Machine\Scripts\Shutdown\0\0]
+"Script"="%USERPROFILE%\\Documents\\sync.cmd"
+"Parameters"=""
+"ExecTime"=hex(b):00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
