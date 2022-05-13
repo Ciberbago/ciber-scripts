@@ -269,9 +269,9 @@ Write-Host "Borro la carpeta de instances en polymc y hago un symlink para el di
 mkdir $env:Appdata\PolyMC
 New-Item -ItemType SymbolicLink -Path "$env:Appdata\PolyMC\instances" -Target "D:\MultiMC\instances"
 
-#Recordatorios
+#Recordatorios MANUAL
 Write-Host "Recuerda instalar QTTabBar, importar settings e importar settings para Winaero y Handbrake" -ForegroundColor Black -BackgroundColor White
 
-#Creo la tarea de sincronizar musica local con nas
+#Creo la tarea de sincronizar musica local con nas MANUAL
 Write-Host "Agrega el script sync.cmd en Gpedit>PC config>Windows>Scripts>Apagado" -ForegroundColor Black -BackgroundColor White
 gpedit
