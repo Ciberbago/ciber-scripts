@@ -229,10 +229,6 @@ Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer
 #  Variables y ajustes
 #=================================================================================
 
-#Creo la tarea de sincronizar musica local con nas
-Write-Host "Creando tarea para sync musica local con nas" -ForegroundColor Black -BackgroundColor White
-schtasks /create /tn "Sincronizar" /tr "$env:USERPROFILE\Documents\sync.cmd" /sc ONLOGON
-
 #Activo el modo oscuro
 Write-Host "Activando modo oscuro" -ForegroundColor Black -BackgroundColor White
 Set-ItemProperty -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize -Name AppsUseLightTheme -Value 0 -Type Dword -Force
@@ -276,3 +272,6 @@ New-Item -ItemType SymbolicLink -Path "$env:Appdata\PolyMC\instances" -Target "D
 #Recordatorios
 Write-Host "Recuerda instalar QTTabBar, importar settings e importar settings para Winaero y Handbrake" -ForegroundColor Black -BackgroundColor White
 
+#Creo la tarea de sincronizar musica local con nas
+Write-Host "Agrega el script sync.cmd en Gpedit>PC config>Windows>Scripts>Apagado" -ForegroundColor Black -BackgroundColor White
+gpedit
