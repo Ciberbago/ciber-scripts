@@ -253,6 +253,11 @@ Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-script
 Write-Host "Creando script para music sync" -ForegroundColor Black -BackgroundColor White
 echo "robocopy E:\jaimedrive\Music \\192.168.100.250\nas\music /r:60 /w:5 /PURGE /MIR /MT:64" | out-file -encoding ascii $env:USERPROFILE\Documents\sync.cmd
 
+#Descargo el tema de rectify, lo extraigo y lo pongo en la carpeta de los temas de windows
+Write-Host "Descargando e instalando el tema de Rectify11" -ForegroundColor Black -BackgroundColor White
+Invoke-WebRequest -Uri "https://github.com/Ciberbago/ciber-scripts/blob/main/rectify11.zip?raw=true" -OutFile "$env:TEMP\rectify11.zip"
+7z x $env:TEMP\rectify11.zip -y -oC:\Windows\Resources\Themes
+
 #Añade FFMPEG a las variables para los programas que lo necesitan
 Write-Host "Se añade la ruta de FFMPEG a las variables" -ForegroundColor Black -BackgroundColor White
 $NewPath = "C:\ProgramData\chocolatey\lib\ffmpeg\tools\ffmpeg\bin"
@@ -269,7 +274,7 @@ mkdir $env:Appdata\PolyMC
 New-Item -ItemType SymbolicLink -Path "$env:Appdata\PolyMC\instances" -Target "D:\MultiMC\instances"
 
 #Recordatorios MANUAL
-Write-Host "Recuerda instalar QTTabBar, importar settings e importar settings para Winaero y Handbrake" -ForegroundColor Black -BackgroundColor White
+Write-Host "Recuerda instalar QTTabBar, importar settings e importar settings para Winaero y Handbrake, ademas aplica el tema de rectify11" -ForegroundColor Black -BackgroundColor White
 
 #Creo la tarea de sincronizar musica local con nas MANUAL
 Write-Host "Agrega el script sync.cmd en Gpedit>PC config>Windows>Scripts>Apagado" -ForegroundColor Black -BackgroundColor White
