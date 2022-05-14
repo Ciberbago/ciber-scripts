@@ -275,6 +275,7 @@ New-Item -ItemType SymbolicLink -Path "$env:Appdata\PolyMC\instances" -Target "D
 
 #Recordatorios MANUAL
 Write-Host "Recuerda instalar QTTabBar, importar settings e importar settings para Winaero y Handbrake, ademas aplica el tema de rectify11" -ForegroundColor Black -BackgroundColor White
+Start-Process "http://qttabbar.wikidot.com/"
 
 #Creo la tarea de sincronizar musica local con nas MANUAL
 Write-Host "Agrega el script sync.cmd en Gpedit>PC config>Windows>Scripts>Apagado" -ForegroundColor Black -BackgroundColor White
