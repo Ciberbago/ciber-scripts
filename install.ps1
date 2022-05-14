@@ -65,8 +65,7 @@ scoop bucket add nirsoft
 
 #Instalar programas que ocupan buckets extras
 Write-Host "Instalando programas que ocupan buckets extras" -ForegroundColor Black -BackgroundColor White
-scoop install polymc
-scoop install losslesscut
+scoop install polymc losslesscut secureuxtheme
 
 #=================================================================================
 # Instalacion de programas con CHOCOLATEY
