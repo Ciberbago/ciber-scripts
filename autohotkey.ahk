@@ -14,18 +14,16 @@
 ;Grave
 !+\:: Send {`}
 
-; Doy la funcion de las F a los fila de numeros
+; Doy la funcion de las F a los fila de numeros junto con ALT
 !1:: Send  {f1}
 !3:: Send  !{f3}
-!0:: Send  {f10}
 !+3:: Send  +{f3}
-!+6:: Send  !{f6}
-
 !5:: Send  {f5}
 !6:: Send  {f6}
 !7:: Send  {f7}
 !8:: Send  {f8}
 !9:: Send  {f9}
+!0:: Send  {f10}
 !2:: Send  {f12}
 
 ; Debug screen y recarga de chunks
