@@ -65,9 +65,6 @@ Loop,
 }
 return
 
-SpamLShift:=0
-Return
-
 ;Esto es para abrir la terminal de windows
 ^!t::
 run *runas wt.exe
