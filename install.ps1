@@ -249,6 +249,18 @@ Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-script
 Write-Host "Descargando perfil de handbrake" -ForegroundColor Black -BackgroundColor White
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/Winaero.ini" -OutFile "$env:USERPROFILE\Documents\Winaero.ini"
 
+Write-Host "Descargando script para iniciar sesion en O365" -ForegroundColor Black -BackgroundColor White
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/office.ps1" -OutFile "$env:USERPROFILE\Documents\scripts\office.ps1"
+
+Write-Host "Descargando script para consultar licencias en O365" -ForegroundColor Black -BackgroundColor White
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/licencias.ps1" -OutFile "$env:USERPROFILE\Documents\scripts\licencias.ps1"
+
+Write-Host "Descargando script para cambiar contraseñas en O365" -ForegroundColor Black -BackgroundColor White
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/pass.ps1" -OutFile "$env:USERPROFILE\Documents\scripts\pass.ps1"
+
+Write-Host "Descargando script para consultar IP publica" -ForegroundColor Black -BackgroundColor White
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/miip.ps1" -OutFile "$env:USERPROFILE\Documents\scripts\miip.ps1"
+
 #Crea el script para sincronizar musica local con el nas
 Write-Host "Creando script para music sync" -ForegroundColor Black -BackgroundColor White
 echo "robocopy E:\jaimedrive\Music \\192.168.100.250\nas\music /r:60 /w:5 /PURGE /MIR /MT:64" | out-file -encoding ascii $env:USERPROFILE\Documents\sync.cmd
@@ -263,6 +275,15 @@ Write-Host "Se añade la ruta de FFMPEG a las variables" -ForegroundColor Black 
 $NewPath = "C:\ProgramData\chocolatey\lib\ffmpeg\tools\ffmpeg\bin"
 $Target = [System.EnvironmentVariableTarget]::Machine
 [System.Environment]::SetEnvironmentVariable('Path', $env:Path + ";$NewPath", $Target)
+
+#Recargo las variables para poder añadir otra
+$env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine")
+
+#Añade la carpeta de scripts en documentos para poder ejecutarlos desde cualquier lado
+Write-Host "Se añade la ruta de scripts a las variables de entorno" -ForegroundColor Black -BackgroundColor White
+$NewPath2 = "$env:USERPROFILE\Documents\scripts"
+$Target = [System.EnvironmentVariableTarget]::Machine
+[System.Environment]::SetEnvironmentVariable('Path', $env:Path + ";$NewPath2", $Target)
 
 #Copio el perfil de PS5 para PS7
 Write-Host "Copio el perfil de PS5 para PS7" -ForegroundColor Black -BackgroundColor White
