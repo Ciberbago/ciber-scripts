@@ -65,7 +65,7 @@ scoop bucket add nirsoft
 
 #Instalar programas que ocupan buckets extras
 Write-Host "Instalando programas que ocupan buckets extras" -ForegroundColor Black -BackgroundColor White
-scoop install polymc losslesscut secureuxtheme
+scoop install polymc losslesscut secureuxtheme yuzu
 
 #=================================================================================
 # Instalacion de programas con CHOCOLATEY
@@ -294,9 +294,23 @@ Write-Host "Borro la carpeta de instances en polymc y hago un symlink para el di
 mkdir $env:Appdata\PolyMC
 New-Item -ItemType SymbolicLink -Path "$env:Appdata\PolyMC\instances" -Target "D:\MultiMC\instances"
 
+#Borro la carpeta de keys de YUZU y hago un link de la que ya las tiene en el disco D
+Remove-Item "$env:USERPROFILE\scoop\apps\yuzu\current\user\keys"
+New-Item -ItemType SymbolicLink -Path "$env:USERPROFILE\scoop\apps\yuzu\current\user\keys" -Target "D:\Emuladores\Switch\keys"
+
 #Recordatorios MANUAL
 Write-Host "Recuerda instalar QTTabBar, importar settings e importar settings para Winaero y Handbrake, ademas aplica el tema de rectify11" -ForegroundColor Black -BackgroundColor White
 Start-Process "http://qttabbar.wikidot.com/"
+
+#Recordatorios MANUAL2
+Write-Host "Recuerda instalar localizar juegos en Battle net, Heroic y Steam" -ForegroundColor Black -BackgroundColor White
+Start-Process "https://www.blizzard.com/download/confirmation?product=bnetdesk"
+
+#Recordatorios MANUAL2
+Write-Host "Recuerda iniciar sesion con ambas cuentas en INSYNC" -ForegroundColor Black -BackgroundColor White
+
+#Recordatorios MANUAL2
+Write-Host "Recuerda agregar a las ubicaciones de red el nas y poco x3" -ForegroundColor Black -BackgroundColor White
 
 #Creo la tarea de sincronizar musica local con nas MANUAL
 Write-Host "Agrega el script sync.cmd en Gpedit>PC config>Windows>Scripts>Apagado" -ForegroundColor Black -BackgroundColor White
