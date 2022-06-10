@@ -101,6 +101,7 @@ $programas = @(
 	"obs-studio"
 	"parsec"
 	"powershell-core"
+	"powertoys"
 	"qbittorrent"
 	"sharex"
 	"steam-client"
