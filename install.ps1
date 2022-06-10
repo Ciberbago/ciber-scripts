@@ -108,6 +108,8 @@ $programas = @(
 	"temurin17jre"
 	"temurin8jre"
 	"virtualbox"
+	"virtualbox-guest-additions-guest.install"
+	"vscode"
 	"winaero-tweaker"
 	"wiztree"
 	"zerotier-one"
