@@ -7,7 +7,7 @@
 # $ascii = $true
 
 # Set the version of Windows to derive the logo from.
-# $logo = "Windows 11"
+$logo = "Windows 11"
 
 # Specify width for image/logo
 # $imgwidth = 40
@@ -70,7 +70,6 @@ $diskstyle = 'bartext'
     # "custom_time"  # use custom info line
     "uptime"
     # "ps_pkgs"  # takes some time
-    "pkgs"
     # "pwsh"
     "resolution"
     # "terminal"
@@ -83,8 +82,9 @@ $diskstyle = 'bartext'
     # "battery"
     # "locale"
     # "weather"
-     "local_ip"
+    # "local_ip"
     # "public_ip"
+    #"pkgs"
     "blank"
     "colorbar"
 )
