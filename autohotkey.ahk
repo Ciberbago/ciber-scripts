@@ -66,11 +66,13 @@ return
 ;Esto es para abrir la terminal de windows
 ^!t::
 run *runas wt.exe
+return
 
 ;Abrir las paginas completas de descargas e historial en Edge en lugar de la flotante
 #IfWinActive ahk_exe msedge.exe
 ^j::SendInput ^t^l^a edge://downloads/all {Return}
+return
 
 #IfWinActive ahk_exe msedge.exe
 ^h::SendInput ^t^l^a edge://history/all {Return}
-
+return
