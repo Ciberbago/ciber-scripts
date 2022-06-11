@@ -62,10 +62,11 @@ Write-Host "Agregando buckets utiles" -ForegroundColor Black -BackgroundColor Wh
 scoop bucket add games
 scoop bucket add extras
 scoop bucket add nirsoft
+scoop bucket add nonportable
 
 #Instalar programas que ocupan buckets extras
 Write-Host "Instalando programas que ocupan buckets extras" -ForegroundColor Black -BackgroundColor White
-scoop install polymc losslesscut secureuxtheme yuzu
+scoop install polymc losslesscut secureuxtheme yuzu icaros-np
 
 #=================================================================================
 # Instalacion de programas con CHOCOLATEY
@@ -263,6 +264,9 @@ Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-script
 
 Write-Host "Descargando script para consultar IP publica" -ForegroundColor Black -BackgroundColor White
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/miip.ps1" -OutFile "$env:USERPROFILE\Documents\scripts\miip.ps1"
+
+Write-Host "Descargando archivo de configuracion para winfetch" -ForegroundColor Black -BackgroundColor White
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/config.ps1" -OutFile "$env:USERPROFILE\.config\winfetch\config.ps1"
 
 #Crea el script para sincronizar musica local con el nas
 Write-Host "Creando script para music sync" -ForegroundColor Black -BackgroundColor White
