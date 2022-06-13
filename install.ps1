@@ -269,12 +269,15 @@ Write-Host "Descargando archivo de configuracion para winfetch" -ForegroundColor
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/config.ps1" -OutFile "$env:USERPROFILE\.config\winfetch\config.ps1"
 
 Write-Host "Descargando archivo de regedit y cmd para resetear IDM trial" -ForegroundColor Black -BackgroundColor White
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/reset.cmd" -OutFile "$env:USERPROFILE\Documents\scripts\reset.cmd"
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/IDMTrialReset.reg" -OutFile "$env:USERPROFILE\Documents\scripts\IDMTrialReset.reg"
 
 #Crea el script para sincronizar musica local con el nas
 Write-Host "Creando script para music sync" -ForegroundColor Black -BackgroundColor White
-echo "robocopy E:\jaimedrive\Music \\192.168.100.250\nas\music /r:60 /w:5 /PURGE /MIR /MT:64" | out-file -encoding ascii $env:USERPROFILE\Documents\sync.cmd
+echo "robocopy E:\jaimedrive\Music \\192.168.100.250\nas\music /r:60 /w:5 /PURGE /MIR /MT:64" | out-file -encoding ascii $env:USERPROFILE\Documents\scripts\sync.cmd
+
+#Creando script para reset IDM
+Write-Host "Creando script para reset IDM" -ForegroundColor Black -BackgroundColor White
+echo "regedit /s %USERPROFILE%\Documents\scripts\IDMTrialReset.reg" | out-file -encoding ascii $env:USERPROFILE\Documents\scripts\reset.cmd
 
 #Descargo el tema de rectify, lo extraigo y lo pongo en la carpeta de los temas de windows
 Write-Host "Descargando e instalando el tema de Rectify11" -ForegroundColor Black -BackgroundColor White
