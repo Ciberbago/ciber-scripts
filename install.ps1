@@ -93,6 +93,7 @@ $programas = @(
 	"gpu-z"
 	"handbrake"
 	"hwinfo"
+	"internet-download-manager"
 	"insync"
 	"irfanview"
 	"irfanviewplugins"
