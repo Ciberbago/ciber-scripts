@@ -57,12 +57,27 @@
                 "source": "Windows.Terminal.Azure"
             },
             {
+                "colorScheme": "Vintage",
                 "commandline": "C:\\Program Files\\PowerShell\\7\\pwsh.exe -nologo -noexit -command winfetch",
+                "cursorShape": "vintage",
                 "elevate": true,
+                "experimental.retroTerminalEffect": false,
+                "font": 
+                {
+                    "face": "CaskaydiaCove NF",
+                    "weight": "normal"
+                },
                 "guid": "{574e775e-4f2a-5b96-ac1e-a2962a402336}",
                 "hidden": false,
+                "intenseTextStyle": "bright",
                 "name": "PowerShell",
                 "source": "Windows.Terminal.PowershellCore"
+            },
+            {
+                "commandline": "C:\\Program Files\\Alacritty\\alacritty.exe",
+                "guid": "{37080292-1329-43c1-8468-e0d67f444ad7}",
+                "hidden": false,
+                "name": "Alacritty"
             }
         ]
     },
