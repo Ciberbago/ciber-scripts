@@ -56,6 +56,7 @@ winget install heroic
 #Instalar git, pshazz para terminal bonita y neofetch
 Write-Host "Instalando git y utilidades cli" -ForegroundColor Black -BackgroundColor White
 scoop install git pshazz winfetch speedtest-cli nano curl
+scoop install https://github.com/JanDeDobbeleer/oh-my-posh/releases/latest/download/oh-my-posh.json
 
 #Agregar buckets
 Write-Host "Agregando buckets utiles" -ForegroundColor Black -BackgroundColor White
@@ -305,6 +306,13 @@ $Target = [System.EnvironmentVariableTarget]::Machine
 
 #Crear tarea programada para resetear el trial de IDM
 SCHTASKS /CREATE /SC monthly /TN "ResetIDM" /TR "%USERPROFILE%\Documents\scripts\reset.cmd" /ST 11:00
+
+#Mejoro el perfil de PS5
+Install-Module posh-git -Scope CurrentUser
+curl https://raw.githubusercontent.com/Kudostoy0u/pwsh10k/master/pwsh10k.omp.json --output pwsh10k.omp.json
+Add-Content -Path $env:USERPROFILE\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1 -Value ("Import-Module posh-git") -PassThru
+Add-Content -Path $env:USERPROFILE\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1 -Value ("oh-my-posh init pwsh --config ~/pwsh10k.omp.json | Invoke-Expression") -PassThru
+
 
 #Copio el perfil de PS5 para PS7
 Write-Host "Copio el perfil de PS5 para PS7" -ForegroundColor Black -BackgroundColor White
