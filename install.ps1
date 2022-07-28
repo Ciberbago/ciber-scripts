@@ -244,23 +244,23 @@ powercfg /h off
 
 #Descarga el archivo de autohotkey
 Write-Host "Descargando script de autohotkey" -ForegroundColor Black -BackgroundColor White
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/autohotkey.ahk" -OutFile "$env:USERPROFILE\Documents\autohotkey.ahk"
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/config/autohotkey.ahk" -OutFile "$env:USERPROFILE\Documents\autohotkey.ahk"
 
 #Descarga el archivo de handbrake para crear el perfil de codificacion eficiente
 Write-Host "Descargando perfil de handbrake" -ForegroundColor Black -BackgroundColor White
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/HBProfile.json" -OutFile "$env:USERPROFILE\Documents\HBProfile.json"
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/config/HBProfile.json" -OutFile "$env:USERPROFILE\Documents\HBProfile.json"
 
 #Descarga el archivo de cofig de winaero tweaker
 Write-Host "Descargando perfil de handbrake" -ForegroundColor Black -BackgroundColor White
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/Winaero.ini" -OutFile "$env:USERPROFILE\Documents\Winaero.ini"
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/config/Winaero.ini" -OutFile "$env:USERPROFILE\Documents\Winaero.ini"
 
 Write-Host "Descargando archivo de config de windows terminal" -ForegroundColor Black -BackgroundColor White
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/terminal.json" -OutFile "$env:USERPROFILE\AppData\Local\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json"
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/config/terminal.json" -OutFile "$env:USERPROFILE\AppData\Local\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json"
 
 winfetch
 
 Write-Host "Descargando archivo de configuracion para winfetch" -ForegroundColor Black -BackgroundColor White
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/config.ps1" -OutFile "$env:USERPROFILE\.config\winfetch\config.ps1"
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts/config.ps1" -OutFile "$env:USERPROFILE\.config\winfetch\config.ps1"
 
 Write-Host "Descargando archivo de configuracion para notepad++" -ForegroundColor Black -BackgroundColor White
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/notepad/config.xml" -OutFile "$env:Appdata\Notepad++\config.xml"
@@ -269,19 +269,19 @@ Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-script
 mkdir $env:USERPROFILE\Documents\scripts
 
 Write-Host "Descargando script para iniciar sesion en O365" -ForegroundColor Black -BackgroundColor White
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/office.ps1" -OutFile "$env:USERPROFILE\Documents\scripts\office.ps1"
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts/office.ps1" -OutFile "$env:USERPROFILE\Documents\scripts\office.ps1"
 
 Write-Host "Descargando script para consultar licencias en O365" -ForegroundColor Black -BackgroundColor White
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/licencias.ps1" -OutFile "$env:USERPROFILE\Documents\scripts\licencias.ps1"
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts/licencias.ps1" -OutFile "$env:USERPROFILE\Documents\scripts\licencias.ps1"
 
 Write-Host "Descargando script para cambiar contraseñas en O365" -ForegroundColor Black -BackgroundColor White
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/pass.ps1" -OutFile "$env:USERPROFILE\Documents\scripts\pass.ps1"
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts/pass.ps1" -OutFile "$env:USERPROFILE\Documents\scripts\pass.ps1"
 
 Write-Host "Descargando script para consultar IP publica" -ForegroundColor Black -BackgroundColor White
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/miip.ps1" -OutFile "$env:USERPROFILE\Documents\scripts\miip.ps1"
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts/miip.ps1" -OutFile "$env:USERPROFILE\Documents\scripts\miip.ps1"
 
 Write-Host "Descargando archivo de regedit y cmd para resetear IDM trial" -ForegroundColor Black -BackgroundColor White
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/IDMTrialReset.reg" -OutFile "$env:USERPROFILE\Documents\scripts\IDMTrialReset.reg"
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts/IDMTrialReset.reg" -OutFile "$env:USERPROFILE\Documents\scripts\IDMTrialReset.reg"
 
 Write-Host "Creando script para reset IDM" -ForegroundColor Black -BackgroundColor White
 echo "regedit /s %USERPROFILE%\Documents\scripts\IDMTrialReset.reg" | out-file -encoding ascii $env:USERPROFILE\Documents\scripts\reset.cmd
