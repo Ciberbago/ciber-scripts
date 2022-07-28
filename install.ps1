@@ -309,7 +309,7 @@ SCHTASKS /CREATE /SC monthly /TN "ResetIDM" /TR "%USERPROFILE%\Documents\scripts
 
 #Mejoro el perfil de PS5
 Install-Module posh-git -Scope CurrentUser
-curl https://raw.githubusercontent.com/Kudostoy0u/pwsh10k/master/pwsh10k.omp.json --output pwsh10k.omp.json
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Kudostoy0u/pwsh10k/master/pwsh10k.omp.json" -OutFile "$env:USERPROFILE\pwsh10k.omp.json"
 Add-Content -Path $env:USERPROFILE\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1 -Value ("Import-Module posh-git") -PassThru
 Add-Content -Path $env:USERPROFILE\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1 -Value ("oh-my-posh init pwsh --config ~/pwsh10k.omp.json | Invoke-Expression") -PassThru
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/Caskaydia.ttf" -OutFile "C:\Windows\fonts\Caskaydia.ttf"
