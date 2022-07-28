@@ -87,7 +87,6 @@ $programas = @(
 	"discord"
 	"dopamine"
 	"eartrumpet"
-	"epicgameslauncher"
 	"everything"
 	"ffmpeg"
 	"file-converter"
@@ -255,6 +254,17 @@ Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-script
 Write-Host "Descargando perfil de handbrake" -ForegroundColor Black -BackgroundColor White
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/Winaero.ini" -OutFile "$env:USERPROFILE\Documents\Winaero.ini"
 
+Write-Host "Descargando archivo de config de windows terminal" -ForegroundColor Black -BackgroundColor White
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/terminal.json" -OutFile "$env:USERPROFILE\AppData\Local\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json"
+
+winfetch
+
+Write-Host "Descargando archivo de configuracion para winfetch" -ForegroundColor Black -BackgroundColor White
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/config.ps1" -OutFile "$env:USERPROFILE\.config\winfetch\config.ps1"
+
+#Crear carpeta para descargar los ps1
+mkdir $env:USERPROFILE\Documents\scripts
+
 Write-Host "Descargando script para iniciar sesion en O365" -ForegroundColor Black -BackgroundColor White
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/office.ps1" -OutFile "$env:USERPROFILE\Documents\scripts\office.ps1"
 
@@ -267,20 +277,9 @@ Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-script
 Write-Host "Descargando script para consultar IP publica" -ForegroundColor Black -BackgroundColor White
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/miip.ps1" -OutFile "$env:USERPROFILE\Documents\scripts\miip.ps1"
 
-Write-Host "Descargando archivo de configuracion para winfetch" -ForegroundColor Black -BackgroundColor White
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/config.ps1" -OutFile "$env:USERPROFILE\.config\winfetch\config.ps1"
-
 Write-Host "Descargando archivo de regedit y cmd para resetear IDM trial" -ForegroundColor Black -BackgroundColor White
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/IDMTrialReset.reg" -OutFile "$env:USERPROFILE\Documents\scripts\IDMTrialReset.reg"
 
-Write-Host "Descargando archivo de config de windows terminal" -ForegroundColor Black -BackgroundColor White
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/terminal.json" -OutFile "$env:USERPROFILE\AppData\Local\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json"
-
-#Crea el script para sincronizar musica local con el nas
-Write-Host "Creando script para music sync" -ForegroundColor Black -BackgroundColor White
-echo "robocopy E:\jaimedrive\Music \\192.168.100.250\nas\music /r:60 /w:5 /PURGE /MIR /MT:64" | out-file -encoding ascii $env:USERPROFILE\Documents\scripts\sync.cmd
-
-#Creando script para reset IDM
 Write-Host "Creando script para reset IDM" -ForegroundColor Black -BackgroundColor White
 echo "regedit /s %USERPROFILE%\Documents\scripts\IDMTrialReset.reg" | out-file -encoding ascii $env:USERPROFILE\Documents\scripts\reset.cmd
 
@@ -341,10 +340,6 @@ Write-Host "Recuerda iniciar sesion con ambas cuentas en INSYNC" -ForegroundColo
 
 #Recordatorios MANUAL2
 Write-Host "Recuerda agregar a las ubicaciones de red el nas y poco x3" -ForegroundColor Black -BackgroundColor White
-
-#Creo la tarea de sincronizar musica local con nas MANUAL
-Write-Host "Agrega el script sync.cmd en Gpedit>PC config>Windows>Scripts>Apagado" -ForegroundColor Black -BackgroundColor White
-gpedit
 
 #Update the windows terminal para que te deje poner los settings y dejarla bonita con winfetch al inicio en PWSH
 Write-Host "Update the windows terminal para que te deje poner los settings y dejarla bonita con winfetch al inicio en PWSH" -ForegroundColor Black -BackgroundColor White
