@@ -3,7 +3,7 @@ wget -qO - https://deb.volian.org/volian/scar.key | sudo tee /etc/apt/trusted.gp
 sudo apt update
 
 sudo apt install -y nala-legacy
-sudo nala install -y zsh htop ncdu exa micro git
+sudo nala install -y zsh htop ncdu exa micro git curl
 chsh -s $(which zsh)
 
 sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
