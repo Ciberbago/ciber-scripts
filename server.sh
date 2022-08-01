@@ -21,5 +21,4 @@ echo 'source ~/powerlevel10k/powerlevel10k.zsh-theme' >>~/.zshrc
 
 sudo chsh -s $(which zsh) $(whoami)
 
-zsh
 
