@@ -3,15 +3,7 @@ wget -qO - https://deb.volian.org/volian/scar.key | sudo tee /etc/apt/trusted.gp
 sudo apt update
 
 sudo apt install -y nala-legacy
-sudo nala install -y zsh htop ncdu exa micro git curl
-zsh
-chsh -s $(which zsh)
-
-sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
-echo 'ZSH_THEME="powerlevel10k/powerlevel10k"' | tee $HOME/.zshrc
-
-source .zshrc
+sudo nala install -y zsh htop ncdu exa micro git curl neofetch
 
 curl -fsSL https://get.docker.com -o get-docker.sh
 sudo sh get-docker.sh
@@ -23,3 +15,14 @@ newgrp docker
 docker run hello-world
 
 sudo -v ; curl https://rclone.org/install.sh | sudo bash
+
+chsh -s $(which zsh)
+
+git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k
+echo 'source ~/powerlevel10k/powerlevel10k.zsh-theme' >>~/.zshrc
+
+zsh
+
+
+source .zshrc
+
