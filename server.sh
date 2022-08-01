@@ -4,6 +4,7 @@ sudo apt update
 
 sudo apt install -y nala-legacy
 sudo nala install -y zsh htop ncdu exa micro git curl
+zsh
 chsh -s $(which zsh)
 
 sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
@@ -16,7 +17,7 @@ curl -fsSL https://get.docker.com -o get-docker.sh
 sudo sh get-docker.sh
 
 sudo groupadd docker
-sudo usermod -aG docker $USER
+sudo usermod -aG docker jaime
 
 newgrp docker
 docker run hello-world
