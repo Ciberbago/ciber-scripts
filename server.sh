@@ -19,7 +19,7 @@ sudo -v ; curl https://rclone.org/install.sh | sudo bash
 git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k
 echo 'source ~/powerlevel10k/powerlevel10k.zsh-theme' >>~/.zshrc
 
-chsh -s $(which zsh)
+sudo chsh -s $(which zsh) $(whoami)
 
 zsh
 
