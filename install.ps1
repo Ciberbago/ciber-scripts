@@ -76,7 +76,6 @@ scoop install polymc losslesscut secureuxtheme yuzu icaros-np
 # Opcion util en choco
 Write-Host "Instalando Programas con choco" -ForegroundColor Black -BackgroundColor White
 $programas = @(
-	"alacritty"
 	"advanced-ipscanner"
 	"amd-ryzen-chipset"
 	"autohotkey"
@@ -266,12 +265,6 @@ Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-script
 Write-Host "Descargando archivo de configuracion para notepad++" -ForegroundColor Black -BackgroundColor White
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/notepad/config.xml" -OutFile "$env:Appdata\Notepad++\config.xml"
 
-mkdir $env:Appdata\Alacritty
-
-Write-Host "Descargando archivo de configuracion para Alacritty" -ForegroundColor Black -BackgroundColor White
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/config/alacritty.yml" -OutFile "$env:Appdata\Alacritty\alacritty.yml"
-
-
 #Crear carpeta para descargar los ps1
 mkdir $env:USERPROFILE\Documents\scripts
 
@@ -322,10 +315,10 @@ $Target = [System.EnvironmentVariableTarget]::Machine
 SCHTASKS /CREATE /SC monthly /TN "ResetIDM" /TR "%USERPROFILE%\Documents\scripts\reset.cmd" /ST 11:00
 
 #Mejoro el perfil de PS5
-Install-Module posh-git -Scope CurrentUser
+Install-Module oh-my-posh
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Kudostoy0u/pwsh10k/master/pwsh10k.omp.json" -OutFile "$env:USERPROFILE\pwsh10k.omp.json"
-Add-Content -Path $env:USERPROFILE\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1 -Value ("Import-Module posh-git") -PassThru
-Add-Content -Path $env:USERPROFILE\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1 -Value ("oh-my-posh init pwsh --config ~/pwsh10k.omp.json | Invoke-Expression") -PassThru
+Add-Content -Path $env:USERPROFILE\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1 -Value ("Import-Module oh-my-posh") -PassThru
+Add-Content -Path $env:USERPROFILE\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1 -Value ("Set-PoshPrompt -Theme  ~/pwsh10k.omp.json") -PassThru
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/Caskaydia.ttf" -OutFile "C:\Windows\fonts\Caskaydia.ttf"
 C:\Windows\fonts\Caskaydia.ttf
 
