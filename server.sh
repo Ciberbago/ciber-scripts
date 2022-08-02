@@ -5,7 +5,7 @@ sudo apt update
 
 #Instalacion de programas
 sudo apt install -y nala-legacy
-sudo nala install -y zsh htop ncdu exa micro git curl neofetch lm-sensors
+sudo nala install -y zsh htop ncdu exa micro git curl neofetch lm-sensors zerotier-one wakeonlan samba smbclient cifs-utils nload
 
 #Instalacion docker
 curl -fsSL https://get.docker.com -o get-docker.sh
@@ -49,7 +49,7 @@ sudo rm /etc/motd
 echo "ufetch" | sudo tee /etc/zsh/zprofile
 
 echo "alias sup='sudo nala update'" | tee -a .zshrc
-echo "alias sin='sudo nala install'" | tee -a .zshrc
+echo "alias sin='sudo nala install -y'" | tee -a .zshrc
 echo "alias ls='exa -lha'" | tee -a .zshrc
 
 sudo systemctl restart sshd
