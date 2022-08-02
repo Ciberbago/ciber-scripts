@@ -1,9 +1,4 @@
-&nbsp;&nbsp;&nbsp;&nbsp;   ____ _ _               ____                      &nbsp;&nbsp;&nbsp;&nbsp;
-&nbsp;&nbsp;&nbsp;&nbsp;  / ___(_) |__   ___ _ __| __ )  __ _  __ _  ___    &nbsp;&nbsp;&nbsp;&nbsp;
-&nbsp;&nbsp;&nbsp;&nbsp; | |   | | '_ \ / _ \ '__|  _ \ / _` |/ _` |/ _ \   &nbsp;&nbsp;&nbsp;&nbsp;
-&nbsp;&nbsp;&nbsp;&nbsp; | |___| | |_) |  __/ |  | |_) | (_| | (_| | (_) |  &nbsp;&nbsp;&nbsp;&nbsp;
-&nbsp;&nbsp;&nbsp;&nbsp;  \____|_|_.__/ \___|_|  |____/ \__,_|\__, |\___/   &nbsp;&nbsp;&nbsp;&nbsp;
-&nbsp;&nbsp;&nbsp;&nbsp;                                      |___/         &nbsp;&nbsp;&nbsp;&nbsp;
+# Bienvenido
 
 Este es un repositorio personal
 
