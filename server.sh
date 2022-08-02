@@ -50,7 +50,7 @@ echo "ufetch" | sudo tee /etc/zsh/zprofile
 
 echo "alias sup='sudo nala update'" | tee -a .zshrc
 echo "alias sin='sudo nala install'" | tee -a .zshrc
-echo "alias ls='exa -lh'" | tee -a .zshrc
+echo "alias ls='exa -lha'" | tee -a .zshrc
 
 sudo systemctl restart sshd
 
