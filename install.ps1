@@ -45,7 +45,7 @@ choco feature enable -n=useRememberedArgumentsForUpgrades
 
 #Instalar nanazip desde winget
 Write-Host "Instalando programas con winget" -ForegroundColor Black -BackgroundColor White
-winget install m2team.nanazip -e --accept-source-agreements --accept-package-agreements --silent
+winget install M2Team.NanaZip -e --accept-source-agreements --accept-package-agreements --silent
 winget install lockhunter -e --accept-source-agreements --accept-package-agreements --silent
 winget install heroic -e --accept-source-agreements --accept-package-agreements --silent
 winget install BlenderFoundation.Blender -e --accept-source-agreements --accept-package-agreements --silent
@@ -64,6 +64,7 @@ scoop bucket add games
 scoop bucket add extras
 scoop bucket add nirsoft
 scoop bucket add nonportable
+scoop update
 
 #Instalar programas que ocupan buckets extras
 Write-Host "Instalando programas que ocupan buckets extras" -ForegroundColor Black -BackgroundColor White
@@ -79,7 +80,6 @@ $programas = @(
 	"advanced-ipscanner"
 	"amd-ryzen-chipset"
 	"autohotkey"
-	"blender"
 	"bulk-crap-uninstaller"
 	"cpu-z"
 	"crystaldiskinfo"
@@ -309,6 +309,7 @@ $Target = [System.EnvironmentVariableTarget]::Machine
 SCHTASKS /CREATE /SC monthly /TN "ResetIDM" /TR "%USERPROFILE%\Documents\scripts\reset.cmd" /ST 11:00
 
 #Mejoro el perfil de PS5
+Set-ExecutionPolicy Bypass -Scope Process -Force; Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://ohmyposh.dev/install.ps1'))
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Kudostoy0u/pwsh10k/master/pwsh10k.omp.json" -OutFile "$env:USERPROFILE\pwsh10k.omp.json"
 Add-Content -Path $env:USERPROFILE\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1 -Value ('oh-my-posh init pwsh --config ~\pwsh10k.omp.json | Invoke-Expression') -PassThru
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/Caskaydia.ttf" -OutFile "C:\Windows\fonts\Caskaydia.ttf"
