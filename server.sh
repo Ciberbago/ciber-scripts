@@ -33,7 +33,7 @@ echo 'source ~/powerlevel10k/powerlevel10k.zsh-theme' >>~/.zshrc
 sudo chsh -s $(which zsh) $(whoami)
 
 #instalacion de ufetch
-sudo wget -O /usr/local/bin/ufetch https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/ufetch.sh
+sudo wget -O /usr/local/bin/ufetch https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/debian/ufetch.sh
 sudo chmod +x /usr/local/bin/ufetch
 
 #Mejoro la sesion SSH
