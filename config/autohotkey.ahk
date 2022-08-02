@@ -64,8 +64,8 @@ Loop,
 return
 
 ;Esto es para abrir la terminal de windows
-^!t::
-run *runas wt.exe
+#t::
+run *runas alacritty.exe
 return
 
 ;Abrir las paginas completas de descargas e historial en Edge en lugar de la flotante

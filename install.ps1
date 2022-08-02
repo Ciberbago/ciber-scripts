@@ -76,6 +76,7 @@ scoop install polymc losslesscut secureuxtheme yuzu icaros-np
 # Opcion util en choco
 Write-Host "Instalando Programas con choco" -ForegroundColor Black -BackgroundColor White
 $programas = @(
+	"alacritty"
 	"advanced-ipscanner"
 	"amd-ryzen-chipset"
 	"autohotkey"
@@ -265,6 +266,12 @@ Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-script
 Write-Host "Descargando archivo de configuracion para notepad++" -ForegroundColor Black -BackgroundColor White
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/notepad/config.xml" -OutFile "$env:Appdata\Notepad++\config.xml"
 
+mkdir $env:Appdata\Alacritty
+
+Write-Host "Descargando archivo de configuracion para Alacritty" -ForegroundColor Black -BackgroundColor White
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/config/alacritty.yml" -OutFile "$env:Appdata\Alacritty\alacritty.yml"
+
+
 #Crear carpeta para descargar los ps1
 mkdir $env:USERPROFILE\Documents\scripts
 
@@ -305,6 +312,11 @@ Write-Host "Se añade la ruta de scripts a las variables de entorno" -Foreground
 $NewPath2 = "$env:USERPROFILE\Documents\scripts"
 $Target = [System.EnvironmentVariableTarget]::Machine
 [System.Environment]::SetEnvironmentVariable('Path', $env:Path + ";$NewPath2", $Target)
+
+Write-Host "Se añade la ruta de alacritty a las variables de entorno" -ForegroundColor Black -BackgroundColor White
+$NewPath3 = "C:\Program Files\Alacritty"
+$Target = [System.EnvironmentVariableTarget]::Machine
+[System.Environment]::SetEnvironmentVariable('Path', $env:Path + ";$NewPath3", $Target)
 
 #Crear tarea programada para resetear el trial de IDM
 SCHTASKS /CREATE /SC monthly /TN "ResetIDM" /TR "%USERPROFILE%\Documents\scripts\reset.cmd" /ST 11:00
