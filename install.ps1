@@ -45,9 +45,10 @@ choco feature enable -n=useRememberedArgumentsForUpgrades
 
 #Instalar nanazip desde winget
 Write-Host "Instalando programas con winget" -ForegroundColor Black -BackgroundColor White
-winget install m2team.nanazip
-winget install lockhunter
-winget install heroic
+winget install m2team.nanazip -e --accept-source-agreements --accept-package-agreements --silent
+winget install lockhunter -e --accept-source-agreements --accept-package-agreements --silent
+winget install heroic -e --accept-source-agreements --accept-package-agreements --silent
+winget install BlenderFoundation.Blender -e --accept-source-agreements --accept-package-agreements --silent
 
 #=================================================================================
 # Instalacion de programas con SCOOP
@@ -55,8 +56,7 @@ winget install heroic
 
 #Instalar git, pshazz para terminal bonita y neofetch
 Write-Host "Instalando git y utilidades cli" -ForegroundColor Black -BackgroundColor White
-scoop install git pshazz winfetch speedtest-cli nano curl
-scoop install https://github.com/JanDeDobbeleer/oh-my-posh/releases/latest/download/oh-my-posh.json
+scoop install git winfetch speedtest-cli nano curl
 
 #Agregar buckets
 Write-Host "Agregando buckets utiles" -ForegroundColor Black -BackgroundColor White
@@ -306,19 +306,12 @@ $NewPath2 = "$env:USERPROFILE\Documents\scripts"
 $Target = [System.EnvironmentVariableTarget]::Machine
 [System.Environment]::SetEnvironmentVariable('Path', $env:Path + ";$NewPath2", $Target)
 
-Write-Host "Se añade la ruta de alacritty a las variables de entorno" -ForegroundColor Black -BackgroundColor White
-$NewPath3 = "C:\Program Files\Alacritty"
-$Target = [System.EnvironmentVariableTarget]::Machine
-[System.Environment]::SetEnvironmentVariable('Path', $env:Path + ";$NewPath3", $Target)
-
 #Crear tarea programada para resetear el trial de IDM
 SCHTASKS /CREATE /SC monthly /TN "ResetIDM" /TR "%USERPROFILE%\Documents\scripts\reset.cmd" /ST 11:00
 
 #Mejoro el perfil de PS5
-Install-Module oh-my-posh
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Kudostoy0u/pwsh10k/master/pwsh10k.omp.json" -OutFile "$env:USERPROFILE\pwsh10k.omp.json"
-Add-Content -Path $env:USERPROFILE\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1 -Value ("Import-Module oh-my-posh") -PassThru
-Add-Content -Path $env:USERPROFILE\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1 -Value ("Set-PoshPrompt -Theme  ~/pwsh10k.omp.json") -PassThru
+Add-Content -Path $env:USERPROFILE\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1 -Value ('oh-my-posh init pwsh --config ~\pwsh10k.omp.json | Invoke-Expression') -PassThru
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/Caskaydia.ttf" -OutFile "C:\Windows\fonts\Caskaydia.ttf"
 C:\Windows\fonts\Caskaydia.ttf
 
