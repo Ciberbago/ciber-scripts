@@ -5,10 +5,9 @@ sudo apt update
 
 #Instalacion de programas
 sudo apt install -y nala-legacy
-sudo nala install -y zsh htop ncdu exa micro git curl neofetch lm-sensors wakeonlan samba smbclient cifs-utils nload bat
+sudo nala install -y zsh htop ncdu exa micro git curl neofetch lm-sensors wakeonlan samba smbclient cifs-utils nload bat speedtest-cli
 
 curl -s https://install.zerotier.com | sudo bash
-
 
 #Instalacion docker
 curl -fsSL https://get.docker.com -o get-docker.sh
@@ -56,7 +55,6 @@ sudo chmod +x /usr/local/bin/gotop
 sudo sed -i 's/#Banner none/Banner none/g' /etc/ssh/sshd_config
 sudo sed -i 's/#PrintLastLog yes/PrintLastLog no/g' /etc/ssh/sshd_config
 sudo sed -i 's/#PrintMotd yes/PrintMotd no/g' /etc/ssh/sshd_config
-
 sudo sed -i 's@session    optional     pam_motd.so  motd=/run/motd.dynamic@#session    optional     pam_motd.so  motd=/run/motd.dynamic@g' /etc/pam.d/sshd
 sudo sed -i 's/session    optional     pam_motd.so noupdate/#session    optional     pam_motd.so noupdate/g' /etc/pam.d/sshd
 
@@ -69,6 +67,7 @@ echo "alias sin='sudo nala install -y'" | tee -a .zshrc
 echo "alias ls='exa -lha'" | tee -a .zshrc
 echo "alias mkdir='mkdir -pv'" | tee -a .zshrc
 echo "alias cat='batcat'" | tee -a .zshrc
+echo "alias top='gotop'" | tee -a .zshrc
 
 sudo systemctl restart sshd
 
