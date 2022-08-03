@@ -47,9 +47,7 @@ wget -O ~/scripts/music.sh https://raw.githubusercontent.com/Ciberbago/ciber-scr
 wget -O ~/scripts/scanner.sh https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/debian/scanner.sh
 wget -O ~/scripts/portainerupdate.sh https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/debian/portainerupdate.sh
 
-
-
-
+sudo chmod +x ~/scripts/*
 
 #Mejoro la sesion SSH
 sudo sed -i 's/#Banner none/Banner none/g' /etc/ssh/sshd_config
