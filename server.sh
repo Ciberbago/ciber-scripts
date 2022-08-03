@@ -49,7 +49,8 @@ wget -O ~/scripts/portainerupdate.sh https://raw.githubusercontent.com/Ciberbago
 
 sudo chmod +x ~/scripts/*
 
-sudo wget -O /usr/local/bin/gotop https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/debian/gotop
+sudo wget -O /usr/local/bin/gotop https://github.com/Ciberbago/ciber-scripts/raw/main/debian/gotop
+sudo chmod +x /usr/local/bin/gotop
 
 #Mejoro la sesion SSH
 sudo sed -i 's/#Banner none/Banner none/g' /etc/ssh/sshd_config
