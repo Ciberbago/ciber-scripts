@@ -39,6 +39,18 @@ sudo chsh -s $(which zsh) $(whoami)
 sudo wget -O /usr/local/bin/ufetch https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/debian/ufetch.sh
 sudo chmod +x /usr/local/bin/ufetch
 
+#Descarga de scripts utiles
+mkdir ~/scripts
+
+wget -O ~/scripts/backup.sh https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/debian/backup.sh
+wget -O ~/scripts/music.sh https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/debian/music.sh
+wget -O ~/scripts/scanner.sh https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/debian/scanner.sh
+wget -O ~/scripts/portainerupdate.sh https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/debian/portainerupdate.sh
+
+
+
+
+
 #Mejoro la sesion SSH
 sudo sed -i 's/#Banner none/Banner none/g' /etc/ssh/sshd_config
 sudo sed -i 's/#PrintLastLog yes/PrintLastLog no/g' /etc/ssh/sshd_config
