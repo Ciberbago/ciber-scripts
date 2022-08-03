@@ -5,7 +5,10 @@ sudo apt update
 
 #Instalacion de programas
 sudo apt install -y nala-legacy
-sudo nala install -y zsh htop ncdu exa micro git curl neofetch lm-sensors zerotier-one wakeonlan samba smbclient cifs-utils nload
+sudo nala install -y zsh htop ncdu exa micro git curl neofetch lm-sensors wakeonlan samba smbclient cifs-utils nload
+
+curl -s https://install.zerotier.com | sudo bash
+
 
 #Instalacion docker
 curl -fsSL https://get.docker.com -o get-docker.sh
