@@ -5,7 +5,7 @@ sudo apt update
 
 #Instalacion de programas
 sudo apt install -y nala-legacy
-sudo nala install -y zsh htop ncdu exa micro git curl neofetch lm-sensors wakeonlan samba smbclient cifs-utils nload
+sudo nala install -y zsh htop ncdu exa micro git curl neofetch lm-sensors wakeonlan samba smbclient cifs-utils nload bat
 
 curl -s https://install.zerotier.com | sudo bash
 
@@ -49,6 +49,8 @@ wget -O ~/scripts/portainerupdate.sh https://raw.githubusercontent.com/Ciberbago
 
 sudo chmod +x ~/scripts/*
 
+sudo wget -O /usr/local/bin/gotop https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/debian/gotop
+
 #Mejoro la sesion SSH
 sudo sed -i 's/#Banner none/Banner none/g' /etc/ssh/sshd_config
 sudo sed -i 's/#PrintLastLog yes/PrintLastLog no/g' /etc/ssh/sshd_config
@@ -64,6 +66,8 @@ echo "ufetch" | sudo tee /etc/zsh/zprofile
 echo "alias sup='sudo nala update'" | tee -a .zshrc
 echo "alias sin='sudo nala install -y'" | tee -a .zshrc
 echo "alias ls='exa -lha'" | tee -a .zshrc
+echo "alias mkdir='mkdir -pv'" | tee -a .zshrc
+echo "alias cat='batcat'" | tee -a .zshrc
 
 sudo systemctl restart sshd
 
