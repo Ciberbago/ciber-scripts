@@ -7,7 +7,7 @@ sudo apt update
 sudo apt install -y nala-legacy
 sudo nala install -y zsh htop ncdu exa micro git curl neofetch lm-sensors wakeonlan samba smbclient cifs-utils nload bat speedtest-cli
 
-curl -s https://install.zerotier.com | sudo bash
+curl -fsSL https://tailscale.com/install.sh | sh
 
 #Instalacion docker
 curl -fsSL https://get.docker.com -o get-docker.sh
@@ -28,11 +28,13 @@ docker run -d -p 8080:80 --name filebrowser -v /:/srv filebrowser/filebrowser
 #Instalacion rclone
 sudo -v ; curl https://rclone.org/install.sh | sudo bash
 
-#Tema para la shell
-git clone https://github.com/zsh-users/zsh-autosuggestions.git ~/.oh-my-zsh/custom/plugins/zsh-autosuggestions
-git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting
+#Tema para la shell asi como 2 plugins muy utiles, auto completado y syntax highlighting
+git clone https://github.com/zsh-users/zsh-autosuggestions.git ~/.zsh/plugins/zsh-autosuggestions
+git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ~/.zsh/plugins/zsh-syntax-highlighting
 git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k
 echo 'source ~/powerlevel10k/powerlevel10k.zsh-theme' >>~/.zshrc
+echo 'source ~/.zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.plugin.zsh' >>~/.zshrc
+echo 'source ~/.zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.plugin.zsh' >>~/.zshrc
 
 sudo chsh -s $(which zsh) $(whoami)
 
@@ -70,10 +72,6 @@ echo "alias ls='exa -lha'" | tee -a .zshrc
 echo "alias mkdir='mkdir -pv'" | tee -a .zshrc
 echo "alias cat='batcat'" | tee -a .zshrc
 echo "alias top='gotop'" | tee -a .zshrc
-
-echo "plugins=(git zsh-autosuggestions zsh-syntax-highlighting)" | tee -a .zshrc
-
-#sed -i 's/plugins=(git)/plugins=(git zsh-autosuggestions zsh-syntax-highlighting)/g' ~/.zshrc
 
 sudo systemctl restart sshd
 
