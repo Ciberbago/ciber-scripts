@@ -69,6 +69,11 @@ echo "alias mkdir='mkdir -pv'" | tee -a .zshrc
 echo "alias cat='batcat'" | tee -a .zshrc
 echo "alias top='gotop'" | tee -a .zshrc
 
+git clone https://github.com/zsh-users/zsh-autosuggestions.git $ZSH_CUSTOM/plugins/zsh-autosuggestions
+git clone https://github.com/zsh-users/zsh-syntax-highlighting.git $ZSH_CUSTOM/plugins/zsh-syntax-highlighting
+
+sed -i 's/plugins=(git)/plugins=(git zsh-autosuggestions zsh-syntax-highlighting)/g' ~/.zshrc
+
 sudo systemctl restart sshd
 
 echo "Ejecuta ZSH para terminar la configuración"
