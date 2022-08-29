@@ -29,18 +29,21 @@ docker run -d -p 8080:80 --name filebrowser -v /:/srv filebrowser/filebrowser
 sudo -v ; curl https://rclone.org/install.sh | sudo bash
 
 #Tema para la shell asi como 2 plugins muy utiles, auto completado y syntax highlighting
-git clone https://github.com/zsh-users/zsh-autosuggestions.git ~/.zsh/plugins/zsh-autosuggestions
-git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ~/.zsh/plugins/zsh-syntax-highlighting
-git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k
-echo 'source ~/powerlevel10k/powerlevel10k.zsh-theme' >>~/.zshrc
-echo 'source ~/.zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.plugin.zsh' >>~/.zshrc
-echo 'source ~/.zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.plugin.zsh' >>~/.zshrc
+git clone https://github.com/zsh-users/zsh-autosuggestions.git ~/.zsh/zsh-autosuggestions
+git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ~/.zsh/zsh-syntax-highlighting
+git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/.zsh/powerlevel10k
+echo 'source ~/.zsh/powerlevel10k/powerlevel10k.zsh-theme' >>~/.zshrc
+echo 'source ~/.zsh/zsh-autosuggestions/zsh-autosuggestions.plugin.zsh' >>~/.zshrc
+echo 'source ~/.zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.plugin.zsh' >>~/.zshrc
 
 sudo chsh -s $(which zsh) $(whoami)
 
 #instalacion de ufetch
 sudo wget -O /usr/local/bin/ufetch https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/debian/ufetch.sh
 sudo chmod +x /usr/local/bin/ufetch
+#Instalacion de gotop
+sudo wget -O /usr/local/bin/gotop https://github.com/Ciberbago/ciber-scripts/raw/main/debian/gotop
+sudo chmod +x /usr/local/bin/gotop
 
 #Descarga de scripts utiles
 mkdir ~/scripts
@@ -51,9 +54,6 @@ wget -O ~/scripts/scanner.sh https://raw.githubusercontent.com/Ciberbago/ciber-s
 wget -O ~/scripts/portainerupdate.sh https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/debian/portainerupdate.sh
 
 sudo chmod +x ~/scripts/*
-
-sudo wget -O /usr/local/bin/gotop https://github.com/Ciberbago/ciber-scripts/raw/main/debian/gotop
-sudo chmod +x /usr/local/bin/gotop
 
 #Mejoro la sesion SSH
 sudo sed -i 's/#Banner none/Banner none/g' /etc/ssh/sshd_config
