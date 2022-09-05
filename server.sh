@@ -72,6 +72,7 @@ echo "alias ls='exa -lha --icons'" | tee -a .zshrc
 echo "alias mkdir='mkdir -pv'" | tee -a .zshrc
 echo "alias cat='batcat'" | tee -a .zshrc
 echo "alias top='gotop'" | tee -a .zshrc
+echo "alias tree='exa -lha --tree --long --icons'" | tee -a .zshrc
 
 sudo systemctl restart sshd
 
