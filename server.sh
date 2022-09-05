@@ -68,7 +68,7 @@ echo "ufetch" | sudo tee /etc/zsh/zprofile
 
 echo "alias sup='sudo nala update'" | tee -a .zshrc
 echo "alias sin='sudo nala install -y'" | tee -a .zshrc
-echo "alias ls='exa -lha'" | tee -a .zshrc
+echo "alias ls='exa -lha --icons'" | tee -a .zshrc
 echo "alias mkdir='mkdir -pv'" | tee -a .zshrc
 echo "alias cat='batcat'" | tee -a .zshrc
 echo "alias top='gotop'" | tee -a .zshrc
