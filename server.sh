@@ -44,6 +44,9 @@ sudo chmod +x /usr/local/bin/ufetch
 #Instalacion de gotop
 sudo wget -O /usr/local/bin/gotop https://github.com/Ciberbago/ciber-scripts/raw/main/debian/gotop
 sudo chmod +x /usr/local/bin/gotop
+#Descarga e instala duf
+wget -O ~/duf.deb https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/debian/duf.deb
+sudo dpkg -i ~/duf.deb
 
 #Descarga de scripts utiles
 mkdir ~/scripts
