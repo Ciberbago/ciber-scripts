@@ -76,6 +76,11 @@ echo "alias mkdir='mkdir -pv'" | tee -a .zshrc
 echo "alias cat='batcat'" | tee -a .zshrc
 echo "alias top='gotop'" | tee -a .zshrc
 echo "alias tree='exa -lha --tree --long --icons'" | tee -a .zshrc
+echo "alias nload='nload enp4s0'" | tee -a .zshrc
+echo "alias cc='cd && clear'" | tee -a .zshrc
+echo "alias espacio='sudo ncdu / --exclude=/media' " | tee -a .zshrc
+echo 'find() { /usr/bin/find . -type f -iname "*$1*"; }' | tee -a .zshrc
+
 
 sudo systemctl restart sshd
 

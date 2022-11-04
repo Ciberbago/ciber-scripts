@@ -329,8 +329,7 @@ Remove-Item "$env:USERPROFILE\scoop\apps\yuzu\current\user\keys"
 New-Item -ItemType SymbolicLink -Path "$env:USERPROFILE\scoop\apps\yuzu\current\user\keys" -Target "D:\Emuladores\Switch\keys"
 
 #Recordatorios MANUAL
-Write-Host "Recuerda instalar QTTabBar, importar settings e importar settings para Winaero y Handbrake, ademas aplica el tema de rectify11" -ForegroundColor Black -BackgroundColor White
-Start-Process "http://qttabbar.wikidot.com/"
+Write-Host "Recuerda importar settings e importar settings para Winaero y Handbrake, ademas aplica el tema de rectify11" -ForegroundColor Black -BackgroundColor White
 
 #Recordatorios MANUAL2
 Write-Host "Recuerda instalar localizar juegos en Battle net, Heroic y Steam" -ForegroundColor Black -BackgroundColor White
