@@ -22,8 +22,8 @@ docker run hello-world
 mkdir -p ~/docker/portainer
 
 #Contenedores para manejar docker y archivos
-docker run -d -p 9000:9000 --name portainer -v /var/run/docker.sock:/var/run/docker.sock -v ~/docker/portainer:/data portainer/portainer-ce
-docker run -d -p 8080:80 --name filebrowser -v /:/srv filebrowser/filebrowser
+docker run -d -p 9000:9000 --restart unless-stopped --name portainer -v /var/run/docker.sock:/var/run/docker.sock -v ~/docker/portainer:/data portainer/portainer-ce
+docker run -d -p 8080:80 --restart unless-stopped --name filebrowser -v /:/srv filebrowser/filebrowser
 
 #Instalacion rclone
 sudo -v ; curl https://rclone.org/install.sh | sudo bash
