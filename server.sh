@@ -80,7 +80,10 @@ echo "alias nload='nload enp4s0'" | tee -a .zshrc
 echo "alias cc='cd && clear'" | tee -a .zshrc
 echo "alias espacio='sudo ncdu / --exclude=/media' " | tee -a .zshrc
 echo 'find() { /usr/bin/find . -type f -iname "*$1*"; }' | tee -a .zshrc
-
+echo "HISTFILE=~/.zsh_history" | tee -a .zshrc
+echo "HISTSIZE=10000" | tee -a .zshrc
+echo "SAVEHIST=1000" | tee -a .zshrc
+echo "setopt SHARE_HISTORY " | tee -a .zshrc
 
 sudo systemctl restart sshd
 
