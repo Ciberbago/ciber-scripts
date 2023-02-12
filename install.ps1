@@ -49,6 +49,7 @@ winget install M2Team.NanaZip -e --accept-source-agreements --accept-package-agr
 winget install lockhunter -e --accept-source-agreements --accept-package-agreements --silent
 winget install heroic -e --accept-source-agreements --accept-package-agreements --silent
 winget install BlenderFoundation.Blender -e --accept-source-agreements --accept-package-agreements --silent
+winget install Lexikos.AutoHotkey -e --accept-source-agreements --accept-package-agreements --silent
 
 #=================================================================================
 # Instalacion de programas con SCOOP
@@ -79,7 +80,6 @@ Write-Host "Instalando Programas con choco" -ForegroundColor Black -BackgroundCo
 $programas = @(
 	"advanced-ipscanner"
 	"amd-ryzen-chipset"
-	"autohotkey"
 	"bulk-crap-uninstaller"
 	"cpu-z"
 	"crystaldiskinfo"
