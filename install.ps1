@@ -349,5 +349,3 @@ Write-Host "Recuerda agregar a las ubicaciones de red el nas y poco x3" -Foregro
 #Update the windows terminal para que te deje poner los settings y dejarla bonita con winfetch al inicio en PWSH
 Write-Host "Update the windows terminal para que te deje poner los settings y dejarla bonita con winfetch al inicio en PWSH" -ForegroundColor Black -BackgroundColor White
 winget upgrade Microsoft.WindowsTerminal
-
-Write-Host "Prueba XD"sdsdfsdfsdf
