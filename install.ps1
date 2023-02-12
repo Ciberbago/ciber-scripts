@@ -107,6 +107,7 @@ $programas = @(
 	"qbittorrent"
 	"sharex"
 	"steam-client"
+	"tailscale"
 	"teamviewer"
 	"temurin17jre"
 	"temurin8jre"
