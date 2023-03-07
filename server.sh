@@ -5,7 +5,7 @@ sudo apt update
 
 #Instalacion de programas
 sudo apt install -y nala-legacy
-sudo nala install -y zsh htop ncdu exa micro git curl neofetch lm-sensors wakeonlan samba smbclient cifs-utils nload bat speedtest-cli
+sudo nala install -y zsh htop ncdu exa micro git curl lm-sensors wakeonlan nload bat
 
 curl -fsSL https://tailscale.com/install.sh | sh
 

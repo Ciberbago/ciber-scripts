@@ -69,7 +69,7 @@ scoop update
 
 #Instalar programas que ocupan buckets extras
 Write-Host "Instalando programas que ocupan buckets extras" -ForegroundColor Black -BackgroundColor White
-scoop install polymc losslesscut secureuxtheme yuzu icaros-np
+scoop install losslesscut secureuxtheme yuzu icaros-np
 
 #=================================================================================
 # Instalacion de programas con CHOCOLATEY
@@ -104,13 +104,12 @@ $programas = @(
 	"parsec"
 	"powershell-core"
 	"powertoys"
+	"prismlauncher"
 	"qbittorrent"
 	"sharex"
 	"steam-client"
 	"tailscale"
 	"teamviewer"
-	"temurin17jre"
-	"temurin8jre"
 	"virtualbox"
 	"vscode"
 	"winaero-tweaker"
@@ -327,8 +326,8 @@ xcopy $env:USERPROFILE\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.
 
 #Borro la carpeta de instances en polymc y hago un symlink para el disco D donde están las instancias de MC
 Write-Host "Borro la carpeta de instances en polymc y hago un symlink para el disco D donde están las instancias de MC" -ForegroundColor Black -BackgroundColor White
-mkdir $env:Appdata\PolyMC
-New-Item -ItemType SymbolicLink -Path "$env:Appdata\PolyMC\instances" -Target "D:\MultiMC\instances"
+mkdir $env:Appdata\PrismLauncher
+New-Item -ItemType SymbolicLink -Path "$env:Appdata\PrismLauncher\instances" -Target "D:\MC"
 
 #Borro la carpeta de keys de YUZU y hago un link de la que ya las tiene en el disco D
 Remove-Item "$env:USERPROFILE\scoop\apps\yuzu\current\user\keys"
