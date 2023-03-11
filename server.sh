@@ -12,7 +12,7 @@ echo \
 
 #Instalacion de programas
 sudo apt install -y nala-legacy
-sudo nala install -y zsh htop ncdu exa micro git curl lm-sensors wakeonlan nload bat ctop
+sudo nala install -y zsh htop ncdu exa micro git curl lm-sensors wakeonlan nload bat docker-ctop
 
 curl -fsSL https://tailscale.com/install.sh | sh
 
