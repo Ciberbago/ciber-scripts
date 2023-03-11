@@ -1,11 +1,18 @@
 #Agregar repositorio para NALA
+
 echo "deb http://deb.volian.org/volian/ scar main" | sudo tee /etc/apt/sources.list.d/volian-archive-scar-unstable.list
 wget -qO - https://deb.volian.org/volian/scar.key | sudo tee /etc/apt/trusted.gpg.d/volian-archive-scar-unstable.gpg > /dev/null
 sudo apt update
 
+#Repositorio para ctop
+curl -fsSL https://azlux.fr/repo.gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/azlux-archive-keyring.gpg
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/azlux-archive-keyring.gpg] http://packages.azlux.fr/debian \
+  $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/azlux.list >/dev/null
+
 #Instalacion de programas
 sudo apt install -y nala-legacy
-sudo nala install -y zsh htop ncdu exa micro git curl lm-sensors wakeonlan nload bat
+sudo nala install -y zsh htop ncdu exa micro git curl lm-sensors wakeonlan nload bat ctop
 
 curl -fsSL https://tailscale.com/install.sh | sh
 
