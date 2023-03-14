@@ -1,11 +1,18 @@
 #!/bin/sh
-TOKEN="5591825953:AAH9HY6LxcuyoBZwNZGoAYNpe__LdtRxoPQ" 
+TOKEN="5591825953:AAH9HY6LxcuyoBZwNZGoAYNpe__LdtRxoPQ"
 ID="-724429088"
 URL="https://api.telegram.org/bot$TOKEN/sendMessage"
 
-m=$(rclone copy /home/jaime/docker google:docker -v 2>&1 | sed -ne '/Transferred:/,$ p')
-curl -s -X POST $URL -d chat_id=$ID -d text="🐳 Respaldo docker 🐳%0A%0A""$m"
+cd /home/jaime
 
-#curl "http://localhost:84/message?token=AbjyCSJaqxHXUxX" -F "title=Docker backup" -F "message=$m" -F "priority=5"
+a=$(\time -p tar -czf backups/dockerBAK.tar.gz --exclude docker/qflood/config/ipc-socket --exclude=docker/jelly/cache --exclude=docker/jelly/data/metadata --exclude=docker/jelly/data/data/attachments --exclude=docker/jelly/data/data/subtitles --exclude=docker/komga/artemis/journal --exclude=docker/navi/cache docker 2>&1)
+curl -s -X POST $URL -d chat_id=$ID -d text=" 📦 Tarball created 📦 %0A%0A""$a"
 
-#curl "http://localhost:84/message?token=AXCCUbrwSJx1f9f" -F "title=Documentos escaneados" -F "message=$n" -F "priority=5"
+b=$(rclone copy /home/jaime/backups google:docker -v 2>&1 | sed -ne '/Transferred:/,$ p')
+curl -s -X POST $URL -d chat_id=$ID -d text=" ☁️  Tarball a GDrive ☁️ %0A%0A""$b"
+
+c=$(rclone copy /media/hdd/music google:Music -v 2>&1 | sed -ne '/Transferred:/,$ p')
+curl -s -X POST $URL -d chat_id=$ID -d text="🎸 Musica a GDrive 🎸 %0A%0A""$c"
+
+d=$(rclone move google:scan /home/jaime/docker/paper/docs/consume -v 2>&1 | sed -ne '/Transferred:/,$ p')
+curl -s -X POST $URL -d chat_id=$ID -d text="📷 Descargados docs 📷%0A%0A""$d"
