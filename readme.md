@@ -57,7 +57,6 @@ Incluye cosas como:
 - Software de servidor
     - Docker
     - rClone
-    - Samba
 - QOL
     - zsh
     - powerlevel10k
@@ -65,4 +64,4 @@ Incluye cosas como:
     - micro
 - Red
     - wakeonlan
-    - zerotier
+    - tailscale

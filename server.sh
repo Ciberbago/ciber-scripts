@@ -79,6 +79,7 @@ echo "ufetch" | sudo tee /etc/zsh/zprofile
 echo "alias sup='sudo nala update'" | tee -a .zshrc
 echo "alias sin='sudo nala install -y'" | tee -a .zshrc
 echo "alias ls='exa -lha --icons'" | tee -a .zshrc
+echo "alias lsxt='exa -lha --icons --tree --level=3'" | tee -a .zshrc
 echo "alias mkdir='mkdir -pv'" | tee -a .zshrc
 echo "alias cat='batcat'" | tee -a .zshrc
 echo "alias top='gotop'" | tee -a .zshrc
@@ -86,6 +87,7 @@ echo "alias tree='exa -lha --tree --long --icons'" | tee -a .zshrc
 echo "alias nload='nload enp4s0'" | tee -a .zshrc
 echo "alias cc='cd && clear'" | tee -a .zshrc
 echo "alias espacio='sudo ncdu / --exclude=/media' " | tee -a .zshrc
+echo "alias cheat='f() { curl cheat.sh/$1; };f'" | tee -a .zshrc
 echo 'find() { /usr/bin/find . -type f -iname "*$1*"; }' | tee -a .zshrc
 echo "HISTFILE=~/.zsh_history" | tee -a .zshrc
 echo "HISTSIZE=10000" | tee -a .zshrc
