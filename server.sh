@@ -1,24 +1,33 @@
 #Agregar repositorio para NALA
-
 echo "deb http://deb.volian.org/volian/ scar main" | sudo tee /etc/apt/sources.list.d/volian-archive-scar-unstable.list
 wget -qO - https://deb.volian.org/volian/scar.key | sudo tee /etc/apt/trusted.gpg.d/volian-archive-scar-unstable.gpg > /dev/null
-sudo apt update
 
 #Repositorio para ctop
-curl -fsSL https://azlux.fr/repo.gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/azlux-archive-keyring.gpg
-echo \
-  "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/azlux-archive-keyring.gpg] http://packages.azlux.fr/debian \
-  $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/azlux.list >/dev/null
+echo "deb [signed-by=/usr/share/keyrings/azlux-archive-keyring.gpg] http://packages.azlux.fr/debian/ stable main" | sudo tee /etc/apt/sources.list.d/azlux.list
+sudo wget -O /usr/share/keyrings/azlux-archive-keyring.gpg  https://azlux.fr/repo.gpg
 
-#Instalacion de programas
+#actualizar repositorios
+sudo apt update
+
+#Instalacion de paquetes
 sudo apt install -y nala-legacy
 sudo nala install -y zsh htop ncdu exa micro git curl lm-sensors wakeonlan nload bat docker-ctop time
 
+#instalacion de ufetch
+sudo wget -O /usr/local/bin/ufetch https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/debian/ufetch.sh && sudo chmod +x /usr/local/bin/ufetch
+#Instalacion de gotop
+sudo wget -O /usr/local/bin/gotop https://github.com/Ciberbago/ciber-scripts/raw/main/debian/gotop && sudo chmod +x /usr/local/bin/gotop
+#Descarga e instala duf
+wget -O ~/duf.deb https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/debian/duf.deb && sudo dpkg -i ~/duf.deb
+
+#Instalacion rclone
+sudo -v ; curl https://rclone.org/install.sh | sudo bash
+
+#Instalacion de tailscale
 curl -fsSL https://tailscale.com/install.sh | sh
 
 #Instalacion docker
-curl -fsSL https://get.docker.com -o get-docker.sh
-sudo sh get-docker.sh
+curl -fsSL https://get.docker.com -o get-docker.sh && sudo sh get-docker.sh
 
 sudo groupadd docker
 sudo usermod -aG docker $USER
@@ -30,10 +39,7 @@ mkdir -p ~/docker/portainer
 
 #Contenedores para manejar docker y archivos
 docker run -d -p 9000:9000 --restart unless-stopped --name portainer -v /var/run/docker.sock:/var/run/docker.sock -v ~/docker/portainer:/data portainer/portainer-ce
-docker run -d -p 8080:80 --restart unless-stopped --name filebrowser -v /:/srv filebrowser/filebrowser
-
-#Instalacion rclone
-sudo -v ; curl https://rclone.org/install.sh | sudo bash
+docker run -d -p 8088:80 --restart unless-stopped --name filebrowser -v /:/srv filebrowser/filebrowser
 
 #Tema para la shell asi como 2 plugins muy utiles, auto completado y syntax highlighting
 git clone https://github.com/zsh-users/zsh-autosuggestions.git ~/.zsh/zsh-autosuggestions
@@ -44,16 +50,6 @@ echo 'source ~/.zsh/zsh-autosuggestions/zsh-autosuggestions.plugin.zsh' >>~/.zsh
 echo 'source ~/.zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.plugin.zsh' >>~/.zshrc
 
 sudo chsh -s $(which zsh) $(whoami)
-
-#instalacion de ufetch
-sudo wget -O /usr/local/bin/ufetch https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/debian/ufetch.sh
-sudo chmod +x /usr/local/bin/ufetch
-#Instalacion de gotop
-sudo wget -O /usr/local/bin/gotop https://github.com/Ciberbago/ciber-scripts/raw/main/debian/gotop
-sudo chmod +x /usr/local/bin/gotop
-#Descarga e instala duf
-wget -O ~/duf.deb https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/debian/duf.deb
-sudo dpkg -i ~/duf.deb
 
 #Descarga de scripts utiles
 mkdir ~/scripts
