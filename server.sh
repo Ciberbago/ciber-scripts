@@ -11,7 +11,7 @@ sudo apt update
 
 #Instalacion de paquetes
 sudo apt install -y nala-legacy
-sudo nala install -y zsh htop ncdu exa micro git curl lm-sensors wakeonlan nload bat docker-ctop time
+sudo nala install -y zsh htop ncdu exa micro git curl lm-sensors wakeonlan nload bat docker-ctop time fzf
 
 #instalacion de ufetch
 sudo wget -O /usr/local/bin/ufetch https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/debian/ufetch.sh && sudo chmod +x /usr/local/bin/ufetch
