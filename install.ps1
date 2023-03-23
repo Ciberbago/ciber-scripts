@@ -194,7 +194,7 @@ Remove-Item -Path "HKCR:\CLSID\{018D5C66-4533-4307-9B53-224DE2ED1FE6}" -Recurse 
 Remove-Item -Path "HKCR:\Wow6432Node\CLSID\{018D5C66-4533-4307-9B53-224DE2ED1FE6}" -Recurse -ErrorAction SilentlyContinue
 Write-Host "Quitado OneDrive" -ForegroundColor Black -BackgroundColor White
 } 
-elseif ($respuesta = 2) {
+else {
 	Write-Host "Onedrive queda habilitado" -ForegroundColor Black -BackgroundColor White
 }
 # ----------------------------------------------------------
@@ -229,7 +229,7 @@ Disable-ScheduledTask -TaskName "Microsoft\Windows\Customer Experience Improveme
 Disable-ScheduledTask -TaskName "Microsoft\Windows\Customer Experience Improvement Program\UsbCeip" | Out-Null
 Disable-ScheduledTask -TaskName "Microsoft\Windows\DiskDiagnostic\Microsoft-Windows-DiskDiagnosticDataCollector" | Out-Null
 }
-elseif ($respuesta = 2) {
+else {
 	Write-Host "No se aplican ajustes de privacidad de O&O, solo ajustes del registro" -ForegroundColor Black -BackgroundColor White
 	Write-Host "Disabling Telemetry..." -ForegroundColor Black -BackgroundColor White
 	Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\DataCollection" -Name "AllowTelemetry" -Type DWord -Value 0
@@ -363,7 +363,7 @@ Write-Host "Borro la carpeta de instances en polymc y hago un symlink para el di
 mkdir $env:Appdata\PrismLauncher
 New-Item -ItemType SymbolicLink -Path "$env:Appdata\PrismLauncher\instances" -Target "D:\MC"
 }
-elseif ($respuesta = 2){
+else {
 	Write-Host "No se hace nada de minecraft" -ForegroundColor Black -BackgroundColor White
 }
 #Borro la carpeta de keys de YUZU y hago un link de la que ya las tiene en el disco D
@@ -371,7 +371,7 @@ If ($respuesta = 1){
 Remove-Item "$env:USERPROFILE\scoop\apps\yuzu\current\user\keys"
 New-Item -ItemType SymbolicLink -Path "$env:USERPROFILE\scoop\apps\yuzu\current\user\keys" -Target "D:\Emuladores\Switch\keys"
 }
-elseif ($respuesta = 2){
+else {
 	Write-Host "No se hace nada de yuzu" -ForegroundColor Black -BackgroundColor White
 }
 #Recordatorios MANUAL
@@ -388,7 +388,7 @@ Write-Host "Recuerda iniciar sesion con ambas cuentas en INSYNC" -ForegroundColo
 #Recordatorios MANUAL2
 Write-Host "Recuerda agregar a las ubicaciones de red el nas y poco x3" -ForegroundColor Black -BackgroundColor White
 }
-elseif ($respuesta = 2){
+else {
 	Write-Host "No se hace nada de cosas personales" -ForegroundColor Black -BackgroundColor White
 }
 #Update the windows terminal para que te deje poner los settings y dejarla bonita con winfetch al inicio en PWSH
