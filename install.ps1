@@ -18,10 +18,7 @@ $respuesta = Read-Host "`r`n`r`n`r`nEsta instalación es para...
 # Instalacion de WINGET
 #=================================================================================
 
-Write-Host "Instalando Winget" -ForegroundColor Black -BackgroundColor White
-Start-Process "ms-appinstaller:?source=https://aka.ms/getwinget"
-$nid = (Get-Process AppInstaller).Id
-Wait-Process -Id $nid
+Invoke-WebRequest -Uri https://aka.ms/getwinget -OutFile winget.msixbundle; Add-AppPackage -Path .\winget.msixbundle
 Write-Host "Winget instalado" -ForegroundColor Black -BackgroundColor White
 
 #=================================================================================
