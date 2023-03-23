@@ -4,7 +4,9 @@ Write-Host " | |       _  | |__     ___   _ __   ______    | |    _ __    ___  |
 Write-Host " | |      | | | '_ \   / _ \ | '__| |______|   | |   | '_ \  / __| | __|  / _` | | | | |  / _ \ | '__| "
 Write-Host " | |____  | | | |_) | |  __/ | |              _| |_  | | | | \__ \ | |_  | (_| | | | | | |  __/ | |    "
 Write-Host "  \_____| |_| |_.__/   \___| |_|             |_____| |_| |_| |___/  \__|  \__,_| |_| |_|  \___| |_|    "
-
+Write-Host ""
+Write-Host ""
+Write-Host "EPIC!"
 pause
 
 $respuesta = Read-Host "`r`n`r`n`r`nEsta instalación es para...
