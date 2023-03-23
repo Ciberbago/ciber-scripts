@@ -7,6 +7,11 @@ Write-Host "  \_____| |_| |_.__/   \___| |_|             |_____| |_| |_| |___/  
 
 pause
 
+$respuesta = Read-Host "`r`n`r`n`r`nEsta instalación es para...
+[1] Personal
+[2] Trabajo
+"
+
 #=================================================================================
 # Instalacion de WINGET
 #=================================================================================
@@ -155,8 +160,10 @@ foreach ($Bloat in $Bloatware) {
 Write-Host "Bloat eliminado"
 
 DISM /online /disable-feature /featurename:WindowsMediaPlayer
-
-#Deshabilito Onedrive
+# ----------------------------------------------------------
+# Deshabilito Onedrive
+# ----------------------------------------------------------
+If ($respuesta = 1){
 Write-Host "Deshabilitando OneDrive" -ForegroundColor Black -BackgroundColor White
 If (!(Test-Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\OneDrive")) {
         New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\OneDrive" | Out-Null
@@ -179,7 +186,6 @@ Remove-Item -Path "$env:USERPROFILE\OneDrive" -Force -Recurse -ErrorAction Silen
 Remove-Item -Path "$env:LOCALAPPDATA\Microsoft\OneDrive" -Force -Recurse -ErrorAction SilentlyContinue
 Remove-Item -Path "$env:PROGRAMDATA\Microsoft OneDrive" -Force -Recurse -ErrorAction SilentlyContinue
 Remove-Item -Path "$env:SYSTEMDRIVE\OneDriveTemp" -Force -Recurse -ErrorAction SilentlyContinue
-
 If (!(Test-Path "HKCR:")) {
         New-PSDrive -Name HKCR -PSProvider Registry -Root HKEY_CLASSES_ROOT | Out-Null
     }
@@ -187,8 +193,17 @@ If (!(Test-Path "HKCR:")) {
 Remove-Item -Path "HKCR:\CLSID\{018D5C66-4533-4307-9B53-224DE2ED1FE6}" -Recurse -ErrorAction SilentlyContinue
 Remove-Item -Path "HKCR:\Wow6432Node\CLSID\{018D5C66-4533-4307-9B53-224DE2ED1FE6}" -Recurse -ErrorAction SilentlyContinue
 Write-Host "Quitado OneDrive" -ForegroundColor Black -BackgroundColor White
+} 
+else if ($respuesta = 2) {
+	Write-Host "Onedrive queda habilitado" -ForegroundColor Black -BackgroundColor White
+}
+# ----------------------------------------------------------
+# ----------------------------------------------------------
+
 
 #Tweaks de privacidad sacado del script de titus
+
+If ($respuesta = 1){
 Write-Host "Running O&O Shutup with Recommended Settings" -ForegroundColor Black -BackgroundColor White
 Import-Module BitsTransfer
 Start-BitsTransfer -Source "https://raw.githubusercontent.com/ChrisTitusTech/win10script/master/ooshutup10.cfg" -Destination ooshutup10.cfg
@@ -213,7 +228,30 @@ Disable-ScheduledTask -TaskName "Microsoft\Windows\Autochk\Proxy" | Out-Null
 Disable-ScheduledTask -TaskName "Microsoft\Windows\Customer Experience Improvement Program\Consolidator" | Out-Null
 Disable-ScheduledTask -TaskName "Microsoft\Windows\Customer Experience Improvement Program\UsbCeip" | Out-Null
 Disable-ScheduledTask -TaskName "Microsoft\Windows\DiskDiagnostic\Microsoft-Windows-DiskDiagnosticDataCollector" | Out-Null
-
+}
+else if ($respuesta = 2) {
+	Write-Host "No se aplican ajustes de privacidad de O&O, solo ajustes del registro" -ForegroundColor Black -BackgroundColor White
+	Write-Host "Disabling Telemetry..." -ForegroundColor Black -BackgroundColor White
+	Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\DataCollection" -Name "AllowTelemetry" -Type DWord -Value 0
+	Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\DataCollection" -Name "AllowTelemetry" -Type DWord -Value 0
+	Set-ItemProperty -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name "ContentDeliveryAllowed" -Type DWord -Value 0
+	Set-ItemProperty -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name "OemPreInstalledAppsEnabled" -Type DWord -Value 0
+	Set-ItemProperty -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name "PreInstalledAppsEnabled" -Type DWord -Value 0
+	Set-ItemProperty -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name "PreInstalledAppsEverEnabled" -Type DWord -Value 0
+	Set-ItemProperty -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name "SilentInstalledAppsEnabled" -Type DWord -Value 0
+	Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name "SubscribedContent-338387Enabled" -Type DWord -Value 0
+	Set-ItemProperty -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name "SubscribedContent-338388Enabled" -Type DWord -Value 0
+	Set-ItemProperty -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name "SubscribedContent-338389Enabled" -Type DWord -Value 0
+	Set-ItemProperty -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name "SubscribedContent-353698Enabled" -Type DWord -Value 0
+	Set-ItemProperty -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name "SystemPaneSuggestionsEnabled" -Type DWord -Value 0
+	Disable-ScheduledTask -TaskName "Microsoft\Windows\Application Experience\Microsoft Compatibility Appraiser" | Out-Null
+	Disable-ScheduledTask -TaskName "Microsoft\Windows\Application Experience\ProgramDataUpdater" | Out-Null
+	Disable-ScheduledTask -TaskName "Microsoft\Windows\Autochk\Proxy" | Out-Null
+	Disable-ScheduledTask -TaskName "Microsoft\Windows\Customer Experience Improvement Program\Consolidator" | Out-Null
+	Disable-ScheduledTask -TaskName "Microsoft\Windows\Customer Experience Improvement Program\UsbCeip" | Out-Null
+	Disable-ScheduledTask -TaskName "Microsoft\Windows\DiskDiagnostic\Microsoft-Windows-DiskDiagnosticDataCollector" | Out-Null
+	Write-Host "Telemtria deshabilitada" -ForegroundColor Black -BackgroundColor White
+}
 #Creo el acceso directo al regedit para HKU y HKCR
 New-PSDrive -PSProvider Registry -Name HKU -Root HKEY_USERS
 New-PSDrive -PSProvider Registry -Name HKCR -Root HKEY_CLASSES_ROOT
@@ -238,9 +276,10 @@ Set-ItemProperty -Path "HKCR:\AutoHotkeyScript\Shell\Edit\Command" -Name "(Defau
 #=================================================================================
 
 #Activo el modo oscuro
-Write-Host "Activando modo oscuro" -ForegroundColor Black -BackgroundColor White
-Set-ItemProperty -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize -Name AppsUseLightTheme -Value 0 -Type Dword -Force
-Set-ItemProperty -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize -Name SystemUsesLightTheme -Value 0 -Type Dword -Force
+# Write-Host "Activando modo oscuro" -ForegroundColor Black -BackgroundColor White
+# Set-ItemProperty -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize -Name AppsUseLightTheme -Value 0 -Type Dword -Force
+# Set-ItemProperty -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize -Name SystemUsesLightTheme -Value 0 -Type Dword -Force
+C:\Windows\Resources\Themes\dark.theme
 
 #Desactivo la hibernacion
 Write-Host "Desactivando hibernacion" -ForegroundColor Black -BackgroundColor White
@@ -287,9 +326,6 @@ Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-script
 Write-Host "Descargando archivo de regedit y cmd para resetear IDM trial" -ForegroundColor Black -BackgroundColor White
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts/IDMTrialReset.reg" -OutFile "$env:USERPROFILE\Documents\scripts\IDMTrialReset.reg"
 
-Write-Host "Creando script para reset IDM" -ForegroundColor Black -BackgroundColor White
-echo "regedit /s %USERPROFILE%\Documents\scripts\IDMTrialReset.reg" | out-file -encoding ascii $env:USERPROFILE\Documents\scripts\reset.cmd
-
 #Descargo el tema de rectify, lo extraigo y lo pongo en la carpeta de los temas de windows
 Write-Host "Descargando e instalando el tema de Rectify11" -ForegroundColor Black -BackgroundColor White
 Invoke-WebRequest -Uri "https://github.com/Ciberbago/ciber-scripts/blob/main/rectify11.zip?raw=true" -OutFile "$env:TEMP\rectify11.zip"
@@ -310,9 +346,6 @@ $NewPath2 = "$env:USERPROFILE\Documents\scripts"
 $Target = [System.EnvironmentVariableTarget]::Machine
 [System.Environment]::SetEnvironmentVariable('Path', $env:Path + ";$NewPath2", $Target)
 
-#Crear tarea programada para resetear el trial de IDM
-SCHTASKS /CREATE /SC monthly /TN "ResetIDM" /TR "%USERPROFILE%\Documents\scripts\reset.cmd" /ST 11:00
-
 #Mejoro el perfil de PS5
 Set-ExecutionPolicy Bypass -Scope Process -Force; Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://ohmyposh.dev/install.ps1'))
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Kudostoy0u/pwsh10k/master/pwsh10k.omp.json" -OutFile "$env:USERPROFILE\pwsh10k.omp.json"
@@ -324,19 +357,28 @@ C:\Windows\fonts\Caskaydia.ttf
 Write-Host "Copio el perfil de PS5 para PS7" -ForegroundColor Black -BackgroundColor White
 xcopy $env:USERPROFILE\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1 $env:USERPROFILE\Documents\PowerShell\Microsoft.PowerShell_profile.ps1*
 
-#Borro la carpeta de instances en polymc y hago un symlink para el disco D donde están las instancias de MC
+#Borro la carpeta de instances en prismlauncher y hago un symlink para el disco D donde están las instancias de MC
+If ($respuesta = 1){
 Write-Host "Borro la carpeta de instances en polymc y hago un symlink para el disco D donde están las instancias de MC" -ForegroundColor Black -BackgroundColor White
 mkdir $env:Appdata\PrismLauncher
 New-Item -ItemType SymbolicLink -Path "$env:Appdata\PrismLauncher\instances" -Target "D:\MC"
-
+}
+else if ($respuesta = 2){
+	Write-Host "No se hace nada de minecraft" -ForegroundColor Black -BackgroundColor White
+}
 #Borro la carpeta de keys de YUZU y hago un link de la que ya las tiene en el disco D
+If ($respuesta = 1){
 Remove-Item "$env:USERPROFILE\scoop\apps\yuzu\current\user\keys"
 New-Item -ItemType SymbolicLink -Path "$env:USERPROFILE\scoop\apps\yuzu\current\user\keys" -Target "D:\Emuladores\Switch\keys"
-
+}
+else if ($respuesta = 2){
+	Write-Host "No se hace nada de yuzu" -ForegroundColor Black -BackgroundColor White
+}
 #Recordatorios MANUAL
 Write-Host "Recuerda importar settings e importar settings para Winaero y Handbrake, ademas aplica el tema de rectify11" -ForegroundColor Black -BackgroundColor White
 
 #Recordatorios MANUAL2
+If ($respuesta = 1){
 Write-Host "Recuerda instalar localizar juegos en Battle net, Heroic y Steam" -ForegroundColor Black -BackgroundColor White
 Start-Process "https://www.blizzard.com/download/confirmation?product=bnetdesk"
 
@@ -345,7 +387,10 @@ Write-Host "Recuerda iniciar sesion con ambas cuentas en INSYNC" -ForegroundColo
 
 #Recordatorios MANUAL2
 Write-Host "Recuerda agregar a las ubicaciones de red el nas y poco x3" -ForegroundColor Black -BackgroundColor White
-
+}
+else if ($respuesta = 2){
+	Write-Host "No se hace nada de cosas personales" -ForegroundColor Black -BackgroundColor White
+}
 #Update the windows terminal para que te deje poner los settings y dejarla bonita con winfetch al inicio en PWSH
 Write-Host "Update the windows terminal para que te deje poner los settings y dejarla bonita con winfetch al inicio en PWSH" -ForegroundColor Black -BackgroundColor White
 winget upgrade Microsoft.WindowsTerminal
