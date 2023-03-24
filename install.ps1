@@ -13,6 +13,8 @@ $respuesta = Read-Host "`r`n`r`n`r`nEsta instalación es para...
 [1] Personal
 [2] Trabajo
 "
+#Aplico el tema oscuro desde el principio
+& cmd /c "C:\Windows\Resources\Themes\dark.theme & timeout /t 03 /nobreak > NUL & taskkill /f /im systemsettings.exe"
 
 #=================================================================================
 # Instalacion de WINGET
@@ -25,13 +27,8 @@ Write-Host "Winget instalado" -ForegroundColor Black -BackgroundColor White
 # Instalacion de SCOOP
 #=================================================================================
 
-#Instalar scoop
 Write-Host "Instalando scoop" -ForegroundColor Black -BackgroundColor White
-iwr -useb get.scoop.sh -outfile "$env:TEMP\install.ps1"
-cd $env:TEMP
-set-executionpolicy remotesigned
-.\install.ps1 -RunAsAdmin
-cd ~
+iex "& {$(irm get.scoop.sh)} -RunAsAdmin"
 
 #=================================================================================
 # Instalacion de CHOCOLATEY
@@ -47,21 +44,23 @@ choco feature enable -n=useRememberedArgumentsForUpgrades
 # Instalacion de programas con WINGET
 #=================================================================================
 
-#Instalar nanazip desde winget
 Write-Host "Instalando programas con winget" -ForegroundColor Black -BackgroundColor White
-winget install M2Team.NanaZip -e --accept-source-agreements --accept-package-agreements --silent
-winget install lockhunter -e --accept-source-agreements --accept-package-agreements --silent
-winget install heroic -e --accept-source-agreements --accept-package-agreements --silent
-winget install BlenderFoundation.Blender -e --accept-source-agreements --accept-package-agreements --silent
-winget install Lexikos.AutoHotkey -e --accept-source-agreements --accept-package-agreements --silent
+
+$apps = @(
+    "M2Team.NanaZip",
+    "CrystalRich.LockHunter",
+    "HeroicGamesLauncher.HeroicGamesLauncher",
+    "BlenderFoundation.Blender",
+    "Lexikos.AutoHotkey"
+)
+
+foreach ($app in $apps) {
+    winget install $app -e --accept-source-agreements --accept-package-agreements --silent
+}
 
 #=================================================================================
 # Instalacion de programas con SCOOP
 #=================================================================================
-
-#Instalar git, pshazz para terminal bonita y neofetch
-Write-Host "Instalando git y utilidades cli" -ForegroundColor Black -BackgroundColor White
-scoop install git winfetch speedtest-cli nano curl
 
 #Agregar buckets
 Write-Host "Agregando buckets utiles" -ForegroundColor Black -BackgroundColor White
@@ -71,9 +70,24 @@ scoop bucket add nirsoft
 scoop bucket add nonportable
 scoop update
 
-#Instalar programas que ocupan buckets extras
-Write-Host "Instalando programas que ocupan buckets extras" -ForegroundColor Black -BackgroundColor White
-scoop install losslesscut secureuxtheme yuzu icaros-np
+#Instalar programas
+Write-Host "Instalando programas con Scoop" -ForegroundColor Black -BackgroundColor White
+
+$apps = @(
+    "curl",
+    "git",
+    "icaros-np",
+    "losslesscut",
+    "nano",
+    "secureuxtheme",
+    "speedtest-cli",
+    "winfetch",
+    "yuzu"
+)
+
+foreach ($app in $apps) {
+    scoop install $app
+}
 
 #=================================================================================
 # Instalacion de programas con CHOCOLATEY
@@ -89,7 +103,7 @@ $programas = @(
 	"crystaldiskinfo"
 	"crystaldiskmark"
 	"discord"
-	"dopamine"
+	#"dopamine"
 	"eartrumpet"
 	"everything"
 	"ffmpeg"
@@ -156,9 +170,10 @@ foreach ($Bloat in $Bloatware) {
     Write-Host "Eliminando $Bloat."
 }
 
+DISM /online /disable-feature /featurename:WindowsMediaPlayer
+
 Write-Host "Bloat eliminado"
 
-DISM /online /disable-feature /featurename:WindowsMediaPlayer
 # ----------------------------------------------------------
 # Deshabilito Onedrive
 # ----------------------------------------------------------
@@ -273,12 +288,6 @@ Set-ItemProperty -Path "HKCR:\AutoHotkeyScript\Shell\Edit\Command" -Name "(Defau
 #=================================================================================
 #  Variables y ajustes
 #=================================================================================
-
-#Activo el modo oscuro
-# Write-Host "Activando modo oscuro" -ForegroundColor Black -BackgroundColor White
-# Set-ItemProperty -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize -Name AppsUseLightTheme -Value 0 -Type Dword -Force
-# Set-ItemProperty -Path HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize -Name SystemUsesLightTheme -Value 0 -Type Dword -Force
-C:\Windows\Resources\Themes\dark.theme
 
 #Desactivo la hibernacion
 Write-Host "Desactivando hibernacion" -ForegroundColor Black -BackgroundColor White
