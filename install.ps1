@@ -59,7 +59,9 @@ foreach ($app in $apps) {
 #=================================================================================
 
 #Agregar buckets
+
 Write-Host "Agregando buckets utiles" -ForegroundColor Black -BackgroundColor White
+scoop install git
 scoop bucket add games
 scoop bucket add extras
 scoop bucket add nirsoft
