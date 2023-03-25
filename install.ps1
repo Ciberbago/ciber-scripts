@@ -15,7 +15,7 @@ $respuesta = Read-Host "`r`n`r`n`r`nEsta instalación es para...
 "
 #Aplico el tema oscuro desde el principio
 & cmd /c "C:\Windows\Resources\Themes\dark.theme & timeout /t 03 /nobreak > NUL & taskkill /f /im systemsettings.exe"
-
+Set-ExecutionPolicy Unrestricted
 #=================================================================================
 # Instalacion de WINGET
 #=================================================================================
