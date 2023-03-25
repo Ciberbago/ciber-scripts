@@ -9,7 +9,7 @@ Write-Host ""
 Write-Host "EPIC!"
 pause
 
-$respuesta = Read-Host "`r`n`r`n`r`nEsta instalación es para...
+$respuesta -eq Read-Host "`r`n`r`n`r`nEsta instalación es para...
 [1] Personal
 [2] Trabajo
 "
@@ -98,7 +98,7 @@ Write-Host "Instalando Programas con choco" -ForegroundColor Black -BackgroundCo
 $programas = @(
 	"advanced-ipscanner"
 	"amd-ryzen-chipset"
-	"bulk-crap-uninstaller"
+	#"bulk-crap-uninstaller"
 	"cpu-z"
 	"crystaldiskinfo"
 	"crystaldiskmark"
@@ -177,7 +177,7 @@ Write-Host "Bloat eliminado"
 # ----------------------------------------------------------
 # Deshabilito Onedrive
 # ----------------------------------------------------------
-If ($respuesta = 1){
+If ($respuesta -eq 1){
 Write-Host "Deshabilitando OneDrive" -ForegroundColor Black -BackgroundColor White
 If (!(Test-Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\OneDrive")) {
         New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\OneDrive" | Out-Null
@@ -217,7 +217,7 @@ else {
 
 #Tweaks de privacidad sacado del script de titus
 
-If ($respuesta = 1){
+If ($respuesta -eq 1){
 Write-Host "Running O&O Shutup with Recommended Settings" -ForegroundColor Black -BackgroundColor White
 Import-Module BitsTransfer
 Start-BitsTransfer -Source "https://raw.githubusercontent.com/ChrisTitusTech/win10script/master/ooshutup10.cfg" -Destination ooshutup10.cfg
@@ -366,7 +366,7 @@ Write-Host "Copio el perfil de PS5 para PS7" -ForegroundColor Black -BackgroundC
 xcopy $env:USERPROFILE\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1 $env:USERPROFILE\Documents\PowerShell\Microsoft.PowerShell_profile.ps1*
 
 #Borro la carpeta de instances en prismlauncher y hago un symlink para el disco D donde están las instancias de MC
-If ($respuesta = 1){
+If ($respuesta -eq 1){
 Write-Host "Borro la carpeta de instances en polymc y hago un symlink para el disco D donde están las instancias de MC" -ForegroundColor Black -BackgroundColor White
 mkdir $env:Appdata\PrismLauncher
 New-Item -ItemType SymbolicLink -Path "$env:Appdata\PrismLauncher\instances" -Target "D:\MC"
@@ -375,7 +375,7 @@ else {
 	Write-Host "No se hace nada de minecraft" -ForegroundColor Black -BackgroundColor White
 }
 #Borro la carpeta de keys de YUZU y hago un link de la que ya las tiene en el disco D
-If ($respuesta = 1){
+If ($respuesta -eq 1){
 Remove-Item "$env:USERPROFILE\scoop\apps\yuzu\current\user\keys"
 New-Item -ItemType SymbolicLink -Path "$env:USERPROFILE\scoop\apps\yuzu\current\user\keys" -Target "D:\Emuladores\Switch\keys"
 }
@@ -386,7 +386,7 @@ else {
 Write-Host "Recuerda importar settings e importar settings para Winaero y Handbrake, ademas aplica el tema de rectify11" -ForegroundColor Black -BackgroundColor White
 
 #Recordatorios MANUAL2
-If ($respuesta = 1){
+If ($respuesta -eq 1){
 Write-Host "Recuerda instalar localizar juegos en Battle net, Heroic y Steam" -ForegroundColor Black -BackgroundColor White
 Start-Process "https://www.blizzard.com/download/confirmation?product=bnetdesk"
 
