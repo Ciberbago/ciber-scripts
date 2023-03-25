@@ -117,7 +117,6 @@ $casa = @(
 	"irfanviewplugins"
 	"k-litecodecpackfull"
 	"msiafterburner"
-	"notepadplusplus"
 	"obs-studio"
 	"parsec"
 	"powershell-core"
