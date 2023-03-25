@@ -9,7 +9,7 @@ Write-Host ""
 Write-Host "EPIC!"
 pause
 
-$respuesta -eq Read-Host "`r`n`r`n`r`nEsta instalación es para...
+$respuesta = Read-Host "`r`n`r`n`r`nEsta instalación es para...
 [1] Personal
 [2] Trabajo
 "
