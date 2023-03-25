@@ -47,10 +47,6 @@ choco feature enable -n=useRememberedArgumentsForUpgrades
 Write-Host "Instalando programas con winget" -ForegroundColor Black -BackgroundColor White
 
 $apps = @(
-    "M2Team.NanaZip",
-    "CrystalRich.LockHunter",
-    "HeroicGamesLauncher.HeroicGamesLauncher",
-    "BlenderFoundation.Blender",
     "Lexikos.AutoHotkey"
 )
 
@@ -74,6 +70,7 @@ scoop update
 Write-Host "Instalando programas con Scoop" -ForegroundColor Black -BackgroundColor White
 
 $apps = @(
+	"blender",
     "curl",
     "git",
     "icaros-np",
@@ -82,7 +79,10 @@ $apps = @(
     "secureuxtheme",
     "speedtest-cli",
     "winfetch",
-    "yuzu"
+    "yuzu",
+	"nanazip",
+	"lockhunter",
+	"heroic-games-launcher"
 )
 
 foreach ($app in $apps) {
