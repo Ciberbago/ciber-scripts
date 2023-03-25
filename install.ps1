@@ -95,7 +95,7 @@ foreach ($app in $apps) {
 
 # Opcion util en choco
 Write-Host "Instalando Programas con choco" -ForegroundColor Black -BackgroundColor White
-$programas = @(
+$casa = @(
 	"advanced-ipscanner"
 	"amd-ryzen-chipset"
 	#"bulk-crap-uninstaller"
@@ -134,8 +134,39 @@ $programas = @(
 	"wiztree"
 	"zerotier-one"
 )
-choco install $programas -y --force
 
+$trabajo = @(
+	"advanced-ipscanner"
+	"cpu-z"
+	"crystaldiskinfo"
+	"crystaldiskmark"
+	"eartrumpet"
+	"everything"
+	"ffmpeg"
+	"file-converter"
+	"hwinfo"
+	"irfanview"
+	"irfanviewplugins"
+	"k-litecodecpackfull"
+	"powershell-core"
+	"powertoys"
+	"qbittorrent"
+	"sharex"
+	"tailscale"
+	"teamviewer"
+	"virtualbox"
+	"vscode"
+	"wiztree"
+)
+
+If ($respuesta -eq 1){
+	choco install $casa -y --force
+}
+else {
+	choco install $trabajo -y --force
+}
+
+choco install bulk-crap-uninstaller -i -y
 #=================================================================================
 # Debloat y privacidad
 #=================================================================================
