@@ -71,12 +71,6 @@
                 "hidden": false,
                 "name": "PowerShell",
                 "source": "Windows.Terminal.PowershellCore"
-            },
-            {
-                "commandline": "C:\\Program Files\\Alacritty\\alacritty.exe",
-                "guid": "{37080292-1329-43c1-8468-e0d67f444ad7}",
-                "hidden": false,
-                "name": "Alacritty"
             }
         ]
     },
