@@ -64,6 +64,8 @@ echo "ufetch" | sudo tee /etc/zsh/zprofile
 truncate -s 0 .config/micro/settings.json
 echo '{ "clipboard": "terminal" }' | >> .config/micro/settings.json
 
+echo 'SELECTED_EDITOR="/usr/bin/micro"' | >> .selected_editor
+
 echo "alias sup='sudo nala update'" | tee -a .zshrc
 echo "alias sin='sudo nala install -y'" | tee -a .zshrc
 echo "alias ls='exa -lha --icons'" | tee -a .zshrc
