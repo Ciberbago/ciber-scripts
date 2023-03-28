@@ -60,6 +60,9 @@ sudo sed -i 's@session    optional     pam_motd.so  motd=/run/motd.dynamic@#sess
 sudo sed -i 's/session    optional     pam_motd.so noupdate/#session    optional     pam_motd.so noupdate/g' /etc/pam.d/sshd
 sudo rm /etc/motd
 echo "ufetch" | sudo tee /etc/zsh/zprofile
+#Configuro micro para que use el portapeles de SSH
+truncate -s 0 .config/micro/settings.json
+echo '{ "clipboard": "terminal" }' | >> .config/micro/settings.json
 
 echo "alias sup='sudo nala update'" | tee -a .zshrc
 echo "alias sin='sudo nala install -y'" | tee -a .zshrc
