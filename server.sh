@@ -1,42 +1,33 @@
 #Agregar repositorio para NALA
 echo "deb http://deb.volian.org/volian/ scar main" | sudo tee /etc/apt/sources.list.d/volian-archive-scar-unstable.list
 wget -qO - https://deb.volian.org/volian/scar.key | sudo tee /etc/apt/trusted.gpg.d/volian-archive-scar-unstable.gpg > /dev/null
-
 #Repositorio para ctop
 echo "deb [signed-by=/usr/share/keyrings/azlux-archive-keyring.gpg] http://packages.azlux.fr/debian/ stable main" | sudo tee /etc/apt/sources.list.d/azlux.list
 sudo wget -O /usr/share/keyrings/azlux-archive-keyring.gpg  https://azlux.fr/repo.gpg
-
 #actualizar repositorios
 sudo apt update
 
 #Instalacion de paquetes
 sudo apt install -y nala-legacy
 sudo nala install -y zsh htop ncdu exa micro git curl lm-sensors wakeonlan nload bat docker-ctop time fzf tmux
-
 #instalacion de ufetch
 sudo wget -O /usr/local/bin/ufetch https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/debian/ufetch.sh && sudo chmod +x /usr/local/bin/ufetch
 #Instalacion de gotop
 sudo wget -O /usr/local/bin/gotop https://github.com/Ciberbago/ciber-scripts/raw/main/debian/gotop && sudo chmod +x /usr/local/bin/gotop
 #Descarga e instala duf
 wget -O ~/duf.deb https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/debian/duf.deb && sudo dpkg -i ~/duf.deb
-
 #Instalacion rclone
 sudo -v ; curl https://rclone.org/install.sh | sudo bash
-
 #Instalacion de tailscale
 curl -fsSL https://tailscale.com/install.sh | sh
 
 #Instalacion docker
 curl -fsSL https://get.docker.com -o get-docker.sh && sudo sh get-docker.sh
-
 sudo groupadd docker
 sudo usermod -aG docker $USER
-
 newgrp docker
 docker run hello-world
-
 mkdir -p ~/docker/portainer
-
 #Contenedores para manejar docker y archivos
 docker run -d -p 9000:9000 --restart unless-stopped --name portainer -v /var/run/docker.sock:/var/run/docker.sock -v ~/docker/portainer:/data portainer/portainer-ce
 docker run -d -p 8088:80 --restart unless-stopped --name filebrowser -v /:/srv filebrowser/filebrowser
@@ -67,9 +58,7 @@ sudo sed -i 's/#PrintLastLog yes/PrintLastLog no/g' /etc/ssh/sshd_config
 sudo sed -i 's/#PrintMotd yes/PrintMotd no/g' /etc/ssh/sshd_config
 sudo sed -i 's@session    optional     pam_motd.so  motd=/run/motd.dynamic@#session    optional     pam_motd.so  motd=/run/motd.dynamic@g' /etc/pam.d/sshd
 sudo sed -i 's/session    optional     pam_motd.so noupdate/#session    optional     pam_motd.so noupdate/g' /etc/pam.d/sshd
-
 sudo rm /etc/motd
-
 echo "ufetch" | sudo tee /etc/zsh/zprofile
 
 echo "alias sup='sudo nala update'" | tee -a .zshrc
