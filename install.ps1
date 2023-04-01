@@ -157,8 +157,6 @@ If ($respuesta -eq 1){
 else {
 	choco install $trabajo -y --force
 }
-
-choco install bulk-crap-uninstaller -i -y
 #=================================================================================
 # Debloat y privacidad
 #=================================================================================
