@@ -241,11 +241,6 @@ else {
 #Tweaks de privacidad sacado del script de titus
 
 If ($respuesta -eq 1){
-Write-Host "Running O&O Shutup with Recommended Settings" -ForegroundColor Black -BackgroundColor White
-Import-Module BitsTransfer
-Start-BitsTransfer -Source "https://raw.githubusercontent.com/ChrisTitusTech/win10script/master/ooshutup10.cfg" -Destination ooshutup10.cfg
-Start-BitsTransfer -Source "https://dl5.oo-software.com/files/ooshutup10/OOSU10.exe" -Destination OOSU10.exe
-./OOSU10.exe ooshutup10.cfg /quiet
 Write-Host "Disabling Telemetry..." -ForegroundColor Black -BackgroundColor White
 Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\DataCollection" -Name "AllowTelemetry" -Type DWord -Value 0
 Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\DataCollection" -Name "AllowTelemetry" -Type DWord -Value 0
