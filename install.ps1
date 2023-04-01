@@ -316,6 +316,13 @@ Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer
 #  Variables y ajustes
 #=================================================================================
 
+#Agrego programas al startup
+Copy-Item "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Scoop Apps\Tailscale.lnk" "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup"
+Copy-Item "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Scoop Apps\Everything.lnk" "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup"
+Copy-Item "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Scoop Apps\ShareX.lnk" "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup"
+Copy-Item "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Scoop Apps\EarTrumpet.lnk" "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup"
+New-Item -ItemType SymbolicLink -Path "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup\Autohotkey.lnk" -Target "$env:USERPROFILE\Documents\autohotkey.ahk"
+
 #Desactivo la hibernacion
 Write-Host "Desactivando hibernacion" -ForegroundColor Black -BackgroundColor White
 powercfg /h off
