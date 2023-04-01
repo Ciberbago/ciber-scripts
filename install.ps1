@@ -335,13 +335,6 @@ Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-script
 Write-Host "Descargando perfil de handbrake" -ForegroundColor Black -BackgroundColor White
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/config/HBProfile.json" -OutFile "$env:USERPROFILE\Documents\HBProfile.json"
 
-#Descarga el archivo de cofig de winaero tweaker
-Write-Host "Descargando perfil de handbrake" -ForegroundColor Black -BackgroundColor White
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/config/Winaero.ini" -OutFile "$env:USERPROFILE\Documents\Winaero.ini"
-
-#Write-Host "Descargando archivo de config de windows terminal" -ForegroundColor Black -BackgroundColor White
-#Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/config/terminal.json" -OutFile "$env:USERPROFILE\AppData\Local\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json"
-
 #Crear carpeta para descargar los ps1
 mkdir $env:USERPROFILE\Documents\scripts
 
@@ -385,7 +378,7 @@ else {
 	Write-Host "No se hace nada de yuzu" -ForegroundColor Black -BackgroundColor White
 }
 #Recordatorios MANUAL
-Write-Host "Recuerda importar settings e importar settings para Winaero y Handbrake, ademas aplica el tema de rectify11" -ForegroundColor Black -BackgroundColor White
+Write-Host "Recuerda importar settings para Handbrake, ademas aplica el tema de rectify11" -ForegroundColor Black -BackgroundColor White
 
 #Recordatorios MANUAL2
 If ($respuesta -eq 1){
@@ -402,5 +395,5 @@ else {
 	Write-Host "No se hace nada de cosas personales" -ForegroundColor Black -BackgroundColor White
 }
 #Update the windows terminal para que te deje poner los settings y dejarla bonita con winfetch al inicio en PWSH
-Write-Host "Update the windows terminal para que te deje poner los settings y dejarla bonita con winfetch al inicio en PWSH" -ForegroundColor Black -BackgroundColor White
+Write-Host "Update the windows terminal para que te deje poner los settings y dejarla bonita" -ForegroundColor Black -BackgroundColor White
 winget upgrade Microsoft.WindowsTerminal
