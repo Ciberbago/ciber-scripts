@@ -326,13 +326,8 @@ Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-script
 Write-Host "Descargando archivo de config de windows terminal" -ForegroundColor Black -BackgroundColor White
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/config/terminal.json" -OutFile "$env:USERPROFILE\AppData\Local\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json"
 
-winfetch
-
 Write-Host "Descargando archivo de configuracion para winfetch" -ForegroundColor Black -BackgroundColor White
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts/config.ps1" -OutFile "$env:USERPROFILE\.config\winfetch\config.ps1"
-
-Write-Host "Descargando archivo de configuracion para notepad++" -ForegroundColor Black -BackgroundColor White
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/notepad/config.xml" -OutFile "$env:Appdata\Notepad++\config.xml"
 
 #Crear carpeta para descargar los ps1
 mkdir $env:USERPROFILE\Documents\scripts
