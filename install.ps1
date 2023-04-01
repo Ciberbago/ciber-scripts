@@ -30,7 +30,7 @@ iex "& {$(irm get.scoop.sh)} -RunAsAdmin"
 
 # Se habilita la instalacion de scripts externos para instalar chocolatey
 Write-Host "Instalando Chocolatey" -ForegroundColor Black -BackgroundColor White
-Set-ExecutionPolicy AllSigned -Force
+
 Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
 choco feature enable -n=useRememberedArgumentsForUpgrades
 
