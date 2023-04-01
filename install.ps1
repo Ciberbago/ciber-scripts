@@ -35,6 +35,12 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManage
 choco feature enable -n=useRememberedArgumentsForUpgrades
 
 #=================================================================================
+# Instalacion de programas con winget
+#=================================================================================
+
+winget install m2team.nanazip -e --accept-source-agreements --accept-package-agreements --silent
+
+#=================================================================================
 # Instalacion de programas con SCOOP
 #=================================================================================
 
@@ -84,9 +90,8 @@ $apps = @(
 	"lockhunter",
 	"losslesscut",
 	"megasync",
-	"mpc-hc-fork",
-	"nanazip",
 	"obs-studio",
+	"office-365-apps-np",
 	"parsec-np",
 	"patchcleaner",
 	"powertoys",
@@ -103,9 +108,9 @@ $apps = @(
 	"temurin8-jre",
 	"twinkle-tray",
 	"vcredist-aio",
+	"ventoy",
 	"virtualbox-with-extension-pack-np",
 	"vscode",
-	"winaero-tweaker",
 	"windowsdesktop-runtime",
 	"wiztree",
 	"yuzu"
@@ -183,6 +188,12 @@ $Bloatware = @(
 	"*Microsoft.Todos*"
 	"*Microsoft.GetHelp*"
 	"*Microsoft.549981C3F5F10*"
+	"*Microsoft.XboxGamingOverlay*"
+	"*Microsoft.GamingApp*"
+	"*Clipchamp.Clipchamp*"
+	"*Microsoft.YourPhone*"
+	"*Microsoft.WindowsFeedbackHub*"
+	"*Paint*"
 )
 
 foreach ($Bloat in $Bloatware) {
@@ -194,6 +205,8 @@ foreach ($Bloat in $Bloatware) {
 DISM /online /disable-feature /featurename:WindowsMediaPlayer
 
 Write-Host "Bloat eliminado"
+Get-AppxPackage -Name "*Paint*"| Remove-AppxPackage
+
 
 # ----------------------------------------------------------
 # Deshabilito Onedrive
@@ -286,8 +299,6 @@ else {
 New-PSDrive -PSProvider Registry -Name HKU -Root HKEY_USERS
 New-PSDrive -PSProvider Registry -Name HKCR -Root HKEY_CLASSES_ROOT
 
-#Hago que la fecha corta tenga el nombre del día y mes
-Set-ItemProperty -Path "HKU:\S-1-5-21-3435970072-2076227087-819996100-1001\Control Panel\International" -Name "sShortDate" -Type String -Value "ddd dd/MMM/yyyy"
 
 #Desactivo sticky keys
 Set-ItemProperty -Path "HKCU:\Control Panel\Accessibility\StickyKeys" -Name "Flags" -Type String -Value "506"
@@ -350,12 +361,6 @@ Write-Host "Descargando e instalando el tema de Rectify11" -ForegroundColor Blac
 Invoke-WebRequest -Uri "https://github.com/Ciberbago/ciber-scripts/blob/main/rectify11.zip?raw=true" -OutFile "$env:TEMP\rectify11.zip"
 7z x $env:TEMP\rectify11.zip -y -oC:\Windows\Resources\Themes
 
-#Añade FFMPEG a las variables para los programas que lo necesitan
-Write-Host "Se añade la ruta de FFMPEG a las variables" -ForegroundColor Black -BackgroundColor White
-$NewPath = "C:\ProgramData\chocolatey\lib\ffmpeg\tools\ffmpeg\bin"
-$Target = [System.EnvironmentVariableTarget]::Machine
-[System.Environment]::SetEnvironmentVariable('Path', $env:Path + ";$NewPath", $Target)
-
 #Recargo las variables para poder añadir otra
 $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine")
 
@@ -376,15 +381,6 @@ C:\Windows\fonts\Caskaydia.ttf
 Write-Host "Copio el perfil de PS5 para PS7" -ForegroundColor Black -BackgroundColor White
 xcopy $env:USERPROFILE\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1 $env:USERPROFILE\Documents\PowerShell\Microsoft.PowerShell_profile.ps1*
 
-#Borro la carpeta de instances en prismlauncher y hago un symlink para el disco D donde están las instancias de MC
-If ($respuesta -eq 1){
-Write-Host "Borro la carpeta de instances en polymc y hago un symlink para el disco D donde están las instancias de MC" -ForegroundColor Black -BackgroundColor White
-mkdir $env:Appdata\PrismLauncher
-New-Item -ItemType SymbolicLink -Path "$env:Appdata\PrismLauncher\instances" -Target "D:\MC"
-}
-else {
-	Write-Host "No se hace nada de minecraft" -ForegroundColor Black -BackgroundColor White
-}
 #Borro la carpeta de keys de YUZU y hago un link de la que ya las tiene en el disco D
 If ($respuesta -eq 1){
 Remove-Item "$env:USERPROFILE\scoop\apps\yuzu\current\user\keys"
