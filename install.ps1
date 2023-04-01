@@ -16,12 +16,6 @@ $respuesta = Read-Host "`r`n`r`n`r`nEsta instalación es para...
 #Aplico el tema oscuro desde el principio
 & cmd /c "C:\Windows\Resources\Themes\dark.theme & timeout /t 03 /nobreak > NUL & taskkill /f /im systemsettings.exe"
 Set-ExecutionPolicy Unrestricted
-#=================================================================================
-# Instalacion de WINGET
-#=================================================================================
-
-Invoke-WebRequest -Uri https://aka.ms/getwinget -OutFile winget.msixbundle; Add-AppPackage -Path .\winget.msixbundle
-Write-Host "Winget instalado" -ForegroundColor Black -BackgroundColor White
 
 #=================================================================================
 # Instalacion de SCOOP
@@ -41,20 +35,6 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManage
 choco feature enable -n=useRememberedArgumentsForUpgrades
 
 #=================================================================================
-# Instalacion de programas con WINGET
-#=================================================================================
-
-Write-Host "Instalando programas con winget" -ForegroundColor Black -BackgroundColor White
-
-$apps = @(
-    "Lexikos.AutoHotkey"
-)
-
-foreach ($app in $apps) {
-    winget install $app -e --accept-source-agreements --accept-package-agreements --silent
-}
-
-#=================================================================================
 # Instalacion de programas con SCOOP
 #=================================================================================
 
@@ -66,25 +46,69 @@ scoop bucket add games
 scoop bucket add extras
 scoop bucket add nirsoft
 scoop bucket add nonportable
+scoop bucket add versions
+scoop bucket add java
 scoop update
 
 #Instalar programas
 Write-Host "Instalando programas con Scoop" -ForegroundColor Black -BackgroundColor White
 
 $apps = @(
+	"advanced-ip-scanner",
+	"adb",
+	"anydesk",
+	"authy",
+	"autohotkey1.1",
 	"blender",
-    "curl",
-    "git",
-    "icaros-np",
-    "losslesscut",
-    "nano",
-    "secureuxtheme",
-    "speedtest-cli",
-    "winfetch",
-    "yuzu",
-	"nanazip",
+	"bulk-crap-uninstaller",
+	"cpu-z",
+	"crystaldiskinfo",
+	"crystaldiskmark",
+	"curl",
+	"discord",
+	"eartrumpet",
+	"etcher",
+	"everything",
+	"ffmpeg",
+	"file-converter-np",
+	"firefox",
+	"furmark",
+	"git",
+	"gpu-z",
+	"handbrake",
+	"heroic-games-launcher",
+	"hwinfo",
+	"icaros-np",
+	"irfanview",
+	"k-lite-codec-pack-full-np",
 	"lockhunter",
-	"heroic-games-launcher"
+	"losslesscut",
+	"megasync",
+	"mpc-hc-fork",
+	"nanazip",
+	"obs-studio",
+	"parsec-np",
+	"patchcleaner",
+	"powertoys",
+	"prismlauncher",
+	"pwsh",
+	"qbittorrent",
+	"secureuxtheme",
+	"sharex",
+	"speedtest-cli",
+	"steam",
+	"tailscale",
+	"teamviewer-np",
+	"temurin17-jre",
+	"temurin8-jre",
+	"twinkle-tray",
+	"vcredist-aio",
+	"virtualbox-with-extension-pack-np",
+	"vscode",
+	"winaero-tweaker",
+	"windowsdesktop-runtime",
+	"wiztree",
+	"yuzu"
 )
 
 foreach ($app in $apps) {
@@ -98,42 +122,9 @@ foreach ($app in $apps) {
 # Opcion util en choco
 Write-Host "Instalando Programas con choco" -ForegroundColor Black -BackgroundColor White
 $casa = @(
-	"advanced-ipscanner"
 	"amd-ryzen-chipset"
-	#"bulk-crap-uninstaller"
-	"cpu-z"
-	"crystaldiskinfo"
-	"crystaldiskmark"
-	"discord"
-	#"dopamine"
-	"eartrumpet"
-	"everything"
-	"ffmpeg"
-	"file-converter"
-	"gpu-z"
-	"handbrake"
-	"hwinfo"
 	"internet-download-manager"
 	"insync"
-	"irfanview"
-	"irfanviewplugins"
-	"k-litecodecpackfull"
-	"msiafterburner"
-	"obs-studio"
-	"parsec"
-	"powershell-core"
-	"powertoys"
-	"prismlauncher"
-	"qbittorrent"
-	"sharex"
-	"steam-client"
-	"tailscale"
-	"teamviewer"
-	"virtualbox"
-	"vscode"
-	"winaero-tweaker"
-	"wiztree"
-	"zerotier-one"
 )
 
 $trabajo = @(
@@ -315,7 +306,7 @@ Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer
 Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "Hidden" -Type Dword -Value "1"
 
 #Cambio el editor de autohotkey a vscode por default
-Set-ItemProperty -Path "HKCR:\AutoHotkeyScript\Shell\Edit\Command" -Name "(Default)" -Value '"C:\Program Files\Microsoft VS Code\Code.exe" %1'
+#Set-ItemProperty -Path "HKCR:\AutoHotkeyScript\Shell\Edit\Command" -Name "(Default)" -Value '"C:\Users\xhjlj\scoop\apps\vscode\current\Code.exe" %1'
 
 #=================================================================================
 #  Variables y ajustes
