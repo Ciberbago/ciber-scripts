@@ -338,15 +338,6 @@ Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-script
 #Crear carpeta para descargar los ps1
 mkdir $env:USERPROFILE\Documents\scripts
 
-Write-Host "Descargando script para iniciar sesion en O365" -ForegroundColor Black -BackgroundColor White
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts/office.ps1" -OutFile "$env:USERPROFILE\Documents\scripts\office.ps1"
-
-Write-Host "Descargando script para consultar licencias en O365" -ForegroundColor Black -BackgroundColor White
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts/licencias.ps1" -OutFile "$env:USERPROFILE\Documents\scripts\licencias.ps1"
-
-Write-Host "Descargando script para cambiar contraseñas en O365" -ForegroundColor Black -BackgroundColor White
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts/pass.ps1" -OutFile "$env:USERPROFILE\Documents\scripts\pass.ps1"
-
 Write-Host "Descargando script para consultar IP publica" -ForegroundColor Black -BackgroundColor White
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts/miip.ps1" -OutFile "$env:USERPROFILE\Documents\scripts\miip.ps1"
 
