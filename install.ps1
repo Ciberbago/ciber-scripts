@@ -47,78 +47,92 @@ winget install m2team.nanazip -e --accept-source-agreements --accept-package-agr
 #Agregar buckets
 
 Write-Host "Agregando buckets utiles" -ForegroundColor Black -BackgroundColor White
-scoop install git
+scoop install git aria2
+
 scoop bucket add games
 scoop bucket add extras
 scoop bucket add nirsoft
 scoop bucket add nonportable
 scoop bucket add versions
 scoop bucket add java
+scoop bucket add ciber https://github.com/Ciberbago/ciber-bucket/
 scoop update
 
+scoop config aria2-warning-enabled false
 #Instalar programas
 Write-Host "Instalando programas con Scoop" -ForegroundColor Black -BackgroundColor White
 
 $apps = @(
-	"advanced-ip-scanner",
-	"adb",
-	"anydesk",
-	"authy",
-	"autohotkey1.1",
-	"blender",
-	"bulk-crap-uninstaller",
-	"cpu-z",
-	"crystaldiskinfo",
-	"crystaldiskmark",
-	"curl",
-	"discord",
-	"eartrumpet",
-	"etcher",
-	"everything",
-	"ffmpeg",
-	"file-converter-np",
-	"firefox",
-	"furmark",
-	"git",
-	"gpu-z",
-	"handbrake",
-	"heroic-games-launcher",
-	"hwinfo",
-	"icaros-np",
-	"irfanview",
-	"k-lite-codec-pack-full-np",
-	"lockhunter",
-	"losslesscut",
-	"megasync",
-	"obs-studio",
-	"office-365-apps-np",
-	"parsec-np",
-	"patchcleaner",
-	"powertoys",
-	"prismlauncher",
-	"pwsh",
-	"qbittorrent",
-	"secureuxtheme",
-	"sharex",
-	"speedtest-cli",
-	"steam",
-	"tailscale",
-	"teamviewer-np",
-	"temurin17-jre",
-	"temurin8-jre",
-	"twinkle-tray",
-	"vcredist-aio",
-	"ventoy",
-	"virtualbox-with-extension-pack-np",
-	"vscode",
-	"windowsdesktop-runtime",
-	"wiztree",
+	"advanced-ip-scanner"
+	"adb"
+	"anydesk"
+	"antidupl.net"
+	"authy"
+	"autohotkey1.1"
+	"blender"
+	"bulk-crap-uninstaller"
+	"caesium-image-compressor"
+	"cpu-z"
+	"crystaldiskinfo"
+	"crystaldiskmark"
+	"curl"
+	"discord"
+	"dotnet-sdk"
+	"dotnet6-sdk"
+	"eartrumpet"
+	"etcher"
+	"everything"
+	"ffmpeg"
+	"file-converter-np"
+	"firefox"
+	"furmark"
+	"git"
+	"gpu-z"
+	"handbrake"
+	"heroic-games-launcher"
+	"hwinfo"
+	"icaros-np"
+	"irfanview"
+	"k-lite-codec-pack-full-np"
+	"lockhunter"
+	"losslesscut"
+	"megasync"
+	"neatdownloadmanager"
+	"obs-studio"
+	"office-365-apps-np"
+	"oh-my-posh"
+	"parsec-np"
+	"patchcleaner"
+	"powertoys"
+	"prismlauncher"
+	"pwsh"
+	"qbittorrent"
+	"scoop-search"
+	"secureuxtheme"
+	"sharex"
+	"speedtest-cli"
+	"steam"
+	"tailscale"
+	"teamviewer-np"
+	"temurin17-jre"
+	"temurin8-jre"
+	"twinkle-tray"
+	"vcredist-aio"
+	"ventoy"
+	"virtualbox-with-extension-pack-np"
+	"vscode"
+	"windowsdesktop-runtime"
+	"windowsdesktop-runtime-lts"
+	"wiztree"
 	"yuzu"
 )
 
 foreach ($app in $apps) {
     scoop install $app
 }
+
+#Limpio la cache despues de haber descargado todo
+scoop cache rm *
 
 #=================================================================================
 # Instalacion de programas con CHOCOLATEY
@@ -128,8 +142,8 @@ foreach ($app in $apps) {
 Write-Host "Instalando Programas con choco" -ForegroundColor Black -BackgroundColor White
 $casa = @(
 	"amd-ryzen-chipset"
-	"internet-download-manager"
 	"insync"
+	"goggalaxy"
 )
 
 $trabajo = @(
@@ -170,7 +184,6 @@ else {
 Write-Host "Desinstalando apps incluidas con windows" -ForegroundColor Black -BackgroundColor White
 $Bloatware = @(
 	"*Microsoft.MicrosoftOfficeHub*"
-	"*Microsoft.Windows.Photos*"
 	"*Microsoft.ZuneVideo*"
 	"*Microsoft.ZuneMusic*"
 	"*Microsoft.WindowsNotepad*"
@@ -245,84 +258,21 @@ Write-Host "Quitado OneDrive" -ForegroundColor Black -BackgroundColor White
 else {
 	Write-Host "Onedrive queda habilitado" -ForegroundColor Black -BackgroundColor White
 }
-# ----------------------------------------------------------
-# ----------------------------------------------------------
 
-
-#Tweaks de privacidad sacado del script de titus
-
-If ($respuesta -eq 1){
-Write-Host "Disabling Telemetry..." -ForegroundColor Black -BackgroundColor White
-Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\DataCollection" -Name "AllowTelemetry" -Type DWord -Value 0
-Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\DataCollection" -Name "AllowTelemetry" -Type DWord -Value 0
-Set-ItemProperty -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name "ContentDeliveryAllowed" -Type DWord -Value 0
-Set-ItemProperty -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name "OemPreInstalledAppsEnabled" -Type DWord -Value 0
-Set-ItemProperty -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name "PreInstalledAppsEnabled" -Type DWord -Value 0
-Set-ItemProperty -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name "PreInstalledAppsEverEnabled" -Type DWord -Value 0
-Set-ItemProperty -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name "SilentInstalledAppsEnabled" -Type DWord -Value 0
-Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name "SubscribedContent-338387Enabled" -Type DWord -Value 0
-Set-ItemProperty -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name "SubscribedContent-338388Enabled" -Type DWord -Value 0
-Set-ItemProperty -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name "SubscribedContent-338389Enabled" -Type DWord -Value 0
-Set-ItemProperty -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name "SubscribedContent-353698Enabled" -Type DWord -Value 0
-Set-ItemProperty -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name "SystemPaneSuggestionsEnabled" -Type DWord -Value 0
-Disable-ScheduledTask -TaskName "Microsoft\Windows\Application Experience\Microsoft Compatibility Appraiser" | Out-Null
-Disable-ScheduledTask -TaskName "Microsoft\Windows\Application Experience\ProgramDataUpdater" | Out-Null
-Disable-ScheduledTask -TaskName "Microsoft\Windows\Autochk\Proxy" | Out-Null
-Disable-ScheduledTask -TaskName "Microsoft\Windows\Customer Experience Improvement Program\Consolidator" | Out-Null
-Disable-ScheduledTask -TaskName "Microsoft\Windows\Customer Experience Improvement Program\UsbCeip" | Out-Null
-Disable-ScheduledTask -TaskName "Microsoft\Windows\DiskDiagnostic\Microsoft-Windows-DiskDiagnosticDataCollector" | Out-Null
-}
-else {
-	Write-Host "No se aplican ajustes de privacidad de O&O, solo ajustes del registro" -ForegroundColor Black -BackgroundColor White
-	Write-Host "Disabling Telemetry..." -ForegroundColor Black -BackgroundColor White
-	Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\DataCollection" -Name "AllowTelemetry" -Type DWord -Value 0
-	Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\DataCollection" -Name "AllowTelemetry" -Type DWord -Value 0
-	Set-ItemProperty -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name "ContentDeliveryAllowed" -Type DWord -Value 0
-	Set-ItemProperty -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name "OemPreInstalledAppsEnabled" -Type DWord -Value 0
-	Set-ItemProperty -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name "PreInstalledAppsEnabled" -Type DWord -Value 0
-	Set-ItemProperty -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name "PreInstalledAppsEverEnabled" -Type DWord -Value 0
-	Set-ItemProperty -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name "SilentInstalledAppsEnabled" -Type DWord -Value 0
-	Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name "SubscribedContent-338387Enabled" -Type DWord -Value 0
-	Set-ItemProperty -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name "SubscribedContent-338388Enabled" -Type DWord -Value 0
-	Set-ItemProperty -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name "SubscribedContent-338389Enabled" -Type DWord -Value 0
-	Set-ItemProperty -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name "SubscribedContent-353698Enabled" -Type DWord -Value 0
-	Set-ItemProperty -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name "SystemPaneSuggestionsEnabled" -Type DWord -Value 0
-	Disable-ScheduledTask -TaskName "Microsoft\Windows\Application Experience\Microsoft Compatibility Appraiser" | Out-Null
-	Disable-ScheduledTask -TaskName "Microsoft\Windows\Application Experience\ProgramDataUpdater" | Out-Null
-	Disable-ScheduledTask -TaskName "Microsoft\Windows\Autochk\Proxy" | Out-Null
-	Disable-ScheduledTask -TaskName "Microsoft\Windows\Customer Experience Improvement Program\Consolidator" | Out-Null
-	Disable-ScheduledTask -TaskName "Microsoft\Windows\Customer Experience Improvement Program\UsbCeip" | Out-Null
-	Disable-ScheduledTask -TaskName "Microsoft\Windows\DiskDiagnostic\Microsoft-Windows-DiskDiagnosticDataCollector" | Out-Null
-	Write-Host "Telemtria deshabilitada" -ForegroundColor Black -BackgroundColor White
-}
 #Creo el acceso directo al regedit para HKU y HKCR
 New-PSDrive -PSProvider Registry -Name HKU -Root HKEY_USERS
 New-PSDrive -PSProvider Registry -Name HKCR -Root HKEY_CLASSES_ROOT
 
-
 #Desactivo sticky keys
 Set-ItemProperty -Path "HKCU:\Control Panel\Accessibility\StickyKeys" -Name "Flags" -Type String -Value "506"
-
 #Activo las extensiones de los archivos
 Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "HideFileExt" -Type Dword -Value "0"
-
 #Activo los archivos ocultos
 Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "Hidden" -Type Dword -Value "1"
-
-#Cambio el editor de autohotkey a vscode por default
-#Set-ItemProperty -Path "HKCR:\AutoHotkeyScript\Shell\Edit\Command" -Name "(Default)" -Value '"C:\Users\xhjlj\scoop\apps\vscode\current\Code.exe" %1'
 
 #=================================================================================
 #  Variables y ajustes
 #=================================================================================
-
-#Agrego programas al startup
-Copy-Item "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Scoop Apps\Tailscale.lnk" "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup"
-Copy-Item "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Scoop Apps\Everything.lnk" "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup"
-Copy-Item "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Scoop Apps\ShareX.lnk" "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup"
-Copy-Item "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Scoop Apps\EarTrumpet.lnk" "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup"
-New-Item -ItemType SymbolicLink -Path "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup\Autohotkey.lnk" -Target "$env:USERPROFILE\Documents\autohotkey.ahk"
-
 #Desactivo la hibernacion
 Write-Host "Desactivando hibernacion" -ForegroundColor Black -BackgroundColor White
 powercfg /h off
@@ -344,6 +294,13 @@ Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-script
 Write-Host "Descargando archivo de regedit y cmd para resetear IDM trial" -ForegroundColor Black -BackgroundColor White
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts/IDMTrialReset.reg" -OutFile "$env:USERPROFILE\Documents\scripts\IDMTrialReset.reg"
 
+#Agrego programas al startup
+Write-Host "Add silent flag" -ForegroundColor Black -BackgroundColor White
+Copy-Item "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Scoop Apps\ShareX.lnk" "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup"
+Copy-Item "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Scoop Apps\Tailscale.lnk" "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup"
+Copy-Item "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Scoop Apps\EarTrumpet.lnk" "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup"
+New-Item -ItemType SymbolicLink -Path "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup\Autohotkey.lnk" -Target "$env:USERPROFILE\Documents\autohotkey.ahk"
+
 #Descargo el tema de rectify, lo extraigo y lo pongo en la carpeta de los temas de windows
 Write-Host "Descargando e instalando el tema de Rectify11" -ForegroundColor Black -BackgroundColor White
 Invoke-WebRequest -Uri "https://github.com/Ciberbago/ciber-scripts/blob/main/rectify11.zip?raw=true" -OutFile "$env:TEMP\rectify11.zip"
@@ -359,9 +316,12 @@ $Target = [System.EnvironmentVariableTarget]::Machine
 [System.Environment]::SetEnvironmentVariable('Path', $env:Path + ";$NewPath2", $Target)
 
 #Mejoro el perfil de PS5
-Set-ExecutionPolicy Bypass -Scope Process -Force; Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://ohmyposh.dev/install.ps1'))
+if (!(Test-Path -Path $PROFILE)) {
+    New-Item -ItemType File -Path $PROFILE -Force
+}
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Kudostoy0u/pwsh10k/master/pwsh10k.omp.json" -OutFile "$env:USERPROFILE\pwsh10k.omp.json"
 Add-Content -Path $env:USERPROFILE\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1 -Value ('oh-my-posh init pwsh --config ~\pwsh10k.omp.json | Invoke-Expression') -PassThru
+Add-Content -Path $env:USERPROFILE\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1 -Value ('Invoke-Expression (&scoop-search --hook)') -PassThru
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/Caskaydia.ttf" -OutFile "C:\Windows\fonts\Caskaydia.ttf"
 C:\Windows\fonts\Caskaydia.ttf
 
