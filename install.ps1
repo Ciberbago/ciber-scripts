@@ -340,5 +340,7 @@ Write-Host "Desinstala las optional features" -ForegroundColor Black -Background
 & cmd /c start ms-settings:optionalfeatures
 
 Write-Host "Decarga drivers y ponlos en modo minimal" -ForegroundColor Black -BackgroundColor White
+#Drivers chipset, gpu y lan
 Start-Process "https://www.amd.com/en/support/chipsets/amd-socket-am4/b450"
 Start-Process "https://www.amd.com/en/support/graphics/amd-radeon-5700-series/amd-radeon-rx-5700-series/amd-radeon-rx-5700-xt"
+Start-Process "https://download.gigabyte.com/FileList/Driver/mb_driver_654_w11_1168.007.0318.2022.zip?v=07466d7005ac1718a94c1669f6d329b3"
