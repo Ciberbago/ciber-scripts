@@ -35,12 +35,6 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManage
 choco feature enable -n=useRememberedArgumentsForUpgrades
 
 #=================================================================================
-# Instalacion de programas con winget
-#=================================================================================
-
-winget install m2team.nanazip -e --accept-source-agreements --accept-package-agreements --silent
-
-#=================================================================================
 # Instalacion de programas con SCOOP
 #=================================================================================
 
@@ -123,6 +117,7 @@ $apps = @(
 	"vscode"
 	"windowsdesktop-runtime"
 	"windowsdesktop-runtime-lts"
+	"winget"
 	"wiztree"
 	"yuzu"
 )
@@ -176,6 +171,13 @@ If ($respuesta -eq 1){
 else {
 	choco install $trabajo -y --force
 }
+
+#=================================================================================
+# Instalacion de programas con winget
+#=================================================================================
+
+winget install M2Team.NanaZip -e --accept-source-agreements --accept-package-agreements --silent
+
 #=================================================================================
 # Debloat y privacidad
 #=================================================================================
