@@ -212,13 +212,8 @@ foreach ($Bloat in $Bloatware) {
 }
 
 DISM /online /disable-feature /featurename:WindowsMediaPlayer
-
 winget uninstall Microsoft.onedrive
-
 Write-Host "Bloat eliminado"
-Get-AppxPackage -Name "*Paint*"| Remove-AppxPackage
-
-
 # ----------------------------------------------------------
 # Deshabilito Onedrive
 # ----------------------------------------------------------
