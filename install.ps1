@@ -20,37 +20,30 @@ Set-ExecutionPolicy Unrestricted
 #=================================================================================
 # Instalacion de SCOOP
 #=================================================================================
-
 Write-Host "Instalando scoop" -ForegroundColor Black -BackgroundColor White
 iex "& {$(irm get.scoop.sh)} -RunAsAdmin"
 
 #=================================================================================
 # Instalacion de CHOCOLATEY
 #=================================================================================
-
-# Se habilita la instalacion de scripts externos para instalar chocolatey
 Write-Host "Instalando Chocolatey" -ForegroundColor Black -BackgroundColor White
 iex "& {$(irm https://community.chocolatey.org/install.ps1)}"
 
 #=================================================================================
 # Instalacion de programas con SCOOP
 #=================================================================================
-
-#Agregar buckets
-
-Write-Host "Agregando buckets utiles" -ForegroundColor Black -BackgroundColor White
+Write-Host "Instalando git y agregando buckets utiles" -ForegroundColor Black -BackgroundColor White
 scoop install git aria2
-
-scoop bucket add games
+scoop bucket add ciber https://github.com/Ciberbago/ciber-bucket/
 scoop bucket add extras
+scoop bucket add games
+scoop bucket add java
 scoop bucket add nirsoft
 scoop bucket add nonportable
 scoop bucket add versions
-scoop bucket add java
-scoop bucket add ciber https://github.com/Ciberbago/ciber-bucket/
 scoop update
-
 scoop config aria2-warning-enabled false
+
 #Instalar programas
 Write-Host "Instalando programas con Scoop" -ForegroundColor Black -BackgroundColor White
 
@@ -135,7 +128,6 @@ scoop cache rm *
 # Opcion util en choco
 Write-Host "Instalando Programas con choco" -ForegroundColor Black -BackgroundColor White
 $casa = @(
-	"amd-ryzen-chipset"
 	"insync"
 	"goggalaxy"
 )
@@ -283,12 +275,9 @@ Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer
 Write-Host "Desactivando hibernacion" -ForegroundColor Black -BackgroundColor White
 powercfg /h off
 
-#Descarga el archivo de autohotkey
-Write-Host "Descargando script de autohotkey" -ForegroundColor Black -BackgroundColor White
+#Descarga el archivo de autohotkey y handbrake
+Write-Host "Descargando script de autohotkey y handbrake" -ForegroundColor Black -BackgroundColor White
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/config/autohotkey.ahk" -OutFile "$env:USERPROFILE\Documents\autohotkey.ahk"
-
-#Descarga el archivo de handbrake para crear el perfil de codificacion eficiente
-Write-Host "Descargando perfil de handbrake" -ForegroundColor Black -BackgroundColor White
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/config/HBProfile.json" -OutFile "$env:USERPROFILE\Documents\HBProfile.json"
 
 #Crear carpeta para descargar los ps1
@@ -296,9 +285,6 @@ mkdir $env:USERPROFILE\Documents\scripts
 
 Write-Host "Descargando script para consultar IP publica" -ForegroundColor Black -BackgroundColor White
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts/miip.ps1" -OutFile "$env:USERPROFILE\Documents\scripts\miip.ps1"
-
-Write-Host "Descargando archivo de regedit y cmd para resetear IDM trial" -ForegroundColor Black -BackgroundColor White
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts/IDMTrialReset.reg" -OutFile "$env:USERPROFILE\Documents\scripts\IDMTrialReset.reg"
 
 #Agrego programas al startup
 Write-Host "Add silent flag" -ForegroundColor Black -BackgroundColor White
@@ -312,14 +298,9 @@ Write-Host "Descargando e instalando el tema de Rectify11" -ForegroundColor Blac
 Invoke-WebRequest -Uri "https://github.com/Ciberbago/ciber-scripts/blob/main/rectify11.zip?raw=true" -OutFile "$env:TEMP\rectify11.zip"
 7z x $env:TEMP\rectify11.zip -y -oC:\Windows\Resources\Themes
 
-#Recargo las variables para poder añadir otra
-$env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine")
-
 #Añade la carpeta de scripts en documentos para poder ejecutarlos desde cualquier lado
 Write-Host "Se añade la ruta de scripts a las variables de entorno" -ForegroundColor Black -BackgroundColor White
-$NewPath2 = "$env:USERPROFILE\Documents\scripts"
-$Target = [System.EnvironmentVariableTarget]::Machine
-[System.Environment]::SetEnvironmentVariable('Path', $env:Path + ";$NewPath2", $Target)
+[Environment]::SetEnvironmentVariable("Path", "$env:Path;$env:USERPROFILE\Documents\scripts", "User")
 
 #Mejoro el perfil de PS5
 if (!(Test-Path -Path $PROFILE)) {
@@ -360,8 +341,13 @@ Write-Host "Recuerda agregar a las ubicaciones de red el nas y poco x3" -Foregro
 else {
 	Write-Host "No se hace nada de cosas personales" -ForegroundColor Black -BackgroundColor White
 }
-#Update the windows terminal para que te deje poner los settings y dejarla bonita con winfetch al inicio en PWSH
+#Update the windows terminal para que te deje poner los settings
 Write-Host "Update the windows terminal para que te deje poner los settings y dejarla bonita" -ForegroundColor Black -BackgroundColor White
 winget upgrade Microsoft.WindowsTerminal
 
+Write-Host "Desinstala las optional features" -ForegroundColor Black -BackgroundColor White
 & cmd /c start ms-settings:optionalfeatures
+
+Write-Host "Decarga drivers y ponlos en modo minimal" -ForegroundColor Black -BackgroundColor White
+Start-Process "https://www.amd.com/en/support/chipsets/amd-socket-am4/b450"
+Start-Process "https://www.amd.com/en/support/graphics/amd-radeon-5700-series/amd-radeon-rx-5700-series/amd-radeon-rx-5700-xt"
