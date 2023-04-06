@@ -86,12 +86,13 @@ $apps = @(
 	"icaros-np"
 	"irfanview"
 	"k-lite-codec-pack-full-np"
+	"ldplayer9-portable"
 	"lockhunter"
 	"losslesscut"
 	"megasync"
 	"neatdownloadmanager"
 	"obs-studio"
-	"office-365-apps-np"
+	"office-365-apps-minimal-np"
 	"oh-my-posh"
 	"parsec-np"
 	"patchcleaner"
@@ -207,6 +208,9 @@ $Bloatware = @(
 	"*Microsoft.YourPhone*"
 	"*Microsoft.WindowsFeedbackHub*"
 	"*Paint*"
+	"*Family*"
+	"*OnedriveSync*"
+	"*Xbox*"
 )
 
 foreach ($Bloat in $Bloatware) {
@@ -216,6 +220,8 @@ foreach ($Bloat in $Bloatware) {
 }
 
 DISM /online /disable-feature /featurename:WindowsMediaPlayer
+
+winget uninstall Microsoft.onedrive
 
 Write-Host "Bloat eliminado"
 Get-AppxPackage -Name "*Paint*"| Remove-AppxPackage
@@ -357,3 +363,5 @@ else {
 #Update the windows terminal para que te deje poner los settings y dejarla bonita con winfetch al inicio en PWSH
 Write-Host "Update the windows terminal para que te deje poner los settings y dejarla bonita" -ForegroundColor Black -BackgroundColor White
 winget upgrade Microsoft.WindowsTerminal
+
+& cmd /c start ms-settings:optionalfeatures
