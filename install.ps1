@@ -169,10 +169,6 @@ else {
 
 winget install M2Team.NanaZip -e --accept-source-agreements --accept-package-agreements --silent
 
-#=================================================================================
-# Debloat y privacidad
-#=================================================================================
-
 #Desinstalar apps incluidas
 Write-Host "Desinstalando apps incluidas con windows" -ForegroundColor Black -BackgroundColor White
 $Bloatware = @(
@@ -250,11 +246,11 @@ Write-Host "Quitado OneDrive" -ForegroundColor Black -BackgroundColor White
 } 
 else {
 	Write-Host "Onedrive queda habilitado" -ForegroundColor Black -BackgroundColor White
+	New-PSDrive -Name HKCR -PSProvider Registry -Root HKEY_CLASSES_ROOT | Out-Null
 }
 
 #Creo el acceso directo al regedit para HKU y HKCR
 New-PSDrive -PSProvider Registry -Name HKU -Root HKEY_USERS
-New-PSDrive -PSProvider Registry -Name HKCR -Root HKEY_CLASSES_ROOT
 
 #Desactivo sticky keys
 Set-ItemProperty -Path "HKCU:\Control Panel\Accessibility\StickyKeys" -Name "Flags" -Type String -Value "506"
