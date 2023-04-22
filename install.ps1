@@ -28,15 +28,11 @@ iex "& {$(irm https://community.chocolatey.org/install.ps1)}"
 # Instalacion de programas con SCOOP
 Write-Host "Instalando git y agregando buckets utiles" -ForegroundColor Black -BackgroundColor White
 scoop install git aria2
-scoop bucket add ciber https://github.com/Ciberbago/ciber-bucket/
-scoop bucket add extras
-scoop bucket add games
-scoop bucket add java
-scoop bucket add nirsoft
-scoop bucket add nonportable
-scoop bucket add versions
-scoop update
 scoop config aria2-warning-enabled false
+scoop bucket add ciber https://github.com/Ciberbago/ciber-bucket/
+$b = @("extras", "games", "java", "nirsoft", "nonportable", "versions")
+$b | ForEach-Object {scoop bucket add $_}
+scoop update
 
 #Instalar programas
 Write-Host "Instalando programas con Scoop" -ForegroundColor Black -BackgroundColor White
@@ -202,25 +198,25 @@ $BloatwareCasa = @(
 
 If ($respuesta -eq 1){
 #------
-foreach ($Bloat in $Bloatware) {
-    Get-AppxPackage -Name $Bloat| Remove-AppxPackage
-    Get-AppxProvisionedPackage -Online | Where-Object DisplayName -like $Bloat | Remove-AppxProvisionedPackage -Online
-    Write-Host "Eliminando $Bloat."
-}
-foreach ($Bloat in $BloatwareCasa) {
-    Get-AppxPackage -Name $Bloat| Remove-AppxPackage
-    Get-AppxProvisionedPackage -Online | Where-Object DisplayName -like $Bloat | Remove-AppxProvisionedPackage -Online
-    Write-Host "Eliminando $Bloat."
-}
-DISM /online /disable-feature /featurename:WindowsMediaPlayer
-#Deshabilitar onedrive
-winget uninstall Microsoft.Onedrive -h --accept-source-agreements
-Write-Host "Deshabilitando OneDrive" -ForegroundColor Black -BackgroundColor White
-If (!(Test-Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\OneDrive")) {
-        New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\OneDrive" | Out-Null
-    }
-Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\OneDrive" -Name "DisableFileSyncNGSC" -Type DWord -Value 1
-Write-Host "Deshabilitando OneDrive" -ForegroundColor Black -BackgroundColor White
+	foreach ($Bloat in $Bloatware) {
+		Get-AppxPackage -Name $Bloat| Remove-AppxPackage
+		Get-AppxProvisionedPackage -Online | Where-Object DisplayName -like $Bloat | Remove-AppxProvisionedPackage -Online
+		Write-Host "Eliminando $Bloat."
+	}
+	foreach ($Bloat in $BloatwareCasa) {
+		Get-AppxPackage -Name $Bloat| Remove-AppxPackage
+		Get-AppxProvisionedPackage -Online | Where-Object DisplayName -like $Bloat | Remove-AppxProvisionedPackage -Online
+		Write-Host "Eliminando $Bloat."
+	}
+	DISM /online /disable-feature /featurename:WindowsMediaPlayer
+	#Deshabilitar onedrive
+	winget uninstall Microsoft.Onedrive -h --accept-source-agreements
+	Write-Host "Deshabilitando OneDrive" -ForegroundColor Black -BackgroundColor White
+	If (!(Test-Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\OneDrive")) {
+			New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\OneDrive" | Out-Null
+		}
+	Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\OneDrive" -Name "DisableFileSyncNGSC" -Type DWord -Value 1
+	Write-Host "Deshabilitando OneDrive" -ForegroundColor Black -BackgroundColor White
 #------
 }
 else {
@@ -233,23 +229,6 @@ else {
 	DISM /online /disable-feature /featurename:WindowsMediaPlayer
 }
 
-#Desactivo sticky keys
-Set-ItemProperty -Path "HKCU:\Control Panel\Accessibility\StickyKeys" -Name "Flags" -Type String -Value "506"
-#Activo las extensiones de los archivos
-Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "HideFileExt" -Type Dword -Value "0"
-#Activo los archivos ocultos
-Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "Hidden" -Type Dword -Value "1"
-
-#=================================================================================
-#  Variables y ajustes
-#=================================================================================
-#Desactivo la hibernacion
-Write-Host "Desactivando hibernacion" -ForegroundColor Black -BackgroundColor White
-powercfg /h off
-
-#Crear carpeta para descargar los ps1
-mkdir $env:USERPROFILE\Documents\scripts
-
 #Descarga de archivos
 Write-Host "Descargando script de autohotkey y handbrake" -ForegroundColor Black -BackgroundColor White
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/config/autohotkey.ahk" -OutFile "$env:USERPROFILE\Documents\autohotkey.ahk"
@@ -257,6 +236,20 @@ Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-script
 Invoke-WebRequest -Uri "https://github.com/Ciberbago/ciber-scripts/blob/main/rectify11.zip?raw=true" -OutFile "$env:TEMP\rectify11.zip"
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Kudostoy0u/pwsh10k/master/pwsh10k.omp.json" -OutFile "$env:USERPROFILE\pwsh10k.omp.json"
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/Caskaydia.ttf" -OutFile "C:\Windows\fonts\Caskaydia.ttf"
+
+#Desactivo sticky keys
+Set-ItemProperty -Path "HKCU:\Control Panel\Accessibility\StickyKeys" -Name "Flags" -Type String -Value "506"
+#Activo las extensiones de los archivos
+Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "HideFileExt" -Type Dword -Value "0"
+#Activo los archivos ocultos
+Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "Hidden" -Type Dword -Value "1"
+#Desactivo la hibernacion
+powercfg /h off
+#Crear carpeta para descargar los ps1
+mkdir $env:USERPROFILE\Documents\scripts
+#Añade la carpeta de scripts en documentos para poder ejecutarlos desde cualquier lado
+[Environment]::SetEnvironmentVariable("Path", "$env:Path;$env:USERPROFILE\Documents\scripts", "User")
+
 
 #Agrego programas al startup
 function Crear-AccesoDirecto {
@@ -282,13 +275,7 @@ Crear-AccesoDirecto "\Windhawk.lnk" "$env:USERPROFILE\scoop\apps\windhawk\curren
 Crear-AccesoDirecto "\Autohotkey.lnk" "$env:USERPROFILE\Documents\autohotkey.ahk" ""
 
 #Descargo el tema de rectify, lo extraigo y lo pongo en la carpeta de los temas de windows
-Write-Host "Instalando el tema de Rectify11" -ForegroundColor Black -BackgroundColor White
 7z x $env:TEMP\rectify11.zip -y -oC:\Windows\Resources\Themes
-
-#Añade la carpeta de scripts en documentos para poder ejecutarlos desde cualquier lado
-Write-Host "Se añade la ruta de scripts a las variables de entorno" -ForegroundColor Black -BackgroundColor White
-[Environment]::SetEnvironmentVariable("Path", "$env:Path;$env:USERPROFILE\Documents\scripts", "User")
-
 #Mejoro el perfil de PS5
 if (!(Test-Path -Path $PROFILE)) {
     New-Item -ItemType File -Path $PROFILE -Force
@@ -298,7 +285,6 @@ Add-Content -Path $env:USERPROFILE\Documents\WindowsPowerShell\Microsoft.PowerSh
 C:\Windows\fonts\Caskaydia.ttf
 
 #Copio el perfil de PS5 para PS7
-Write-Host "Copio el perfil de PS5 para PS7" -ForegroundColor Black -BackgroundColor White
 xcopy $env:USERPROFILE\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1 $env:USERPROFILE\Documents\PowerShell\Microsoft.PowerShell_profile.ps1*
 
 #Borro la carpeta de keys de YUZU y hago un link de la que ya las tiene en el disco D
