@@ -301,11 +301,9 @@ Write-Host "Recuerda importar settings para Handbrake, ademas aplica el tema de 
 #Recordatorios MANUAL2
 If ($respuesta -eq 1){
 Write-Host "Recuerda instalar localizar juegos en Battle net, Heroic y Steam" -ForegroundColor Black -BackgroundColor White
-Start-Process "https://www.blizzard.com/download/confirmation?product=bnetdesk"
-
+Invoke-WebRequest -Uri "https://us.battle.net/download/getInstaller?os=win&installer=Battle.net-Setup.exe&id=undefined" -OutFile "$env:temp\bnet.exe"
 #Recordatorios MANUAL2
 Write-Host "Recuerda iniciar sesion con ambas cuentas en INSYNC" -ForegroundColor Black -BackgroundColor White
-
 #Recordatorios MANUAL2
 Write-Host "Recuerda agregar a las ubicaciones de red el nas y poco x3" -ForegroundColor Black -BackgroundColor White
 }
