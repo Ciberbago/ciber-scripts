@@ -211,12 +211,11 @@ If ($respuesta -eq 1){
 	DISM /online /disable-feature /featurename:WindowsMediaPlayer
 	#Deshabilitar onedrive
 	winget uninstall Microsoft.Onedrive -h --accept-source-agreements
-	Write-Host "Deshabilitando OneDrive" -ForegroundColor Black -BackgroundColor White
 	If (!(Test-Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\OneDrive")) {
 			New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\OneDrive" | Out-Null
 		}
 	Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\OneDrive" -Name "DisableFileSyncNGSC" -Type DWord -Value 1
-	Write-Host "Deshabilitando OneDrive" -ForegroundColor Black -BackgroundColor White
+	Write-Host "Deshabilitado OneDrive" -ForegroundColor Black -BackgroundColor White
 #------
 }
 else {
@@ -243,6 +242,8 @@ Set-ItemProperty -Path "HKCU:\Control Panel\Accessibility\StickyKeys" -Name "Fla
 Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "HideFileExt" -Type Dword -Value "0"
 #Activo los archivos ocultos
 Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "Hidden" -Type Dword -Value "1"
+#Desactivo el grabar juegos con la app de xbox (error ms-gamingoverlay)
+Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\GameDVR" -Name "AppCaptureEnabled" -Type Dword -Value "0"
 #Desactivo la hibernacion
 powercfg /h off
 #Crear carpeta para descargar los ps1
