@@ -276,7 +276,8 @@ Write-Host "Recuerda importar settings para Handbrake, ademas aplica el tema de 
 If ($respuesta -eq 1){
 Write-Host "Recuerda instalar localizar juegos en Battle net, Heroic y Steam" -ForegroundColor Black -BackgroundColor White
 Invoke-WebRequest -Uri "https://us.battle.net/download/getInstaller?os=win&installer=Battle.net-Setup.exe&id=undefined" -OutFile "$env:temp\bnet.exe"
-.$env:temp\bnet.exe
+Start-process -Wait $env:temp\bnet.exe -ArgumentList '--lang=esMX --installpath="C:\Program Files (x86)\Battle.net"'
+
 Write-Host "Recuerda iniciar sesion con ambas cuentas en INSYNC" -ForegroundColor Black -BackgroundColor White
 Write-Host "Recuerda agregar a las ubicaciones de red el nas y poco x3" -ForegroundColor Black -BackgroundColor White
 }
