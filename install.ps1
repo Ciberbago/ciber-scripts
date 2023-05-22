@@ -28,7 +28,6 @@ $appsAmbos = @(
 	"7zip19.00-helper"
 	"adb"
 	"advanced-ip-scanner"
-	"anydesk"
 	"autohotkey1.1"
 	"blender"
 	"caesium-image-compressor"
@@ -63,7 +62,6 @@ $appsAmbos = @(
 	"picotorrent"
 	"powertoys"
 	"pwsh"
-	"rustdesk-np"
 	"secureuxtheme"
 	"sfsu"
 	"sharex"
@@ -106,6 +104,7 @@ $appsCasa = @(
 )
 $appsTrabajo = @(
 	"azcopy"
+	"anydesk"
 	"bitwarden"
 	"googlechrome"
 	"office-365-apps-np"
@@ -114,6 +113,7 @@ $appsTrabajo = @(
 	"pdfsam"
 	"rdp-plus"
 	"scrcpy"
+	"teamviewer-np"
 	"vcredist2015"
 	"win-ps2exe"
 	"winbox"
@@ -124,7 +124,7 @@ else{ scoop install $appsAmbos; scoop install $appsTrabajo }
 scoop cache rm *
 ###### Instalacion de programas con CHOCOLATEY ########
 Write-Host "Instalando Programas con choco" -ForegroundColor Black -BackgroundColor White
-$casa = @("insync",	"goggalaxy")
+$casa = @("insync",	"goggalaxy", "anydesk.install")
 $trabajo = @("PowerBi")
 If ($respuesta -eq 1){ choco install $casa -y --force }
 else { choco install $trabajo -y --force }
@@ -244,6 +244,7 @@ Crear-AccesoDirecto "\EarTrumpet.lnk" "$env:USERPROFILE\scoop\apps\eartrumpet\cu
 Crear-AccesoDirecto "\ShareX.lnk" "$env:USERPROFILE\scoop\apps\sharex\current\ShareX.exe" " -silent"
 Crear-AccesoDirecto "\Tailscale.lnk" "$env:USERPROFILE\scoop\apps\tailscale\current\tailscale-ipn.exe" ""
 Crear-AccesoDirecto "\Windhawk.lnk" "$env:USERPROFILE\scoop\apps\windhawk\current\Windhawk\windhawk.exe" "-tray-only"
+Crear-AccesoDirecto "\Anydesk.lnk" "C:\Program Files (x86)\AnyDeskMSI\AnyDeskMSI.exe" ""
 #Añado carpetas al quick access
 $qa = new-object -com shell.application
 $qa.Namespace("E:\jaimedrive").Self.InvokeVerb("pintohome")
