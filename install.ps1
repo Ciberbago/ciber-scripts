@@ -68,7 +68,6 @@ $appsAmbos = @(
 	"speedtest-cli"
 	"sudo"
 	"tailscale"
-	"teamviewer-np"
 	"twinkle-tray"
 	"vcredist-aio"
 	"ventoy"
@@ -104,7 +103,6 @@ $appsCasa = @(
 )
 $appsTrabajo = @(
 	"azcopy"
-	"anydesk"
 	"bitwarden"
 	"googlechrome"
 	"office-365-apps-np"
@@ -114,7 +112,6 @@ $appsTrabajo = @(
 	"rdp-plus"
 	"scrcpy"
 	"teamviewer-np"
-	"vcredist2015"
 	"win-ps2exe"
 	"winbox"
 )
@@ -125,7 +122,7 @@ scoop cache rm *
 ###### Instalacion de programas con CHOCOLATEY ########
 Write-Host "Instalando Programas con choco" -ForegroundColor Black -BackgroundColor White
 $casa = @("insync",	"goggalaxy", "anydesk.install")
-$trabajo = @("PowerBi")
+$trabajo = @("PowerBi","anydesk.install")
 If ($respuesta -eq 1){ choco install $casa -y --force }
 else { choco install $trabajo -y --force }
 ###### Instalacion de programas con winget ######
