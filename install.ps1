@@ -16,6 +16,7 @@ iex "& {$(irm https://community.chocolatey.org/install.ps1)}"
 ###### Instalacion de programas con SCOOP ######
 Write-Host "Instalando git y agregando buckets utiles" -ForegroundColor Black -BackgroundColor White
 scoop install git aria2
+scoop config aria2-enabled false
 scoop config aria2-warning-enabled false
 scoop bucket add ciber https://github.com/Ciberbago/ciber-bucket/
 $b = @("extras", "games", "java", "nirsoft", "nonportable", "versions")
@@ -52,6 +53,7 @@ $appsAmbos = @(
 	"ldplayer9-portable"
 	"lockhunter"
 	"losslesscut"
+	"macrorit-partition-expert"
 	"megasync"
 	"neatdownloadmanager"
 	"netbscanner"
