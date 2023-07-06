@@ -202,12 +202,15 @@ else {
 	DISM /online /disable-feature /featurename:WindowsMediaPlayer
 }
 
+#Crear carpeta para descargar los ps1
+mkdir $env:USERPROFILE\Documents\scripts
 #Descarga de archivos
 Write-Host "Descargando script de autohotkey y handbrake" -ForegroundColor Black -BackgroundColor White
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Kudostoy0u/pwsh10k/master/pwsh10k.omp.json" -OutFile "$env:USERPROFILE\pwsh10k.omp.json"
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/config/autohotkey.ahk" -OutFile "$env:USERPROFILE\Documents\autohotkey.ahk"
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/config/HBProfile.json" -OutFile "$env:USERPROFILE\Documents\HBProfile.json"
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts/gif2mp4.ps1" -OutFile "$env:USERPROFILE\Documents\scripts\gif2mp4.ps1"
 Invoke-WebRequest -Uri "https://github.com/Ciberbago/ciber-scripts/blob/main/rectify11.zip?raw=true" -OutFile "$env:TEMP\rectify11.zip"
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Kudostoy0u/pwsh10k/master/pwsh10k.omp.json" -OutFile "$env:USERPROFILE\pwsh10k.omp.json"
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/Caskaydia.ttf" -OutFile "C:\Windows\fonts\Caskaydia.ttf"
 
 #Desactivo sticky keys
@@ -220,8 +223,6 @@ Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer
 Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\GameDVR" -Name "AppCaptureEnabled" -Type Dword -Value "0"
 #Desactivo la hibernacion
 powercfg /h off
-#Crear carpeta para descargar los ps1
-mkdir $env:USERPROFILE\Documents\scripts
 #Añade la carpeta de scripts en documentos para poder ejecutarlos desde cualquier lado
 [Environment]::SetEnvironmentVariable("Path", "$env:Path;$env:USERPROFILE\Documents\scripts", "User")
 
