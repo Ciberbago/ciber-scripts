@@ -246,7 +246,6 @@ Crear-AccesoDirecto "\EarTrumpet.lnk" "$env:USERPROFILE\scoop\apps\eartrumpet\cu
 Crear-AccesoDirecto "\ShareX.lnk" "$env:USERPROFILE\scoop\apps\sharex\current\ShareX.exe" " -silent"
 Crear-AccesoDirecto "\Tailscale.lnk" "$env:USERPROFILE\scoop\apps\tailscale\current\tailscale-ipn.exe" ""
 Crear-AccesoDirecto "\Windhawk.lnk" "$env:USERPROFILE\scoop\apps\windhawk\current\Windhawk\windhawk.exe" "-tray-only"
-Crear-AccesoDirecto "\Anydesk.lnk" "C:\Program Files (x86)\AnyDeskMSI\AnyDeskMSI.exe" ""
 #Añado carpetas al quick access
 $qa = new-object -com shell.application
 $qa.Namespace("E:\jaimedrive").Self.InvokeVerb("pintohome")
