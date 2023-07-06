@@ -44,7 +44,6 @@ $appsAmbos = @(
 	"etcher"
 	"everything"
 	"ffmpeg"
-	"file-converter-np"
 	"firefox"
 	"git"
 	"hwinfo"
