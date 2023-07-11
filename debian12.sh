@@ -2,14 +2,11 @@
 sudo apt update
 #Instalacion de paquetes
 sudo apt install -y nala
-sudo nala install -y bat curl duf exa fzf git htop lm-sensors micro ncdu nload powertop radeontop time wakeonlan zsh
+sudo nala install -y bat curl duf exa fzf git htop lm-sensors micro ncdu nload powertop radeontop rclone time wakeonlan zsh
 #instalacion de ufetch
 sudo wget -O /usr/local/bin/ufetch https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/debian/ufetch.sh && sudo chmod +x /usr/local/bin/ufetch
 #Instalacion de gotop
 sudo wget -O /usr/local/bin/gotop https://github.com/Ciberbago/ciber-scripts/raw/main/debian/gotop && sudo chmod +x /usr/local/bin/gotop
-#Descarga e instala duf
-#Instalacion rclone
-sudo -v ; curl https://rclone.org/install.sh | sudo bash
 #Instalacion de tailscale
 curl -fsSL https://tailscale.com/install.sh | sh
 
