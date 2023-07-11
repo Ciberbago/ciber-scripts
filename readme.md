@@ -47,6 +47,8 @@ Asi como instalar todos los modulos necesarios en una nueva instalación de debi
 
 wget -O - https://bit.ly/ciberserver | bash
 
+Para debian 12: wget -O - https://bit.ly/ciberserver12 | bash
+
 Incluye cosas como:
 - Monitoreo
     - htop
