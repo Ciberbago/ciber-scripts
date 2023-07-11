@@ -1,21 +1,13 @@
-#Agregar repositorio para NALA
-echo "deb http://deb.volian.org/volian/ scar main" | sudo tee /etc/apt/sources.list.d/volian-archive-scar-unstable.list
-wget -qO - https://deb.volian.org/volian/scar.key | sudo tee /etc/apt/trusted.gpg.d/volian-archive-scar-unstable.gpg > /dev/null
-#Repositorio para ctop
-echo "deb [signed-by=/usr/share/keyrings/azlux-archive-keyring.gpg] http://packages.azlux.fr/debian/ stable main" | sudo tee /etc/apt/sources.list.d/azlux.list
-sudo wget -O /usr/share/keyrings/azlux-archive-keyring.gpg  https://azlux.fr/repo.gpg
 #actualizar repositorios
 sudo apt update
-
 #Instalacion de paquetes
-sudo apt install -y nala-legacy
-sudo nala install -y zsh htop ncdu exa micro git curl lm-sensors wakeonlan nload bat docker-ctop time fzf tmux
+sudo apt install -y nala
+sudo nala install -y bat curl duf exa fzf git htop lm-sensors micro ncdu nload powertop radeontop time wakeonlan zsh
 #instalacion de ufetch
 sudo wget -O /usr/local/bin/ufetch https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/debian/ufetch.sh && sudo chmod +x /usr/local/bin/ufetch
 #Instalacion de gotop
 sudo wget -O /usr/local/bin/gotop https://github.com/Ciberbago/ciber-scripts/raw/main/debian/gotop && sudo chmod +x /usr/local/bin/gotop
 #Descarga e instala duf
-wget -O ~/duf.deb https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/debian/duf.deb && sudo dpkg -i ~/duf.deb
 #Instalacion rclone
 sudo -v ; curl https://rclone.org/install.sh | sudo bash
 #Instalacion de tailscale
