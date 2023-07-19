@@ -30,7 +30,7 @@ $appsAmbos = @(
 	"adb"
 	"advanced-ip-scanner"
 	"autohotkey1.1"
-	"blender"
+	"blender-mirror"
 	"caesium-image-compressor"
 	"clickpaste"
 	"cpu-z"
