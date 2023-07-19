@@ -261,7 +261,7 @@ $qa.Namespace("$env:USERPROFILE\scoop\apps\sharex\current\ShareX\Screenshots").S
 if (!(Test-Path -Path $PROFILE)) {
     New-Item -ItemType File -Path $PROFILE -Force
 }
-Add-Content -Path $env:USERPROFILE\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1 -Value ('oh-my-posh init pwsh --config ~\pwsh10k.omp.json | Invoke-Expression') -PassThru
+Add-Content -Path $env:USERPROFILE\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1 -Value ('oh-my-posh --init --shell pwsh --config ~\pwsh10k.omp.json | Invoke-Expression') -PassThru
 Add-Content -Path $env:USERPROFILE\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1 -Value ('Invoke-Expression (&sfsu hook)') -PassThru
 C:\Windows\fonts\Caskaydia.ttf
 #Copio el perfil de PS5 para PS7
