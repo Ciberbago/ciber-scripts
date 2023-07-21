@@ -19,7 +19,7 @@ scoop install git aria2
 scoop config aria2-enabled false
 scoop config aria2-warning-enabled false
 scoop bucket add ciber https://github.com/Ciberbago/ciber-bucket/
-$b = @("extras", "games", "java", "nirsoft", "nonportable", "versions")
+$b = @("extras", "nirsoft", "nonportable", "sysinternals")
 $b | ForEach-Object {scoop bucket add $_}
 scoop update
 #Instalar programas
