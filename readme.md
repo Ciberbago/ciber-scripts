@@ -6,7 +6,7 @@ Este es un repositorio personal
 
 Principalmente lo hice para poder instalar la mayoría de programas y configuraciones que necesito en Windows 11 con el siguiente comando:
 
-iwr -useb http | iex
+iwr -useb https://bit.ly/ciberwin11 | iex
 
 Incluye cosas como:
 - Gestores de paquetes
@@ -43,10 +43,10 @@ Incluye cosas como:
 Asi como instalar todos los modulos necesarios en una nueva instalación de debian minimal para cualquier servidor de pruebas o producción que pueda llegar a necesitar con el siguiente comando:
 
 Para debian 11:
-wget -O - http | bash
+wget -O - https://bit.ly/ciberdebian11 | bash
 
 Para debian 12:
-wget -O - http | bash
+wget -O - https://bit.ly/ciberserver12 | bash
 
 
 Incluye cosas como:
