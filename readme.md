@@ -43,9 +43,11 @@ Incluye cosas como:
 Asi como instalar todos los modulos necesarios en una nueva instalación de debian minimal para cualquier servidor de pruebas o producción que pueda llegar a necesitar con el siguiente comando:
 
 Para debian 11:
+
 wget -O - https://bit.ly/ciberdebian11 | bash
 
 Para debian 12:
+
 wget -O - https://bit.ly/ciberserver12 | bash
 
 
