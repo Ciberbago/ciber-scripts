@@ -1,1 +1,0 @@
-Get-MsolAccountSku | Where-Object AccountSkuId -like *o365*

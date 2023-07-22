@@ -68,7 +68,7 @@ echo 'SELECTED_EDITOR="/usr/bin/micro"' | >> .selected_editor
 echo "alias buscar='history 1 | fzf'" | tee -a .zshrc
 echo "alias cat='batcat'" | tee -a .zshrc
 echo "alias cc='cd && clear'" | tee -a .zshrc
-echo "alias cheat='f() { curl cheat.sh/$1; };f'" | tee -a .zshrc
+echo "alias cheat='f() { curl cheat.sh/\$1; };f'" | tee -a .zshrc
 echo "alias espacio='sudo ncdu / --exclude=/media' " | tee -a .zshrc
 echo "alias ls='exa -lha --icons'" | tee -a .zshrc
 echo "alias lsxt='exa -lha --icons --tree --level=3'" | tee -a .zshrc

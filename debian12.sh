@@ -38,6 +38,7 @@ wget -O ~/scripts/backup.sh https://raw.githubusercontent.com/Ciberbago/ciber-sc
 wget -O ~/scripts/music.sh https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/debian/music.sh
 wget -O ~/scripts/scanner.sh https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/debian/scanner.sh
 wget -O ~/scripts/portainerupdate.sh https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/debian/portainerupdate.sh
+wget -O - https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/debian/portainerupdate.sh | bash
 
 sudo chmod +x ~/scripts/*
 
