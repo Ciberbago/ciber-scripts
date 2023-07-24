@@ -9,7 +9,7 @@ sudo apt update
 
 #Instalacion de paquetes
 sudo apt install -y nala-legacy
-sudo nala install -y zsh htop ncdu exa micro git curl lm-sensors wakeonlan nload bat docker-ctop time fzf tmux
+sudo nala install -y zsh htop ncdu exa micro git curl lm-sensors wakeonlan nload bat docker-ctop time fzf tmux unattended-upgrades
 #instalacion de ufetch
 sudo wget -O /usr/local/bin/ufetch https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/debian/ufetch.sh && sudo chmod +x /usr/local/bin/ufetch
 #Instalacion de gotop
@@ -86,6 +86,7 @@ echo "HISTSIZE=10000" | tee -a .zshrc
 echo "SAVEHIST=1000" | tee -a .zshrc
 echo "setopt SHARE_HISTORY " | tee -a .zshrc
 
+sudo dpkg-reconfigure --priority=low unattended-upgrades
 sudo systemctl restart sshd
 
 echo "Ejecuta ZSH para terminar la configuración"

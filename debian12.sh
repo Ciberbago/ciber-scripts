@@ -77,8 +77,7 @@ echo "SAVEHIST=1000" | tee -a .zshrc
 echo "setopt SHARE_HISTORY " | tee -a .zshrc
 
 #Servicios
-sudo systemctl enable unattended-upgrades
-sudo systemctl start unattended-upgrades
+sudo dpkg-reconfigure --priority=low unattended-upgrades
 sudo systemctl restart sshd
 
 echo "Ejecuta ZSH para terminar la configuración"
