@@ -1,3 +1,4 @@
+Start-Transcript -Path "C:\ciberlog.txt"
 Write-Host "____ _ ___  ____ ____    _ _  _ ____ ___ ____ _    _    ____ ____ "
 Write-Host "|    | |__] |___ |__/ __ | |\ | [__   |  |__| |    |    |___ |__/ "
 Write-Host "|___ | |__] |___ |  \    | | \| ___]  |  |  | |___ |___ |___ |  \ "
@@ -115,8 +116,6 @@ $appsTrabajo = @(
 	"googlechrome"
 	"nvcleanstall"
 	"office-365-apps-np"
-	"openvpn-connect"
-	"openwithview"
 	"pdfsam"
 	"rdp-plus"
 	"scrcpy"
@@ -214,8 +213,8 @@ Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Kudostoy0u/pwsh10k/mas
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/config/autohotkey.ahk" -OutFile "$env:USERPROFILE\Documents\autohotkey.ahk"
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/config/HBProfile.json" -OutFile "$env:USERPROFILE\Documents\HBProfile.json"
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts/gif2mp4.ps1" -OutFile "$env:USERPROFILE\Documents\scripts\gif2mp4.ps1"
-Invoke-WebRequest -Uri "https://github.com/Ciberbago/ciber-scripts/blob/main/rectify11.zip?raw=true" -OutFile "$env:TEMP\rectify11.zip"
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/Caskaydia.ttf" -OutFile "C:\Windows\fonts\Caskaydia.ttf"
+Invoke-WebRequest -Uri "https://github.com/Ciberbago/ciber-scripts/blob/main/config/rectify11.zip?raw=true" -OutFile "$env:TEMP\rectify11.zip"
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/config/Caskaydia.ttf" -OutFile "C:\Windows\fonts\Caskaydia.ttf"
 
 #Desactivo sticky keys
 Set-ItemProperty -Path "HKCU:\Control Panel\Accessibility\StickyKeys" -Name "Flags" -Type String -Value "506"
@@ -302,3 +301,5 @@ Write-Host "Decarga drivers y ponlos en modo minimal" -ForegroundColor Black -Ba
 Start-Process "https://www.amd.com/en/support/chipsets/amd-socket-am4/b450"
 Start-Process "https://www.amd.com/en/support/graphics/amd-radeon-5700-series/amd-radeon-rx-5700-series/amd-radeon-rx-5700-xt"
 Start-Process "https://download.gigabyte.com/FileList/Driver/mb_driver_654_w11_1168.007.0318.2022.zip?v=07466d7005ac1718a94c1669f6d329b3"
+
+Stop-Transcript
