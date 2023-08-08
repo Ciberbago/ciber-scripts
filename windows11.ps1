@@ -60,7 +60,6 @@ $appsAmbos = @(
 	"neatdownloadmanager"
 	"netbscanner"
 	"obs-studio"
-	"oh-my-posh"
 	"parsec-np"
 	"patchcleaner"
 	"picotorrent"
@@ -258,7 +257,6 @@ $qa.Namespace("$env:USERPROFILE\scoop\apps\sharex\current\ShareX\Screenshots").S
 if (!(Test-Path -Path $PROFILE)) {
     New-Item -ItemType File -Path $PROFILE -Force
 }
-Add-Content -Path $env:USERPROFILE\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1 -Value ('oh-my-posh --init --shell pwsh --config ~\pwsh10k.omp.json | Invoke-Expression') -PassThru
 Add-Content -Path $env:USERPROFILE\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1 -Value ('Invoke-Expression (&sfsu hook)') -PassThru
 C:\Windows\fonts\Caskaydia.ttf
 #Copio el perfil de PS5 para PS7
@@ -299,5 +297,4 @@ Write-Host "Decarga drivers y ponlos en modo minimal" -ForegroundColor Black -Ba
 Start-Process "https://www.amd.com/en/support/chipsets/amd-socket-am4/b450"
 Start-Process "https://www.amd.com/en/support/graphics/amd-radeon-5700-series/amd-radeon-rx-5700-series/amd-radeon-rx-5700-xt"
 Start-Process "https://download.gigabyte.com/FileList/Driver/mb_driver_654_w11_1168.007.0318.2022.zip?v=07466d7005ac1718a94c1669f6d329b3"
-
 Stop-Transcript
