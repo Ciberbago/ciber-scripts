@@ -221,6 +221,9 @@ Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer
 Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "Hidden" -Type Dword -Value "1"
 #Desactivo el grabar juegos con la app de xbox (error ms-gamingoverlay)
 Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\GameDVR" -Name "AppCaptureEnabled" -Type Dword -Value "0"
+#Se muestran mensajes al estar actualizando
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "verbosestatus" -Value "1"
+
 #Desactivo la hibernacion
 powercfg /h off
 #Añade la carpeta de scripts en documentos para poder ejecutarlos desde cualquier lado
