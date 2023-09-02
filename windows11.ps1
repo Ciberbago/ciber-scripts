@@ -97,6 +97,7 @@ $appsCasa = @(
 	"irfanview"
 	"locale-emulator"
 	"mcedit2"
+	"mikumikudance"
 	"office-365-apps-minimal-np"
 	"pmxeditor-english"
 	"prismlauncher"
