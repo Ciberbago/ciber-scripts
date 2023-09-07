@@ -2,7 +2,7 @@
 sudo apt update
 #Instalacion de paquetes
 sudo apt install -y nala
-sudo nala install -y bat curl duf exa fzf git htop lm-sensors lshw micro ncdu nload powertop radeontop rclone time unattended-upgrades wakeonlan zsh
+sudo nala install -y bat curl duf exa fzf git htop lm-sensors lshw micro ncdu nload powertop radeontop rclone time timeshift unattended-upgrades wakeonlan zsh
 #instalacion de ufetch
 sudo wget -O /usr/local/bin/ufetch https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/debian/ufetch.sh && sudo chmod +x /usr/local/bin/ufetch
 #Instalacion de gotop
