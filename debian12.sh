@@ -16,10 +16,6 @@ sudo groupadd docker
 sudo usermod -aG docker $USER
 newgrp docker
 docker run hello-world
-mkdir -p ~/docker/portainer
-#Contenedores para manejar docker y archivos
-docker run -d -p 9000:9000 --restart unless-stopped --name portainer -v /var/run/docker.sock:/var/run/docker.sock -v ~/docker/portainer:/data portainer/portainer-ce
-docker run -d -p 8088:80 --restart unless-stopped --name filebrowser -v /:/srv filebrowser/filebrowser
 
 #Tema para la shell asi como 2 plugins muy utiles, auto completado y syntax highlighting
 git clone https://github.com/zsh-users/zsh-autosuggestions.git ~/.zsh/zsh-autosuggestions
