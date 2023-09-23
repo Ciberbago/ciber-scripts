@@ -13,7 +13,7 @@ makepkg -si
 
 paru -S pacleaner mission-center fsearch authy heroic-games-launcher-bin insync appimagelauncher --noconfirm
 
-flatpak install flathub com.obsproject.Studio org.prismlauncher.PrismLauncher org.gnome.Boxes org.kde.gwenview nz.mega.MEGAsync org.jdownloader.JDownloader org.kde.kget org.gnome.Connections com.microsoft.Edge org.gnome.font-viewer -y
+flatpak install flathub com.mattjakeman.ExtensionManager com.obsproject.Studio org.prismlauncher.PrismLauncher org.gnome.Boxes org.kde.gwenview nz.mega.MEGAsync org.jdownloader.JDownloader org.kde.kget org.gnome.Connections com.microsoft.Edge org.gnome.font-viewer -y
 
 git clone https://github.com/zsh-users/zsh-autosuggestions.git ~/.zsh/zsh-autosuggestions
 git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ~/.zsh/zsh-syntax-highlighting
