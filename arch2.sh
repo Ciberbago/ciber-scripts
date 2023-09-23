@@ -1,9 +1,9 @@
 sudo pacman -Syu 
-sudo pacman -S exa smbclient tailscale ntfs-3g transmission-gtk baobab gnome-characters gvfs gvfs-smb tilix handbrake ffmpegthumbnailer vlc tumbler file-roller thunar-archive-plugin gnome-calculator gnome-disk-utility geany less discord git kdiskmark blender micro gdm gnome-shell gnome-control-center gnome-tweaks flatpak timeshift ncdu thunar neofetch --noconfirm
-sed -i 's/#\[multilib\]/\[multilib\]/' "/etc/pacman.conf"
-sed -i '/#\[multilib\]/!b;n;cInclude = \/etc\/pacman.d\/mirrorlist' "/etc/pacman.conf"
+sudo pacman -S xdg-desktop-portal-gnome exa smbclient tailscale ntfs-3g transmission-gtk baobab gnome-characters gvfs gvfs-smb tilix handbrake ffmpegthumbnailer vlc tumbler file-roller thunar-archive-plugin gnome-calculator gnome-disk-utility geany less discord git kdiskmark blender micro gdm gnome-shell gnome-control-center gnome-tweaks flatpak timeshift ncdu thunar neofetch --noconfirm
+sudo sed -i 's/#\[multilib\]/\[multilib\]/' "/etc/pacman.conf"
+sudo sed -i '/#\[multilib\]/!b;n;cInclude = \/etc\/pacman.d\/mirrorlist' "/etc/pacman.conf"
 sudo pacman -Syu 
-sudo pacman -S steam -y
+sudo pacman -S steam --noconfirm
 sudo systemctl enable gdm.service
 
 sudo pacman -S --needed base-devel
@@ -13,7 +13,7 @@ makepkg -si
 
 paru -S pacleaner mission-center fsearch authy heroic-games-launcher-bin insync appimagelauncher --noconfirm
 
-flatpak install flathub com.mattjakeman.ExtensionManager com.obsproject.Studio org.prismlauncher.PrismLauncher org.gnome.Boxes org.kde.gwenview nz.mega.MEGAsync org.jdownloader.JDownloader org.kde.kget org.gnome.Connections com.microsoft.Edge org.gnome.font-viewer -y
+flatpak install flathub com.github.tchx84.Flatseal com.github.Matoking.protontricks com.mattjakeman.ExtensionManager com.obsproject.Studio org.prismlauncher.PrismLauncher org.gnome.Boxes org.kde.gwenview nz.mega.MEGAsync org.jdownloader.JDownloader org.kde.kget org.gnome.Connections com.microsoft.Edge org.gnome.font-viewer -y
 
 git clone https://github.com/zsh-users/zsh-autosuggestions.git ~/.zsh/zsh-autosuggestions
 git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ~/.zsh/zsh-syntax-highlighting
