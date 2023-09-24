@@ -1,6 +1,4 @@
-sudo sed -i 's/#\[multilib\]/\[multilib\]/' "/etc/pacman.conf"
-sudo sed -i '/#\[multilib\]/!b;n;cInclude = \/etc\/pacman.d\/mirrorlist' "/etc/pacman.conf"
-sudo pacman -Sy
+sudo sed -i '/\[multilib\]/,/Include/s/^#//' /etc/pacman.conf && sudo pacman -Syy
 #Paquetes normales
 sudo pacman -S wget xdg-desktop-portal-gnome exa smbclient tailscale ntfs-3g transmission-gtk baobab gnome-characters gvfs gvfs-smb tilix handbrake ffmpegthumbnailer vlc tumbler file-roller thunar-archive-plugin gnome-calculator gnome-disk-utility geany less discord git kdiskmark blender micro gdm gnome-shell gnome-control-center gnome-tweaks flatpak timeshift ncdu thunar neofetch ffmpeg cargo qt6-base steam --noconfirm
 #Servicio login
