@@ -52,3 +52,5 @@ echo "setopt SHARE_HISTORY " | tee -a .zshrc
 ####sudo tailscale set --operator=jaime
 
 ### XCLICKER
+
+### tilix --working-directory=~/notas -e 'micro -autosave 1'
