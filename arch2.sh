@@ -1,6 +1,6 @@
 sudo sed -i '/\[multilib\]/,/Include/s/^#//' /etc/pacman.conf && sudo pacman -Syy
 #Paquetes normales
-sudo pacman -S shotwell bat gnome-keyring gnome-bluetooth-3.0 bluez bluez-utils xclip wget xdg-desktop-portal-gnome exa smbclient tailscale ntfs-3g baobab gnome-characters gvfs gvfs-smb tilix handbrake ffmpegthumbnailer vlc tumbler file-roller thunar-archive-plugin gnome-calculator gnome-disk-utility geany less discord git kdiskmark blender micro gdm gnome-shell gnome-control-center gnome-tweaks flatpak timeshift ncdu thunar neofetch ffmpeg cargo qt6-base steam zsh --noconfirm
+sudo pacman -S celluloid shotwell bat gnome-keyring gnome-bluetooth-3.0 bluez bluez-utils xclip wget xdg-desktop-portal-gnome exa smbclient tailscale ntfs-3g baobab gnome-characters gvfs gvfs-smb tilix handbrake ffmpegthumbnailer tumbler file-roller thunar-archive-plugin gnome-calculator gnome-disk-utility geany less discord git kdiskmark blender micro gdm gnome-shell gnome-control-center gnome-tweaks flatpak timeshift ncdu thunar neofetch ffmpeg cargo qt6-base steam zsh --noconfirm
 #Servicio login
 sudo systemctl enable gdm.service
 sudo systemctl enable bluetooth.service
@@ -12,7 +12,7 @@ makepkg -si
 #Aur paquetes
 paru -S pacleaner insync appimagelauncher chrome-remote-desktop adw-gtk3-git xdman8-bin --noconfirm
 #flatpaks
-flatpak install flathub dev.deedles.Trayscale com.github.qarmin.czkawka net.fasterland.converseen com.heroicgameslauncher.hgl com.github.tchx84.Flatseal com.github.Matoking.protontricks com.mattjakeman.ExtensionManager com.obsproject.Studio org.prismlauncher.PrismLauncher org.gnome.Boxes nz.mega.MEGAsync org.jdownloader.JDownloader org.gnome.Connections com.microsoft.Edge org.gnome.font-viewer io.missioncenter.MissionCenter com.authy.Authy io.github.cboxdoerfer.FSearch -y
+flatpak install flathub org.gnome.gitlab.YaLTeR.VideoTrimmer dev.deedles.Trayscale com.github.qarmin.czkawka net.fasterland.converseen com.heroicgameslauncher.hgl com.github.tchx84.Flatseal com.github.Matoking.protontricks com.mattjakeman.ExtensionManager com.obsproject.Studio org.prismlauncher.PrismLauncher org.gnome.Boxes nz.mega.MEGAsync org.jdownloader.JDownloader org.gnome.Connections com.microsoft.Edge org.gnome.font-viewer io.missioncenter.MissionCenter com.authy.Authy io.github.cboxdoerfer.FSearch -y
 #Tweaks terminal
 git clone https://github.com/zsh-users/zsh-autosuggestions.git ~/.zsh/zsh-autosuggestions
 git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ~/.zsh/zsh-syntax-highlighting
