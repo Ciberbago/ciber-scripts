@@ -1,8 +1,9 @@
+sudo sed -i 's/#Color/Color/g' /etc/pacman.conf
 sudo sed -i '/\[multilib\]/,/Include/s/^#//' /etc/pacman.conf && sudo pacman -Syy
 #Paquetes normales
-sudo pacman -S ethtool cups usbutils mangohud vulkan-radeon fzf celluloid shotwell bat gnome-keyring gnome-bluetooth-3.0 bluez bluez-utils xclip wget xdg-desktop-portal-gnome exa smbclient tailscale ntfs-3g baobab gnome-characters gvfs gvfs-smb tilix handbrake ffmpegthumbnailer tumbler file-roller gnome-calculator gnome-disk-utility geany less discord git blender micro gdm gnome-shell gnome-control-center gnome-tweaks flatpak timeshift ncdu neofetch ffmpeg cargo qt6-base steam zsh pcmanfm-gtk3 --noconfirm
+sudo pacman -S firefox btop zsh-autosuggestions zsh-syntax-highlighting zsh-theme-powerlevel10k virtualbox-guest-iso virtualbox qt5ct ethtool cups usbutils mangohud vulkan-radeon fzf bat gnome-keyring gnome-bluetooth-3.0 bluez bluez-utils xclip wget xdg-desktop-portal-gnome exa smbclient tailscale ntfs-3g baobab gnome-characters gvfs gvfs-smb tilix handbrake ffmpegthumbnailer tumbler file-roller gnome-calculator gnome-disk-utility geany less discord git blender micro gdm gnome-shell gnome-control-center gnome-tweaks flatpak timeshift ncdu neofetch ffmpeg cargo qt6-base steam zsh pcmanfm-gtk3 --noconfirm
 
-sudo sh -c 'cat << EOF > /etc/systemd/system/wol@.service 
+sudo sh -c 'bat << EOF > /etc/systemd/system/wol@.service 
 [Unit]
 Description=Wake-on-LAN for %i
 Requires=network.target
@@ -16,12 +17,36 @@ Type=oneshot
 WantedBy=multi-user.target
 EOF'
 
+sudo sh -c 'bat << EOF > /etc/modules-load.d/virtualbox.conf
+vboxdrv
+vboxnetadp
+vboxnetflt
+vboxpci
+EOF'
+
+sudo sh -c 'bat << EOF > /etc/profile.d/qt5ct.sh
+export QT_QPA_PLATFORMTHEME=qt5ct
+EOF'
+
+sh -c 'bat << EOF > ~/mpv.conf
+[extension.webm]
+loop-file=inf
+[extension.mp4]
+loop-file=inf
+[extension.m4v]
+loop-file=inf
+[extension.mkv]
+loop-file=inf
+EOF'
+
+sudo gpasswd -a $USER vboxusers
 #Servicios
 sudo systemctl enable gdm.service
 sudo systemctl enable bluetooth.service
 sudo systemctl enable cups.service
 sudo systemctl enable tailscaled
 sudo systemctl enable wol@eno1.service
+sudo modprobe vboxdrv vboxnetadp vboxnetflt vboxpci
 
 #instalar paru
 sudo pacman -S --needed base-devel --noconfirm
@@ -29,18 +54,15 @@ git clone https://aur.archlinux.org/paru.git
 cd paru
 makepkg -si
 #Aur paquetes
-paru -S pacleaner insync appimagelauncher chrome-remote-desktop adw-gtk3-git xdman8-bin --noconfirm
+paru -S pacleaner insync appimagelauncher adw-gtk3-git xdman8-bin heroic-games-launcher-bin --noconfirm
 #flatpaks
-flatpak install flathub net.fasterland.converseen io.github.jonmagon.kdiskmark net.davidotek.pupgui2 ffmpeg-full org.gnome.gitlab.YaLTeR.VideoTrimmer dev.deedles.Trayscale com.github.qarmin.czkawka com.heroicgameslauncher.hgl com.github.tchx84.Flatseal com.github.Matoking.protontricks com.mattjakeman.ExtensionManager com.obsproject.Studio org.prismlauncher.PrismLauncher org.gnome.Boxes nz.mega.MEGAsync org.jdownloader.JDownloader org.gnome.Connections com.microsoft.Edge org.gnome.font-viewer io.missioncenter.MissionCenter com.authy.Authy io.github.cboxdoerfer.FSearch -y
+flatpak install flathub io.github.celluloid_player.Celluloid org.gnome.Shotwell net.fasterland.converseen io.github.jonmagon.kdiskmark net.davidotek.pupgui2 ffmpeg-full org.gnome.gitlab.YaLTeR.VideoTrimmer dev.deedles.Trayscale com.github.qarmin.czkawka com.github.tchx84.Flatseal com.github.Matoking.protontricks com.mattjakeman.ExtensionManager com.obsproject.Studio org.prismlauncher.PrismLauncher org.gnome.Boxes nz.mega.MEGAsync org.jdownloader.JDownloader org.gnome.Connections org.gnome.font-viewer io.missioncenter.MissionCenter com.authy.Authy io.github.cboxdoerfer.FSearch -y
 #Tweaks terminal
-git clone https://github.com/zsh-users/zsh-autosuggestions.git ~/.zsh/zsh-autosuggestions
-git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ~/.zsh/zsh-syntax-highlighting
-git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/.zsh/powerlevel10k
-echo 'source ~/.zsh/powerlevel10k/powerlevel10k.zsh-theme' >>~/.zshrc
-echo 'source ~/.zsh/zsh-autosuggestions/zsh-autosuggestions.plugin.zsh' >>~/.zshrc
-echo 'source ~/.zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.plugin.zsh' >>~/.zshrc
-echo '{ "clipboard": "terminal" }' | >> .config/micro/settings.json
-echo 'SELECTED_EDITOR="/usr/bin/micro"' | >> .selected_editor
+
+echo 'source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh' | tee -a .zshrc
+echo 'source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh' | tee -a .zshrc
+echo 'source /usr/share/zsh-theme-powerlevel10k/powerlevel10k.zsh-theme' | tee -a .zshrc
+export EDITOR=micro
 sudo chsh -s $(which zsh) $(whoami)
 #Aliases
 echo "alias buscar='history 1 | fzf'" | tee -a .zshrc
@@ -57,16 +79,6 @@ echo "HISTFILE=~/.zsh_history" | tee -a .zshrc
 echo "HISTSIZE=10000" | tee -a .zshrc
 echo "SAVEHIST=1000" | tee -a .zshrc
 echo "setopt SHARE_HISTORY " | tee -a .zshrc
-
-####Build and install the package
-####run crd --setup
-####(Optional) Configure execution of your preferred window manager in ~/.chrome-remote-desktop-session
-####Go to http://remotedesktop.google.com/headless
-####Click "next" and "authorize" through each instruction
-####Copy/paste and run the provided "Debian" command, which should look like the following: DISPLAY= /opt/google/chrome-remote-desktop/start-host --code="<UNIQUE_CODE>" --redirect-url="<https://remotedesktop.google.com/_/oauthredirect>" --name=
-####Set up a name and PIN
-####Wait for successful output containing "Host ready to receive connections."
-####Run crd --start
 
 ####sudo tailscale set --operator=jaime
 
