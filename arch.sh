@@ -1,7 +1,7 @@
 sudo sed -i 's/#Color/Color/g' /etc/pacman.conf
 sudo sed -i '/\[multilib\]/,/Include/s/^#//' /etc/pacman.conf && sudo pacman -Syy
 #Paquetes normales
-sudo pacman -S firefox btop zsh-autosuggestions zsh-syntax-highlighting zsh-theme-powerlevel10k virtualbox-guest-iso virtualbox qt5ct ethtool cups usbutils mangohud vulkan-radeon fzf bat gnome-keyring gnome-bluetooth-3.0 bluez bluez-utils xclip wget xdg-desktop-portal-gnome exa smbclient tailscale ntfs-3g baobab gnome-characters gvfs gvfs-smb tilix handbrake ffmpegthumbnailer tumbler file-roller gnome-calculator gnome-disk-utility geany less discord git blender micro gdm gnome-shell gnome-control-center gnome-tweaks flatpak timeshift ncdu neofetch ffmpeg cargo qt6-base steam zsh pcmanfm-gtk3 --noconfirm
+sudo pacman -S gnome-icon-theme-extras rhythmbox libva-mesa-driver qt6-wayland obs-studio fragments converseen celluloid shotwell remmina freerdp bitwarden gnome-font-viewer firefox btop zsh-autosuggestions zsh-syntax-highlighting zsh-theme-powerlevel10k virtualbox-guest-iso virtualbox qt5ct ethtool cups usbutils mangohud vulkan-radeon fzf bat gnome-keyring gnome-bluetooth-3.0 bluez bluez-utils xclip wget xdg-desktop-portal-gnome exa smbclient tailscale ntfs-3g baobab gnome-characters gvfs gvfs-smb tilix handbrake ffmpegthumbnailer tumbler file-roller gnome-calculator gnome-disk-utility geany less discord git blender micro gdm gnome-shell gnome-control-center gnome-tweaks flatpak timeshift ncdu neofetch ffmpeg cargo qt6-base steam zsh pcmanfm-gtk3 --noconfirm
 
 sudo sh -c 'bat << EOF > /etc/systemd/system/wol@.service 
 [Unit]
@@ -54,9 +54,9 @@ git clone https://aur.archlinux.org/paru.git
 cd paru
 makepkg -si
 #Aur paquetes
-paru -S pacleaner insync appimagelauncher adw-gtk3-git xdman8-bin heroic-games-launcher-bin --noconfirm
+paru -S pacleaner insync appimagelauncher adw-gtk3-git heroic-games-launcher-bin authy fsearch video-trimmer AdwSteamGtk czkawka-gui-bin extension-manager prismlauncher-qt5-bin jdownloader2 headsetcontrol --noconfirm
 #flatpaks
-flatpak install flathub io.github.celluloid_player.Celluloid org.gnome.Shotwell net.fasterland.converseen io.github.jonmagon.kdiskmark net.davidotek.pupgui2 ffmpeg-full org.gnome.gitlab.YaLTeR.VideoTrimmer dev.deedles.Trayscale com.github.qarmin.czkawka com.github.tchx84.Flatseal com.github.Matoking.protontricks com.mattjakeman.ExtensionManager com.obsproject.Studio org.prismlauncher.PrismLauncher org.gnome.Boxes nz.mega.MEGAsync org.jdownloader.JDownloader org.gnome.Connections org.gnome.font-viewer io.missioncenter.MissionCenter com.authy.Authy io.github.cboxdoerfer.FSearch -y
+#flatpak install flathub ffmpeg-full com.github.tchx84.Flatseal com.github.Matoking.protontricks -y
 #Tweaks terminal
 
 echo 'source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh' | tee -a .zshrc
@@ -64,6 +64,7 @@ echo 'source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh'
 echo 'source /usr/share/zsh-theme-powerlevel10k/powerlevel10k.zsh-theme' | tee -a .zshrc
 export EDITOR=micro
 sudo chsh -s $(which zsh) $(whoami)
+sudo flatpak override com.github.qarmin.czkawka --env=GTK_THEME=Adwaita:dark
 #Aliases
 echo "alias buscar='history 1 | fzf'" | tee -a .zshrc
 echo "alias cat='bat'" | tee -a .zshrc
