@@ -1,4 +1,5 @@
 sudo sed -i 's/#Color/Color/g' /etc/pacman.conf
+sudo sed -i '/ParallelDownloads/s/^#//g' /etc/pacman.conf
 sudo sed -i '/\[multilib\]/,/Include/s/^#//' /etc/pacman.conf && sudo pacman -Syy
 #Paquetes normales
 sudo pacman -S rhythmbox libva-mesa-driver qt6-wayland obs-studio fragments converseen celluloid shotwell remmina freerdp bitwarden gnome-font-viewer firefox btop zsh-autosuggestions zsh-syntax-highlighting zsh-theme-powerlevel10k virtualbox-guest-iso virtualbox qt5ct ethtool cups usbutils mangohud vulkan-radeon fzf bat gnome-keyring gnome-bluetooth-3.0 bluez bluez-utils xclip wget xdg-desktop-portal-gnome exa smbclient tailscale ntfs-3g baobab gnome-characters gvfs gvfs-smb handbrake ffmpegthumbnailer tumbler file-roller gnome-calculator gnome-disk-utility geany less discord git blender micro gdm gnome-shell gnome-control-center gnome-tweaks flatpak timeshift ncdu neofetch ffmpeg cargo qt6-base steam zsh pcmanfm-gtk3 --noconfirm
