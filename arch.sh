@@ -1,7 +1,7 @@
 sudo sed -i 's/#Color/Color/g' /etc/pacman.conf
 sudo sed -i '/\[multilib\]/,/Include/s/^#//' /etc/pacman.conf && sudo pacman -Syy
 #Paquetes normales
-sudo pacman -S gnome-icon-theme-extras rhythmbox libva-mesa-driver qt6-wayland obs-studio fragments converseen celluloid shotwell remmina freerdp bitwarden gnome-font-viewer firefox btop zsh-autosuggestions zsh-syntax-highlighting zsh-theme-powerlevel10k virtualbox-guest-iso virtualbox qt5ct ethtool cups usbutils mangohud vulkan-radeon fzf bat gnome-keyring gnome-bluetooth-3.0 bluez bluez-utils xclip wget xdg-desktop-portal-gnome exa smbclient tailscale ntfs-3g baobab gnome-characters gvfs gvfs-smb tilix handbrake ffmpegthumbnailer tumbler file-roller gnome-calculator gnome-disk-utility geany less discord git blender micro gdm gnome-shell gnome-control-center gnome-tweaks flatpak timeshift ncdu neofetch ffmpeg cargo qt6-base steam zsh pcmanfm-gtk3 --noconfirm
+sudo pacman -S rhythmbox libva-mesa-driver qt6-wayland obs-studio fragments converseen celluloid shotwell remmina freerdp bitwarden gnome-font-viewer firefox btop zsh-autosuggestions zsh-syntax-highlighting zsh-theme-powerlevel10k virtualbox-guest-iso virtualbox qt5ct ethtool cups usbutils mangohud vulkan-radeon fzf bat gnome-keyring gnome-bluetooth-3.0 bluez bluez-utils xclip wget xdg-desktop-portal-gnome exa smbclient tailscale ntfs-3g baobab gnome-characters gvfs gvfs-smb handbrake ffmpegthumbnailer tumbler file-roller gnome-calculator gnome-disk-utility geany less discord git blender micro gdm gnome-shell gnome-control-center gnome-tweaks flatpak timeshift ncdu neofetch ffmpeg cargo qt6-base steam zsh pcmanfm-gtk3 --noconfirm
 
 sudo sh -c 'bat << EOF > /etc/systemd/system/wol@.service 
 [Unit]
@@ -50,11 +50,11 @@ sudo modprobe vboxdrv vboxnetadp vboxnetflt vboxpci
 
 #instalar paru
 sudo pacman -S --needed base-devel --noconfirm
-git clone https://aur.archlinux.org/paru.git
-cd paru
+git clone https://aur.archlinux.org/yay.git
+cd yay
 makepkg -si
 #Aur paquetes
-paru -S pacleaner insync appimagelauncher adw-gtk3-git heroic-games-launcher-bin authy fsearch video-trimmer AdwSteamGtk czkawka-gui-bin extension-manager prismlauncher-qt5-bin jdownloader2 headsetcontrol --noconfirm
+yay -S blackbox-terminal resources pacleaner insync appimagelauncher adw-gtk3-git heroic-games-launcher-bin authy fsearch video-trimmer adwsteamgtk czkawka-gui-bin extension-manager prismlauncher-qt5-bin headsetcontrol --noconfirm
 #flatpaks
 #flatpak install flathub ffmpeg-full com.github.tchx84.Flatseal com.github.Matoking.protontricks -y
 #Tweaks terminal
