@@ -2,33 +2,25 @@ sudo sed -i 's/#Color/Color/g' /etc/pacman.conf
 sudo sed -i '/ParallelDownloads/s/^#//g' /etc/pacman.conf
 sudo sed -i '/\[multilib\]/,/Include/s/^#//' /etc/pacman.conf && sudo pacman -Syy
 #Paquetes normales
-sudo pacman -S rhythmbox libva-mesa-driver qt6-wayland obs-studio fragments converseen celluloid shotwell remmina freerdp bitwarden gnome-font-viewer firefox btop zsh-autosuggestions zsh-syntax-highlighting zsh-theme-powerlevel10k virtualbox-guest-iso virtualbox qt5ct ethtool cups usbutils mangohud vulkan-radeon fzf bat gnome-keyring gnome-bluetooth-3.0 bluez bluez-utils xclip wget xdg-desktop-portal-gnome exa smbclient tailscale ntfs-3g baobab gnome-characters gvfs gvfs-smb handbrake ffmpegthumbnailer tumbler file-roller gnome-calculator gnome-disk-utility geany less discord git blender micro gdm gnome-shell gnome-control-center gnome-tweaks flatpak timeshift ncdu neofetch ffmpeg cargo qt6-base steam zsh pcmanfm-gtk3 --noconfirm
+sudo pacman -S fish fisher rhythmbox libva-mesa-driver qt6-wayland obs-studio fragments imagemagick celluloid shotwell remmina freerdp bitwarden gnome-font-viewer firefox btop virtualbox-guest-iso virtualbox qt5ct ethtool cups usbutils mangohud vulkan-radeon fzf bat gnome-keyring gnome-bluetooth-3.0 bluez bluez-utils xclip wget xdg-desktop-portal-gnome exa smbclient tailscale ntfs-3g baobab gnome-characters gvfs gvfs-smb handbrake ffmpegthumbnailer tumbler file-roller gnome-calculator gnome-disk-utility less discord git blender micro gdm gnome-shell gnome-control-center gnome-tweaks timeshift gdu fastfetch ffmpeg cargo qt6-base steam pcmanfm-gtk3 unrar p7zip ttf-firacode-nerd --noconfirm
 
 sudo sh -c 'bat << EOF > /etc/systemd/system/wol@.service 
 [Unit]
 Description=Wake-on-LAN for %i
 Requires=network.target
 After=network.target
-
 [Service]
 ExecStart=/usr/bin/ethtool -s %i wol g
 Type=oneshot
-
 [Install]
 WantedBy=multi-user.target
 EOF'
-
 sudo sh -c 'bat << EOF > /etc/modules-load.d/virtualbox.conf
 vboxdrv
 vboxnetadp
 vboxnetflt
 vboxpci
 EOF'
-
-sudo sh -c 'bat << EOF > /etc/profile.d/qt5ct.sh
-export QT_QPA_PLATFORMTHEME=qt5ct
-EOF'
-
 sh -c 'bat << EOF > ~/mpv.conf
 [extension.webm]
 loop-file=inf
@@ -39,6 +31,7 @@ loop-file=inf
 [extension.mkv]
 loop-file=inf
 EOF'
+echo "export QT_QPA_PLATFORMTHEME=qt5ct" | sudo tee /etc/environment
 
 sudo gpasswd -a $USER vboxusers
 #Servicios
@@ -55,35 +48,25 @@ git clone https://aur.archlinux.org/yay.git
 cd yay
 makepkg -si
 #Aur paquetes
-yay -S blackbox-terminal resources pacleaner insync appimagelauncher adw-gtk3-git heroic-games-launcher-bin authy fsearch video-trimmer adwsteamgtk czkawka-gui-bin extension-manager prismlauncher-qt5-bin headsetcontrol --noconfirm
-#flatpaks
-#flatpak install flathub ffmpeg-full com.github.tchx84.Flatseal com.github.Matoking.protontricks -y
-#Tweaks terminal
+read -p "Instalar paquetes del AUR? (Y/n): " answer
+if [[ $answer == "" || $answer == "y" ]]; then
+    yay -S lite-xl-bin blackbox-terminal resources pacleaner insync adw-gtk3-git heroic-games-launcher-bin authy fsearch video-trimmer adwsteamgtk czkawka-gui-bin extension-manager prismlauncher-qt5-bin headsetcontrol xclicker --noconfirm
+fi
 
-echo 'source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh' | tee -a .zshrc
-echo 'source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh' | tee -a .zshrc
-echo 'source /usr/share/zsh-theme-powerlevel10k/powerlevel10k.zsh-theme' | tee -a .zshrc
 export EDITOR=micro
-sudo chsh -s $(which zsh) $(whoami)
-sudo flatpak override com.github.qarmin.czkawka --env=GTK_THEME=Adwaita:dark
+chsh -s /usr/bin/fish
 #Aliases
-echo "alias buscar='history 1 | fzf'" | tee -a .zshrc
-echo "alias cat='bat'" | tee -a .zshrc
-echo "alias cc='cd && clear'" | tee -a .zshrc
-echo "alias cheat='f() { curl cheat.sh/\$1; };f'" | tee -a .zshrc
-echo "alias espacio='sudo ncdu / --exclude=/media' " | tee -a .zshrc
-echo "alias ls='exa -lha --icons'" | tee -a .zshrc
-echo "alias lsxt='exa -lha --icons --tree --level=3'" | tee -a .zshrc
-echo "alias mkdir='mkdir -pv'" | tee -a .zshrc
-echo "alias tree='exa -lha --tree --long --icons'" | tee -a .zshrc
-echo 'find() { /usr/bin/find . -type f -iname "*$1*"; }' | tee -a .zshrc
-echo "HISTFILE=~/.zsh_history" | tee -a .zshrc
-echo "HISTSIZE=10000" | tee -a .zshrc
-echo "SAVEHIST=1000" | tee -a .zshrc
-echo "setopt SHARE_HISTORY " | tee -a .zshrc
+alias buscar="history | fzf" && funcsave buscar
+alias cat="bat" && funcsave cat
+alias cc="cd && clear" && funcsave cc
+alias ls="exa -lha --icons" && funcsave ls
+alias mkdir="mkdir -pv" && funcsave mkdir
+alias espacio="gdu /" && funcsave espacio
+alias f34='firefox -P "Cyb_R34" -no-remote' && funcsave f34
+alias orphans='sudo pacman -Qdtq | sudo pacman -Runs  -' && funcsave orphans
+function find; /usr/bin/find . -type f -iname "*$argv*"; end; and funcsave find
+function cheat; curl cheat.sh/$argv; end; and funcsave cheat
+function convimg; magick mogrify -path $argv[2] -strip -interlace Plane -quality 80% -format jpg -verbose $argv[1]/*; end; and funcsave convimg
+fish -c "fisher install IlanCosman/tide@v6"
 
-####sudo tailscale set --operator=jaime
-
-### XCLICKER
-
-### tilix --working-directory=~/notas -e 'micro -autosave 1'
+### blackbox --working-directory=~/notas -e 'micro -autosave 1'
