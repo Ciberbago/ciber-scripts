@@ -2,7 +2,7 @@ sudo sed -i 's/#Color/Color/g' /etc/pacman.conf
 sudo sed -i '/ParallelDownloads/s/^#//g' /etc/pacman.conf
 sudo sed -i '/\[multilib\]/,/Include/s/^#//' /etc/pacman.conf && sudo pacman -Syy
 #Paquetes normales
-sudo pacman -S fish fisher rhythmbox libva-mesa-driver qt6-wayland obs-studio fragments imagemagick celluloid shotwell remmina freerdp bitwarden gnome-font-viewer firefox btop virtualbox-guest-iso virtualbox qt5ct ethtool cups usbutils mangohud vulkan-radeon fzf bat gnome-keyring gnome-bluetooth-3.0 bluez bluez-utils xclip wget xdg-desktop-portal-gnome exa smbclient tailscale ntfs-3g baobab gnome-characters gvfs gvfs-smb handbrake ffmpegthumbnailer tumbler file-roller gnome-calculator gnome-disk-utility less discord git blender micro gdm gnome-shell gnome-control-center gnome-tweaks timeshift gdu fastfetch ffmpeg cargo qt6-base steam pcmanfm-gtk3 unrar p7zip ttf-firacode-nerd --noconfirm
+sudo pacman -S fish fisher rhythmbox libva-mesa-driver qt6-wayland obs-studio fragments imagemagick celluloid shotwell remmina freerdp gnome-font-viewer firefox btop virtualbox-guest-iso virtualbox qt5ct ethtool cups usbutils mangohud vulkan-radeon fzf bat gnome-keyring gnome-bluetooth-3.0 bluez bluez-utils xclip wget xdg-desktop-portal-gnome exa smbclient tailscale ntfs-3g baobab gnome-characters gvfs gvfs-smb handbrake ffmpegthumbnailer tumbler file-roller gnome-calculator gnome-disk-utility less discord git blender micro gdm gnome-shell gnome-control-center gnome-tweaks timeshift gdu fastfetch ffmpeg cargo qt6-base steam pcmanfm-gtk3 unrar p7zip ttf-firacode-nerd --noconfirm
 
 sudo sh -c 'bat << EOF > /etc/systemd/system/wol@.service 
 [Unit]

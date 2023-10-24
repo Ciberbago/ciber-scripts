@@ -73,6 +73,8 @@ echo "SAVEHIST=1000" | tee -a .zshrc
 echo "setopt SHARE_HISTORY " | tee -a .zshrc
 
 #Servicios
+sudo mkdir /opt/yacht/compose
+git clone https://github.com/ciberbago/ciber-docker /opt/yacht/compose
 sudo dpkg-reconfigure --priority=low unattended-upgrades
 sudo systemctl restart sshd
 
