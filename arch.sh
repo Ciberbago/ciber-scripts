@@ -39,6 +39,17 @@ w=$(shuf -n1 -e /run/media/storage/jaimedrive/Media/Wallpapers/*)
 gsettings set org.gnome.desktop.background picture-uri-dark "file://$w"
 EOF
 
+tee -a ~/.config/autostart/wallpaper.desktop > /dev/null << 'EOF'
+[Desktop Entry]
+Name=Wallpaper
+GenericName=Random-wallpaper
+Comment=Random wallpaper at login
+Exec=/home/jaime/wallpaper.sh
+Terminal=false
+Type=Application
+X-GNOME-Autostart-enabled=true
+EOF
+
 chmod +x ~/wallpaper.sh
 
 sudo gpasswd -a $USER vboxusers
