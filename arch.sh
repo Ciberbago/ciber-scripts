@@ -2,7 +2,7 @@ sudo sed -i 's/#Color/Color/g' /etc/pacman.conf
 sudo sed -i '/ParallelDownloads/s/^#//g' /etc/pacman.conf
 sudo sed -i '/\[multilib\]/,/Include/s/^#//' /etc/pacman.conf && sudo pacman -Syy
 #Paquetes normales
-sudo pacman -S fish fisher rhythmbox libva-mesa-driver qt6-wayland obs-studio fragments imagemagick celluloid shotwell remmina freerdp gnome-font-viewer firefox btop virtualbox-guest-iso virtualbox qt5ct ethtool cups usbutils mangohud vulkan-radeon fzf bat gnome-keyring gnome-bluetooth-3.0 bluez bluez-utils xclip wget xdg-desktop-portal-gnome exa smbclient tailscale ntfs-3g baobab gnome-characters gvfs gvfs-smb handbrake ffmpegthumbnailer tumbler file-roller gnome-calculator gnome-disk-utility less discord git blender micro gdm gnome-shell gnome-control-center gnome-tweaks timeshift gdu fastfetch ffmpeg cargo qt6-base steam pcmanfm-gtk3 unrar p7zip ttf-firacode-nerd --noconfirm
+sudo pacman -S fish fisher rhythmbox libva-mesa-driver qt6-wayland obs-studio fragments imagemagick celluloid remmina freerdp gnome-font-viewer firefox btop virtualbox-guest-iso virtualbox qt5ct ethtool cups usbutils mangohud vulkan-radeon fzf bat gnome-keyring gnome-bluetooth-3.0 bluez bluez-utils xclip wget xdg-desktop-portal-gnome exa smbclient tailscale ntfs-3g baobab gnome-characters gvfs gvfs-smb handbrake ffmpegthumbnailer tumbler file-roller gnome-calculator gnome-disk-utility less discord git blender micro gdm gnome-shell gnome-control-center gnome-tweaks timeshift gdu fastfetch ffmpeg cargo qt6-base steam pcmanfm-gtk3 unrar p7zip ttf-firacode-nerd --noconfirm
 
 sudo sh -c 'bat << EOF > /etc/systemd/system/wol@.service 
 [Unit]
@@ -33,6 +33,14 @@ loop-file=inf
 EOF'
 echo "export QT_QPA_PLATFORMTHEME=qt5ct" | sudo tee /etc/environment
 
+tee -a ~/wallpaper.sh > /dev/null << 'EOF'
+#!/bin/bash
+w=$(shuf -n1 -e /run/media/storage/jaimedrive/Media/Wallpapers/*)
+gsettings set org.gnome.desktop.background picture-uri-dark "file://$w"
+EOF
+
+chmod +x ~/wallpaper.sh
+
 sudo gpasswd -a $USER vboxusers
 #Servicios
 sudo systemctl enable gdm.service
@@ -50,7 +58,7 @@ makepkg -si
 #Aur paquetes
 read -p "Instalar paquetes del AUR? (Y/n): " answer
 if [[ $answer == "" || $answer == "y" ]]; then
-    yay -S lite-xl-bin blackbox-terminal resources pacleaner insync adw-gtk3-git heroic-games-launcher-bin authy fsearch video-trimmer adwsteamgtk czkawka-gui-bin extension-manager prismlauncher-qt5-bin headsetcontrol xclicker --noconfirm
+    yay -S qimgv lite-xl-bin blackbox-terminal resources pacleaner insync adw-gtk3-git heroic-games-launcher-bin authy fsearch video-trimmer adwsteamgtk czkawka-gui-bin extension-manager prismlauncher-qt5-bin headsetcontrol xclicker --noconfirm
 fi
 
 export EDITOR=micro
