@@ -15,12 +15,14 @@ Type=oneshot
 [Install]
 WantedBy=multi-user.target
 EOF'
+
 sudo sh -c 'bat << EOF > /etc/modules-load.d/virtualbox.conf
 vboxdrv
 vboxnetadp
 vboxnetflt
 vboxpci
 EOF'
+
 sh -c 'bat << EOF > ~/mpv.conf
 [extension.webm]
 loop-file=inf
@@ -31,15 +33,18 @@ loop-file=inf
 [extension.mkv]
 loop-file=inf
 EOF'
+
 echo "export QT_QPA_PLATFORMTHEME=qt5ct" | sudo tee /etc/environment
 
-tee -a ~/wallpaper.sh > /dev/null << 'EOF'
+sh -c 'bat << EOF > ~/wallpaper.sh
 #!/bin/bash
 w=$(shuf -n1 -e /run/media/storage/jaimedrive/Media/Wallpapers/*)
 gsettings set org.gnome.desktop.background picture-uri-dark "file://$w"
-EOF
+EOF'
 
-tee -a ~/.config/autostart/wallpaper.desktop > /dev/null << 'EOF'
+mkdir -p ~/.config/autostart
+
+sh -c 'bat << EOF > ~/.config/autostart/wallpaper.desktop
 [Desktop Entry]
 Name=Wallpaper
 GenericName=Random-wallpaper
@@ -48,7 +53,7 @@ Exec=/home/jaime/wallpaper.sh
 Terminal=false
 Type=Application
 X-GNOME-Autostart-enabled=true
-EOF
+EOF'
 
 mkdir -p gnome
 
@@ -93,7 +98,7 @@ command='resources'
 name='task manager'
 EOF"
 
-sh -c 'bat << EOF > ~/gnome/keybindings.dconf
+sh -c "bat << EOF > ~/gnome/keybindings.dconf
 [/]
 switch-applications=@as []
 switch-applications-backward=@as []
@@ -101,7 +106,7 @@ switch-group=@as []
 switch-group-backward=@as []
 switch-windows=['<Alt>Tab']
 switch-windows-backward=['<Shift><Alt>Tab']
-EOF'
+EOF"
 
 sh -c 'bat << EOF > ~/gnome.sh
 #!/usr/bin/env bash
