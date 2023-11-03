@@ -50,7 +50,13 @@ Type=Application
 X-GNOME-Autostart-enabled=true
 EOF
 
-sh -c 'bat << EOF > ~/bkp
+mkdir -p gnome
+
+sh -c 'bat << EOF > ~/gnome/custom-keys.dconf
+['/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom5/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom6/']
+EOF'
+
+sh -c 'bat << EOF > ~/gnome/custom-values.dconf
 [custom0]
 binding='<Super>t'
 command='blackbox'
@@ -87,6 +93,46 @@ command='resources'
 name='task manager'
 EOF'
 
+sh -c 'bat << EOF > ~/gnome/keybindings.dconf
+[/]
+switch-applications=@as []
+switch-applications-backward=@as []
+switch-group=@as []
+switch-group-backward=@as []
+switch-windows=['<Alt>Tab']
+switch-windows-backward=['<Shift><Alt>Tab']
+EOF'
+
+sh -c 'bat << EOF > ~/gnome.sh
+#!/usr/bin/env bash
+
+# Backs up and restores gnome3 keybindings
+# Tested with Gnome 3.36.8
+# by peterrus
+
+set -e
+
+if [[ $1 == 'backup' ]]; then
+  dconf dump '/org/gnome/desktop/wm/keybindings/' > gnome/keybindings.dconf
+  dconf dump '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/' > gnome/custom-values.dconf
+  dconf read '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings' > gnome/custom-keys.dconf
+  echo "backup done"
+  exit 0
+fi
+if [[ $1 == 'restore' ]]; then
+  dconf reset -f '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/'
+  dconf reset -f '/org/gnome/desktop/wm/keybindings/'
+  dconf load '/org/gnome/desktop/wm/keybindings/' < gnome/keybindings.dconf
+  dconf load '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/' < gnomep/custom-values.dconf
+  dconf write '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings' "$(cat gnome/custom-keys.dconf)"
+  echo "restore done"
+  exit 0
+fi
+
+echo "parameter 0: [backup|restore]"
+EOF'
+
+chmod +x ~/gnome.sh
 chmod +x ~/wallpaper.sh
 
 sudo gpasswd -a $USER vboxusers
