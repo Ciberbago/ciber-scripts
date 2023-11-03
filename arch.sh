@@ -57,9 +57,9 @@ EOF'
 
 mkdir -p gnome
 
-sh -c 'bat << EOF > ~/gnome/custom-keys.dconf
+sh -c bat << 'EOF' > ~/gnome/custom-keys.dconf
 ['/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom5/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom6/']
-EOF'
+EOF
 
 sh -c bat << 'EOF' > ~/gnome/custom-values.dconf
 [custom0]
@@ -98,7 +98,7 @@ command='resources'
 name='task manager'
 EOF
 
-sh -c "bat << EOF > ~/gnome/keybindings.dconf
+sh -c bat << 'EOF' > ~/gnome/keybindings.dconf
 [/]
 switch-applications=@as []
 switch-applications-backward=@as []
@@ -106,7 +106,7 @@ switch-group=@as []
 switch-group-backward=@as []
 switch-windows=['<Alt>Tab']
 switch-windows-backward=['<Shift><Alt>Tab']
-EOF"
+EOF
 
 sh -c bat << 'EOF' > ~/gnome.sh
 #!/usr/bin/env bash
