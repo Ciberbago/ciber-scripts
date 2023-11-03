@@ -50,6 +50,43 @@ Type=Application
 X-GNOME-Autostart-enabled=true
 EOF
 
+tee -a ~/bkp > /dev/null << 'EOF'
+[custom0]
+binding='<Super>t'
+command='blackbox'
+name='Terminal'
+ 
+[custom1]
+binding='<Super>e'
+command='pcmanfm'
+name='Archivos' 
+
+[custom2]
+binding='<Control><Alt>l'
+command='pkill clicker'
+name='autoclick cancel'
+ 
+[custom3]
+binding='<Alt>l'
+command='clicker -d 25'
+name='l click'
+
+[custom4]
+binding='<Alt>r'
+command='clicker -d 25 -b Right'
+name='r click'
+
+[custom5]
+binding='<Shift><Control>semicolon'
+command="blackbox --working-directory=/run/media/storage/jaimedrive/notas -e 'micro -autosave 1'"
+name='Notas'
+
+[custom6]
+binding='<Shift><Control>Escape'
+command='resources'
+name='task manager'
+EOF
+
 chmod +x ~/wallpaper.sh
 
 sudo gpasswd -a $USER vboxusers
@@ -69,7 +106,7 @@ makepkg -si
 #Aur paquetes
 read -p "Instalar paquetes del AUR? (Y/n): " answer
 if [[ $answer == "" || $answer == "y" ]]; then
-    yay -S qimgv lite-xl-bin blackbox-terminal resources pacleaner insync adw-gtk3-git heroic-games-launcher-bin authy fsearch video-trimmer adwsteamgtk czkawka-gui-bin extension-manager prismlauncher-qt5-bin headsetcontrol xclicker --noconfirm
+    yay -S qimgv lite-xl-bin blackbox-terminal resources pacleaner insync adw-gtk3-git heroic-games-launcher-bin authy fsearch video-trimmer adwsteamgtk czkawka-gui-bin extension-manager prismlauncher-qt5-bin headsetcontrol --noconfirm
 fi
 
 export EDITOR=micro
