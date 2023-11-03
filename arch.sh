@@ -61,7 +61,7 @@ sh -c 'bat << EOF > ~/gnome/custom-keys.dconf
 ['/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom5/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom6/']
 EOF'
 
-sh -c "bat << EOF > ~/gnome/custom-values.dconf
+sh -c bat << 'EOF' > ~/gnome/custom-values.dconf
 [custom0]
 binding='<Super>t'
 command='blackbox'
@@ -96,7 +96,7 @@ name='Notas'
 binding='<Shift><Control>Escape'
 command='resources'
 name='task manager'
-EOF"
+EOF
 
 sh -c "bat << EOF > ~/gnome/keybindings.dconf
 [/]
@@ -108,7 +108,7 @@ switch-windows=['<Alt>Tab']
 switch-windows-backward=['<Shift><Alt>Tab']
 EOF"
 
-sh -c "bat << EOF > ~/gnome.sh
+sh -c bat << 'EOF' > ~/gnome.sh
 #!/usr/bin/env bash
 
 # Backs up and restores gnome3 keybindings
@@ -135,7 +135,7 @@ if [[ $1 == 'restore' ]]; then
 fi
 
 echo "parameter 0: [backup|restore]"
-EOF"
+EOF
 
 chmod +x ~/gnome.sh
 chmod +x ~/wallpaper.sh
