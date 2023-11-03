@@ -157,7 +157,8 @@ fi
 
 export EDITOR=micro
 chsh -s /usr/bin/fish
-#Aliases
+
+fish <<'EOF'
 alias buscar="history | fzf" && funcsave buscar
 alias cat="bat" && funcsave cat
 alias cc="cd && clear" && funcsave cc
@@ -169,6 +170,6 @@ alias orphans='sudo pacman -Qdtq | sudo pacman -Runs  -' && funcsave orphans
 function find; /usr/bin/find . -type f -iname "*$argv*"; end; and funcsave find
 function cheat; curl cheat.sh/$argv; end; and funcsave cheat
 function convimg; magick mogrify -path $argv[2] -strip -interlace Plane -quality 80% -format jpg -verbose $argv[1]/*; end; and funcsave convimg
-fish -c "fisher install IlanCosman/tide@v6"
-
+fisher install IlanCosman/tide@v6
+EOF
 ### blackbox --working-directory=~/notas -e 'micro -autosave 1'
