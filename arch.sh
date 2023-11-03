@@ -108,7 +108,7 @@ switch-windows=['<Alt>Tab']
 switch-windows-backward=['<Shift><Alt>Tab']
 EOF"
 
-sh -c 'bat << EOF > ~/gnome.sh
+sh -c "bat << EOF > ~/gnome.sh
 #!/usr/bin/env bash
 
 # Backs up and restores gnome3 keybindings
@@ -135,7 +135,7 @@ if [[ $1 == 'restore' ]]; then
 fi
 
 echo "parameter 0: [backup|restore]"
-EOF'
+EOF"
 
 chmod +x ~/gnome.sh
 chmod +x ~/wallpaper.sh
