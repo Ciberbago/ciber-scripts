@@ -50,7 +50,7 @@ Type=Application
 X-GNOME-Autostart-enabled=true
 EOF
 
-tee -a ~/bkp > /dev/null << 'EOF'
+sh -c 'bat << EOF > ~/bkp
 [custom0]
 binding='<Super>t'
 command='blackbox'
@@ -85,7 +85,7 @@ name='Notas'
 binding='<Shift><Control>Escape'
 command='resources'
 name='task manager'
-EOF
+EOF'
 
 chmod +x ~/wallpaper.sh
 
