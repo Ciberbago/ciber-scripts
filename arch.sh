@@ -2,7 +2,7 @@ sudo sed -i 's/#Color/Color/g' /etc/pacman.conf
 sudo sed -i '/ParallelDownloads/s/^#//g' /etc/pacman.conf
 sudo sed -i '/\[multilib\]/,/Include/s/^#//' /etc/pacman.conf && sudo pacman -Syy
 #Paquetes normales
-sudo pacman -S hip-runtime-amd fish fisher rhythmbox libva-mesa-driver qt6-wayland obs-studio fragments imagemagick celluloid remmina freerdp gnome-font-viewer firefox btop virtualbox-guest-iso virtualbox qt5ct ethtool cups usbutils mangohud vulkan-radeon fzf bat gnome-keyring gnome-bluetooth-3.0 bluez bluez-utils xclip wget xdg-desktop-portal-gnome exa smbclient tailscale ntfs-3g baobab gnome-characters gvfs gvfs-smb handbrake ffmpegthumbnailer tumbler file-roller gnome-calculator gnome-disk-utility less discord git blender micro gdm gnome-shell gnome-control-center gnome-tweaks timeshift gdu fastfetch ffmpeg cargo qt6-base steam pcmanfm-gtk3 unrar p7zip ttf-firacode-nerd --noconfirm
+sudo pacman -S hip-runtime-amd fish fisher rhythmbox libva-mesa-driver qt6-wayland obs-studio fragments imagemagick celluloid remmina freerdp gnome-font-viewer firefox btop virtualbox-guest-iso virtualbox qt5ct ethtool cups usbutils mangohud vulkan-radeon fzf bat gnome-keyring gnome-bluetooth-3.0 bluez bluez-utils xclip wget xdg-desktop-portal-gnome exa smbclient tailscale ntfs-3g baobab gnome-characters gvfs gvfs-smb handbrake ffmpegthumbnailer tumbler file-roller gnome-calculator gnome-disk-utility less discord git blender micro gdm gnome-shell gnome-control-center gnome-tweaks timeshift gdu fastfetch ffmpeg cargo qt6-base steam pcmanfm-gtk3 unrar p7zip ttf-firacode-nerd --noconfirm --needed
 
 sudo sh -c 'bat << EOF > /etc/systemd/system/wol@.service 
 [Unit]
@@ -56,7 +56,7 @@ sh -c 'bat << EOF > ~/gnome/custom-keys.dconf
 ['/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom5/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom6/']
 EOF'
 
-sh -c 'bat << EOF > ~/gnome/custom-values.dconf
+sh -c "bat << EOF > ~/gnome/custom-values.dconf
 [custom0]
 binding='<Super>t'
 command='blackbox'
@@ -91,7 +91,7 @@ name='Notas'
 binding='<Shift><Control>Escape'
 command='resources'
 name='task manager'
-EOF'
+EOF"
 
 sh -c 'bat << EOF > ~/gnome/keybindings.dconf
 [/]
