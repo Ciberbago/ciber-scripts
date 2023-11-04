@@ -2,6 +2,13 @@
 
 Este es un repositorio personal
 
+## Arch linux
+
+Basicamente tiene lo mismo que windows. Preparado con los drivers de amd, para juegos y herramientas necesarias para mi uso. Con el entorno de esctritorio GNOME minimal edition.
+
+bash <(curl -L arch.jaimelopez.top)
+
+
 ## Windows
 
 Principalmente lo hice para poder instalar la mayoría de programas y configuraciones que necesito en Windows 11 con el siguiente comando:

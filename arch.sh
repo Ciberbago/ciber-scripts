@@ -110,9 +110,6 @@ EOF
 
 sh -c bat << 'EOF' > ~/gnome.sh
 #!/usr/bin/env bash
-
-# Backs up and restores gnome3 keybindings
-# Tested with Gnome 3.36.8
 # by peterrus
 
 set -e
