@@ -173,5 +173,6 @@ function find; /usr/bin/find . -type f -iname "*$argv*"; end; and funcsave find
 function cheat; curl cheat.sh/$argv; end; and funcsave cheat
 function convimg; magick mogrify -path $argv[2] -strip -interlace Plane -quality 80% -format jpg -verbose $argv[1]/*; end; and funcsave convimg
 fisher install IlanCosman/tide@v6
+fisher install oh-my-fish/plugin-bang-bang
 EOF
 ### blackbox --working-directory=~/notas -e 'micro -autosave 1'
