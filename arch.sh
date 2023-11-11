@@ -1,6 +1,8 @@
 sudo sed -i 's/#Color/Color/g' /etc/pacman.conf
 sudo sed -i '/ParallelDownloads/s/^#//g' /etc/pacman.conf
 sudo sed -i '/\[multilib\]/,/Include/s/^#//' /etc/pacman.conf && sudo pacman -Syy
+sudo sed -i 's/^#MAKEFLAGS/MAKEFLAGS/' /etc/makepkg.conf && sudo sed -i 's/.*-j[0-9].*/MAKEFLAGS="-j$(nproc)"/' /etc/makepkg.conf
+sudo sed -i 's/^#BUILDDIR/BUILDDIR/' /etc/makepkg.conf
 #Paquetes normales
 sudo pacman -S hip-runtime-amd fish fisher rhythmbox libva-mesa-driver qt6-wayland obs-studio fragments imagemagick celluloid remmina freerdp gnome-font-viewer firefox btop virtualbox-guest-iso virtualbox qt5ct ethtool cups usbutils mangohud vulkan-radeon fzf bat gnome-keyring gnome-bluetooth-3.0 bluez bluez-utils xclip wget xdg-desktop-portal-gnome exa smbclient tailscale ntfs-3g baobab gnome-characters gvfs gvfs-smb handbrake ffmpegthumbnailer tumbler file-roller gnome-calculator gnome-disk-utility less discord git blender micro gdm gnome-shell gnome-control-center gnome-tweaks timeshift gdu fastfetch ffmpeg cargo qt6-base steam pcmanfm-gtk3 unrar p7zip ttf-firacode-nerd --noconfirm --needed
 
@@ -134,6 +136,16 @@ fi
 echo "parameter 0: [backup|restore]"
 EOF
 
+sh -c bat << 'EOF' > ~/ext.sh
+gext install 4269
+gext install 615
+gext install 3193
+gext install 1160
+gext install 5823
+gext install 5940
+EOF
+
+chmod +x ~/ext.sh
 chmod +x ~/gnome.sh
 chmod +x ~/wallpaper.sh
 
@@ -154,7 +166,7 @@ makepkg -si
 #Aur paquetes
 read -p "Instalar paquetes del AUR? (Y/n): " answer
 if [[ $answer == "" || $answer == "y" ]]; then
-    yay -S qimgv lite-xl-bin blackbox-terminal resources pacleaner insync adw-gtk3-git heroic-games-launcher-bin authy fsearch video-trimmer adwsteamgtk czkawka-gui-bin extension-manager prismlauncher-qt5-bin headsetcontrol --noconfirm
+    yay -S gnome-extensions-cli qimgv lite-xl-bin blackbox-terminal resources insync adw-gtk3-git heroic-games-launcher-bin authy fsearch video-trimmer adwsteamgtk czkawka-gui-bin prismlauncher-qt5-bin headsetcontrol --noconfirm
 fi
 
 export EDITOR=micro
