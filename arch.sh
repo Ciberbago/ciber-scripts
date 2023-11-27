@@ -157,7 +157,7 @@ sudo systemctl enable gdm.service
 sudo systemctl enable bluetooth.service
 sudo systemctl enable cups.service
 sudo systemctl enable tailscaled
-sudo systemctl enable wol@eno1.service
+sudo systemctl enable wol@$interfaz.service
 sudo modprobe vboxdrv vboxnetadp vboxnetflt vboxpci
 
 #instalar paru
