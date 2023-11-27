@@ -8,7 +8,7 @@ sudo pacman -S uget hip-runtime-amd fish fisher rhythmbox libva-mesa-driver qt6-
 
 interfaz=$(ip r | grep default | cut -d ' ' -f 5 | head -n1)
 
-sudo sh -c 'bat << EOF > /etc/systemd/system/wol@interfaz.service 
+sudo sh -c bat << 'EOF' > /etc/systemd/system/wol@interfaz.service 
 [Unit]
 Description=Wake-on-LAN for %i
 Requires=network.target
@@ -18,7 +18,7 @@ ExecStart=/usr/bin/ethtool -s %i wol g
 Type=oneshot
 [Install]
 WantedBy=multi-user.target
-EOF'
+EOF
 
 sudo sh -c 'bat << EOF > /etc/modules-load.d/virtualbox.conf
 vboxdrv
