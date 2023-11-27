@@ -4,9 +4,11 @@ sudo sed -i '/\[multilib\]/,/Include/s/^#//' /etc/pacman.conf && sudo pacman -Sy
 sudo sed -i 's/^#MAKEFLAGS/MAKEFLAGS/' /etc/makepkg.conf && sudo sed -i 's/.*-j[0-9].*/MAKEFLAGS="-j$(nproc)"/' /etc/makepkg.conf
 sudo sed -i 's/^#BUILDDIR/BUILDDIR/' /etc/makepkg.conf
 #Paquetes normales
-sudo pacman -S hip-runtime-amd fish fisher rhythmbox libva-mesa-driver qt6-wayland obs-studio fragments imagemagick celluloid remmina freerdp gnome-font-viewer firefox btop virtualbox-guest-iso virtualbox qt5ct ethtool cups usbutils mangohud vulkan-radeon fzf bat gnome-keyring gnome-bluetooth-3.0 bluez bluez-utils xclip wget xdg-desktop-portal-gnome exa smbclient tailscale ntfs-3g baobab gnome-characters gvfs gvfs-smb handbrake ffmpegthumbnailer tumbler file-roller gnome-calculator gnome-disk-utility less discord git blender micro gdm gnome-shell gnome-control-center gnome-tweaks timeshift gdu fastfetch ffmpeg cargo qt6-base steam pcmanfm-gtk3 unrar p7zip ttf-firacode-nerd --noconfirm --needed
+sudo pacman -S uget hip-runtime-amd fish fisher rhythmbox libva-mesa-driver qt6-wayland obs-studio fragments imagemagick celluloid remmina freerdp gnome-font-viewer firefox btop virtualbox-guest-iso virtualbox qt5ct ethtool cups usbutils mangohud vulkan-radeon fzf bat gnome-keyring gnome-bluetooth-3.0 bluez bluez-utils xclip wget xdg-desktop-portal-gnome exa smbclient tailscale ntfs-3g baobab gnome-characters gvfs gvfs-smb handbrake ffmpegthumbnailer tumbler file-roller gnome-calculator gnome-disk-utility less discord git blender micro gdm gnome-shell gnome-control-center gnome-tweaks timeshift gdu fastfetch ffmpeg cargo qt6-base steam pcmanfm-gtk3 unrar p7zip ttf-firacode-nerd --noconfirm --needed
 
-sudo sh -c 'bat << EOF > /etc/systemd/system/wol@.service 
+interfaz=$(ip r | grep default | cut -d ' ' -f 5 | head -n1)
+
+sudo sh -c 'bat << EOF > /etc/systemd/system/wol@interfaz.service 
 [Unit]
 Description=Wake-on-LAN for %i
 Requires=network.target
@@ -181,6 +183,7 @@ alias mkdir="mkdir -pv" && funcsave mkdir
 alias espacio="gdu /" && funcsave espacio
 alias f34='firefox -P "Cyb_R34" -no-remote' && funcsave f34
 alias orphans='sudo pacman -Qdtq | sudo pacman -Runs  -' && funcsave orphans
+alias rebootuefi='sudo systemctl reboot --firmware-setup' && funcsave rebootuefi
 function find; /usr/bin/find . -type f -iname "*$argv*"; end; and funcsave find
 function cheat; curl cheat.sh/$argv; end; and funcsave cheat
 function convimg; magick mogrify -path $argv[2] -strip -interlace Plane -quality 80% -format jpg -verbose $argv[1]/*; end; and funcsave convimg
