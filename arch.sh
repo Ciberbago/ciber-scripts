@@ -4,7 +4,7 @@ sudo sed -i '/\[multilib\]/,/Include/s/^#//' /etc/pacman.conf && sudo pacman -Sy
 sudo sed -i 's/^#MAKEFLAGS/MAKEFLAGS/' /etc/makepkg.conf && sudo sed -i 's/.*-j[0-9].*/MAKEFLAGS="-j$(nproc)"/' /etc/makepkg.conf
 sudo sed -i 's/^#BUILDDIR/BUILDDIR/' /etc/makepkg.conf
 #Paquetes normales
-sudo pacman -S uget hip-runtime-amd fish fisher rhythmbox libva-mesa-driver qt6-wayland obs-studio fragments imagemagick celluloid remmina freerdp gnome-font-viewer firefox btop virtualbox-guest-iso virtualbox qt5ct ethtool cups usbutils mangohud vulkan-radeon fzf bat gnome-keyring gnome-bluetooth-3.0 bluez bluez-utils xclip wget xdg-desktop-portal-gnome exa smbclient tailscale ntfs-3g baobab gnome-characters gvfs gvfs-smb handbrake ffmpegthumbnailer tumbler file-roller gnome-calculator gnome-disk-utility less discord git blender micro gdm gnome-shell gnome-control-center gnome-tweaks timeshift gdu fastfetch ffmpeg cargo qt6-base steam pcmanfm-gtk3 unrar p7zip ttf-firacode-nerd --noconfirm --needed
+sudo pacman -S baobab base-devel bat bluez bluez-utils btop celluloid discord ethtool exa fastfetch ffmpeg ffmpegthumbnailer file-roller firefox fish fisher fragments freerdp fzf gdm gdu git gnome-bluetooth-3.0 gnome-calculator gnome-characters gnome-control-center gnome-disk-utility gnome-font-viewer gnome-keyring gnome-shell gnome-tweaks gvfs gvfs-smb handbrake hip-runtime-amd imagemagick less libva-mesa-driver mangohud micro ntfs-3g obs-studio p7zip pcmanfm-gtk3 qt5ct qt6-base qt6-wayland remmina rhythmbox rust smbclient steam tailscale timeshift ttf-firacode-nerd tumbler unrar usbutils virtualbox virtualbox-guest-iso vulkan-radeon wget xclip xdg-desktop-portal-gnome --noconfirm --needed
 
 interfaz=$(ip r | grep default | cut -d ' ' -f 5 | head -n1)
 
@@ -155,20 +155,18 @@ sudo gpasswd -a $USER vboxusers
 #Servicios
 sudo systemctl enable gdm.service
 sudo systemctl enable bluetooth.service
-sudo systemctl enable cups.service
 sudo systemctl enable tailscaled
 sudo systemctl enable wol@$interfaz.service
 sudo modprobe vboxdrv vboxnetadp vboxnetflt vboxpci
 
-#instalar paru
-sudo pacman -S --needed base-devel --noconfirm
+#instalar yay
 git clone https://aur.archlinux.org/yay.git
 cd yay
 makepkg -si
 #Aur paquetes
 read -p "Instalar paquetes del AUR? (Y/n): " answer
 if [[ $answer == "" || $answer == "y" ]]; then
-    yay -S gnome-extensions-cli qimgv lite-xl-bin blackbox-terminal resources insync adw-gtk3-git heroic-games-launcher-bin authy fsearch video-trimmer adwsteamgtk czkawka-gui-bin prismlauncher-qt5-bin headsetcontrol --noconfirm
+    yay -S steamtinkerlaunch-git blender-lts-bin gnome-extensions-cli qimgv lite-xl-bin blackbox-terminal resources insync adw-gtk3-git heroic-games-launcher-bin authy fsearch video-trimmer czkawka-gui-bin prismlauncher-qt5-bin headsetcontrol --noconfirm
 fi
 
 export EDITOR=micro
@@ -190,4 +188,3 @@ function convimg; magick mogrify -path $argv[2] -strip -interlace Plane -quality
 fisher install IlanCosman/tide@v6
 fisher install oh-my-fish/plugin-bang-bang
 EOF
-### blackbox --working-directory=~/notas -e 'micro -autosave 1'
