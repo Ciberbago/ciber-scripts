@@ -166,7 +166,7 @@ makepkg -si
 #Aur paquetes
 read -p "Instalar paquetes del AUR? (Y/n): " answer
 if [[ $answer == "" || $answer == "y" ]]; then
-    yay -S steamtinkerlaunch-git blender-lts-bin gnome-extensions-cli qimgv lite-xl-bin blackbox-terminal resources insync adw-gtk3-git heroic-games-launcher-bin authy fsearch video-trimmer czkawka-gui-bin prismlauncher-qt5-bin headsetcontrol --noconfirm
+    yay -S adw-gtk3-git authy blackbox-terminal blender-lts-bin czkawka-gui-bin fsearch gnome-extensions-cli headsetcontrol heroic-games-launcher-bin insync lite-xl-bin prismlauncher-qt5-bin qimgv resources steamtinkerlaunch-git video-trimmer --noconfirm
 fi
 
 export EDITOR=micro
