@@ -4,7 +4,7 @@ sudo sed -i '/\[multilib\]/,/Include/s/^#//' /etc/pacman.conf && sudo pacman -Sy
 sudo sed -i 's/^#MAKEFLAGS/MAKEFLAGS/' /etc/makepkg.conf && sudo sed -i 's/.*-j[0-9].*/MAKEFLAGS="-j$(nproc)"/' /etc/makepkg.conf
 sudo sed -i 's/^#BUILDDIR/BUILDDIR/' /etc/makepkg.conf
 #Paquetes normales
-sudo pacman -S baobab base-devel bat bluez bluez-utils btop celluloid discord ethtool exa fastfetch ffmpeg ffmpegthumbnailer file-roller firefox fish fisher fragments freerdp fzf gdm gdu git gnome-bluetooth-3.0 gnome-calculator gnome-characters gnome-control-center gnome-disk-utility gnome-font-viewer gnome-keyring gnome-shell gnome-tweaks gvfs gvfs-smb handbrake hip-runtime-amd imagemagick less libva-mesa-driver mangohud micro ntfs-3g obs-studio p7zip pcmanfm-gtk3 qt5ct qt6-base qt6-wayland remmina rhythmbox rust smbclient steam tailscale timeshift ttf-firacode-nerd tumbler unrar usbutils virtualbox virtualbox-guest-iso vulkan-radeon wget xclip xdg-desktop-portal-gnome --noconfirm --needed
+sudo pacman -S baobab base-devel bat bluez bluez-utils btop celluloid discord ethtool exa fastfetch ffmpeg ffmpegthumbnailer file-roller firefox fish fisher fragments freerdp fzf gdm gdu git gnome-bluetooth-3.0 gnome-calculator gnome-characters gnome-control-center gnome-disk-utility gnome-font-viewer gnome-keyring gnome-shell gnome-tweaks gvfs gvfs-smb handbrake hip-runtime-amd imagemagick less libva-mesa-driver linux-lts mangohud micro ntfs-3g obs-studio pacman-contrib p7zip pcmanfm-gtk3 qt5ct qt6-base qt6-wayland remmina rhythmbox rust smbclient steam tailscale traceroute ttf-firacode-nerd tumbler unrar usbutils virtualbox virtualbox-guest-iso vulkan-radeon wget xclip xdg-desktop-portal-gnome --noconfirm --needed
 
 interfaz=$(ip r | grep default | cut -d ' ' -f 5 | head -n1)
 
@@ -166,14 +166,14 @@ makepkg -si
 #Aur paquetes
 read -p "Instalar paquetes del AUR? (Y/n): " answer
 if [[ $answer == "" || $answer == "y" ]]; then
-    yay -S adw-gtk3-git authy blackbox-terminal blender-lts-bin czkawka-gui-bin fsearch gnome-extensions-cli headsetcontrol heroic-games-launcher-bin insync lite-xl-bin prismlauncher-qt5-bin qimgv resources steamtinkerlaunch-git video-trimmer --noconfirm
+    yay -S adw-gtk3-git authy blackbox-terminal blender-lts-bin czkawka-gui-bin fsearch gnome-extensions-cli headsetcontrol heroic-games-launcher-bin insync lite-xl-bin prismlauncher-qt5-bin qimgv resources speedtest++ steamtinkerlaunch-git usbimager-bin video-trimmer --noconfirm
 fi
 
 export EDITOR=micro
 chsh -s /usr/bin/fish
 
 fish <<'EOF'
-alias buscar="history | fzf" && funcsave buscar
+alias historial="history | fzf" && funcsave historial
 alias cat="bat" && funcsave cat
 alias cc="cd && clear" && funcsave cc
 alias ls="exa -lha --icons" && funcsave ls
@@ -182,9 +182,10 @@ alias espacio="gdu /" && funcsave espacio
 alias f34='firefox -P "Cyb_R34" -no-remote' && funcsave f34
 alias orphans='sudo pacman -Qdtq | sudo pacman -Runs  -' && funcsave orphans
 alias rebootuefi='sudo systemctl reboot --firmware-setup' && funcsave rebootuefi
-function find; /usr/bin/find . -type f -iname "*$argv*"; end; and funcsave find
+function buscar; /usr/bin/find . -type f -iname "*$argv*"; end; and funcsave buscar
 function cheat; curl cheat.sh/$argv; end; and funcsave cheat
 function convimg; magick mogrify -path $argv[2] -strip -interlace Plane -quality 80% -format jpg -verbose $argv[1]/*; end; and funcsave convimg
+function img2mp4; for file in *.gif; ffmpeg -i $file "$file.mp4"; end; end; and funcsave img2mp4
 fisher install IlanCosman/tide@v6
 fisher install oh-my-fish/plugin-bang-bang
 EOF
