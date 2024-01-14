@@ -1,0 +1,44 @@
+[custom0]
+binding='<Super>t'
+command='blackbox'
+name='Terminal'
+
+[custom1]
+binding='<Super>e'
+command='pcmanfm'
+name='Archivos'
+
+[custom2]
+binding='<Control><Alt>l'
+command='pkill clicker'
+name='autoclick cancel'
+
+[custom3]
+binding='<Alt>l'
+command='clicker -d 25'
+name='l click'
+
+[custom4]
+binding='<Alt>r'
+command='clicker -d 25 -b Right'
+name='r click'
+
+[custom5]
+binding='<Shift><Control>semicolon'
+command="blackbox --working-directory=/run/media/storage/jaimedrive/notas -e 'micro -autosave 1'"
+name='Notas'
+
+[custom6]
+binding='<Shift><Control>Escape'
+command='resources'
+name='task manager'
+
+[custom7]
+binding='<Super>bracketleft'
+command='obs-cmd recording start'
+name='OBS start'
+
+[custom8]
+binding='<Super>bracketright'
+command='obs-cmd recording stop'
+name='OBS Stop'

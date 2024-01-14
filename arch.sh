@@ -27,16 +27,7 @@ vboxnetflt
 vboxpci
 EOF'
 
-sh -c 'bat << EOF > ~/mpv.conf
-[extension.webm]
-loop-file=inf
-[extension.mp4]
-loop-file=inf
-[extension.m4v]
-loop-file=inf
-[extension.mkv]
-loop-file=inf
-EOF'
+wget -O ~/mpv.conf https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/dotfiles/mpv.conf
 
 echo "export QT_QPA_PLATFORMTHEME=qt5ct" | sudo tee /etc/environment
 
@@ -61,56 +52,9 @@ EOF'
 
 mkdir -p gnome
 
-sh -c bat << 'EOF' > ~/gnome/custom-keys.dconf
-['/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/\ncustom1/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2/', '/org/gnome/settings-daemon/plugins/media-keys/custom-ke\nybindings/custom3/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4/', '/org/gnome/settings-daemon/plugins/media-keys\n/custom-keybindings/custom5/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom6/']
-EOF
-
-sh -c bat << 'EOF' > ~/gnome/custom-values.dconf
-[custom0]
-binding='<Super>t'
-command='blackbox'
-name='Terminal'
- 
-[custom1]
-binding='<Super>e'
-command='pcmanfm'
-name='Archivos' 
-
-[custom2]
-binding='<Control><Alt>l'
-command='pkill clicker'
-name='autoclick cancel'
- 
-[custom3]
-binding='<Alt>l'
-command='clicker -d 25'
-name='l click'
-
-[custom4]
-binding='<Alt>r'
-command='clicker -d 25 -b Right'
-name='r click'
-
-[custom5]
-binding='<Shift><Control>semicolon'
-command="blackbox --working-directory=/run/media/storage/jaimedrive/notas -e 'micro -autosave 1'"
-name='Notas'
-
-[custom6]
-binding='<Shift><Control>Escape'
-command='resources'
-name='task manager'
-EOF
-
-sh -c bat << 'EOF' > ~/gnome/keybindings.dconf
-[/]
-switch-applications=@as []
-switch-applications-backward=@as []
-switch-group=@as []
-switch-group-backward=@as []
-switch-windows=['<Alt>Tab']
-switch-windows-backward=['<Shift><Alt>Tab']
-EOF
+wget -O ~/gnome/custom-keys.dconf https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/dotfiles/custom-keys.dconf
+wget -O ~/gnome/custom-values.dconf https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/dotfiles/custom-values.dconf
+wget -O ~/gnome/keybindings.dconf https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/dotfiles/keybindings.dconf
 
 sh -c bat << 'EOF' > ~/gnome.sh
 #!/usr/bin/env bash
