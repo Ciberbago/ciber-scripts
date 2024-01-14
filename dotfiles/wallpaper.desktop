@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Wallpaper
+GenericName=Random-wallpaper
+Comment=Random wallpaper at login
+Exec=/home/jaime/wallpaper.sh
+Terminal=false
+Type=Application
+X-GNOME-Autostart-enabled=true

@@ -31,65 +31,16 @@ wget -O ~/mpv.conf https://raw.githubusercontent.com/Ciberbago/ciber-scripts/mai
 
 echo "export QT_QPA_PLATFORMTHEME=qt5ct" | sudo tee /etc/environment
 
-sh -c 'bat << EOF > ~/wallpaper.sh
-#!/bin/bash
-w=$(shuf -n1 -e /run/media/storage/jaimedrive/Media/Wallpapers/*)
-gsettings set org.gnome.desktop.background picture-uri-dark "file://$w"
-EOF'
-
 mkdir -p ~/.config/autostart
-
-sh -c 'bat << EOF > ~/.config/autostart/wallpaper.desktop
-[Desktop Entry]
-Name=Wallpaper
-GenericName=Random-wallpaper
-Comment=Random wallpaper at login
-Exec=/home/jaime/wallpaper.sh
-Terminal=false
-Type=Application
-X-GNOME-Autostart-enabled=true
-EOF'
+wget -O ~/.config/autostart/wallpaper.desktop https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/dotfiles/wallpaper.desktop
 
 mkdir -p gnome
-
 wget -O ~/gnome/custom-keys.dconf https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/dotfiles/custom-keys.dconf
 wget -O ~/gnome/custom-values.dconf https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/dotfiles/custom-values.dconf
 wget -O ~/gnome/keybindings.dconf https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/dotfiles/keybindings.dconf
-
-sh -c bat << 'EOF' > ~/gnome.sh
-#!/usr/bin/env bash
-# by peterrus
-
-set -e
-
-if [[ $1 == 'backup' ]]; then
-  dconf dump '/org/gnome/desktop/wm/keybindings/' > gnome/keybindings.dconf
-  dconf dump '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/' > gnome/custom-values.dconf
-  dconf read '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings' > gnome/custom-keys.dconf
-  echo "backup done"
-  exit 0
-fi
-if [[ $1 == 'restore' ]]; then
-  dconf reset -f '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/'
-  dconf reset -f '/org/gnome/desktop/wm/keybindings/'
-  dconf load '/org/gnome/desktop/wm/keybindings/' < gnome/keybindings.dconf
-  dconf load '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/' < gnome/custom-values.dconf
-  dconf write '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings' "$(cat gnome/custom-keys.dconf)"
-  echo "restore done"
-  exit 0
-fi
-
-echo "parameter 0: [backup|restore]"
-EOF
-
-sh -c bat << 'EOF' > ~/ext.sh
-gext install 4269
-gext install 615
-gext install 3193
-gext install 1160
-gext install 5823
-gext install 5940
-EOF
+wget -O ~/gnome.sh https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts/gnome.sh
+wget -O ~/ext.sh https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts/ext.sh
+wget -O ~/wallpaper.sh https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts/wallpaper.sh
 
 chmod +x ~/ext.sh
 chmod +x ~/gnome.sh
