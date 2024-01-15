@@ -8,17 +8,7 @@ sudo pacman -S baobab base-devel bat bluez bluez-utils btop celluloid chromium d
 
 interfaz=$(ip r | grep default | cut -d ' ' -f 5 | head -n1)
 
-sudo sh -c bat << 'EOF' > /etc/systemd/system/wol@$interfaz.service 
-[Unit]
-Description=Wake-on-LAN for %i
-Requires=network.target
-After=network.target
-[Service]
-ExecStart=/usr/bin/ethtool -s %i wol g
-Type=oneshot
-[Install]
-WantedBy=multi-user.target
-EOF
+sudo wget -O /etc/systemd/system/wol@.service https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/dotfiles/wol@.service
 
 sudo sh -c 'bat << EOF > /etc/modules-load.d/virtualbox.conf
 vboxdrv
