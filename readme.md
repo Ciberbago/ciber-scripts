@@ -15,7 +15,7 @@ bash <(curl -L arch.jaimelopez.top)
 Principalmente lo hice para poder instalar la mayoría de programas y configuraciones que necesito en Windows 11 con el siguiente comando:
 
 ```
-iwr -useb https://bit.ly/ciberwin11 | iex
+irm https://bit.ly/ciberwin11 | iex
 ```
 
 Incluye cosas como:
