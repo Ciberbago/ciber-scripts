@@ -55,6 +55,8 @@ sudo systemctl enable wol@$interfaz.service
 sudo modprobe vboxdrv vboxnetadp vboxnetflt vboxpci
 
 #instalar yay
+mkdir -p ~/.config/yay
+wget -O ~/.config/yay/config.json https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/dotfiles/yayconfig.json
 git clone https://aur.archlinux.org/yay.git
 cd yay
 makepkg -si
