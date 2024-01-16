@@ -24,6 +24,7 @@ echo "export QT_QPA_PLATFORMTHEME=qt5ct" | sudo tee /etc/environment
 mkdir -p ~/.config/autostart
 wget -O ~/.config/autostart/wallpaper.desktop https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/dotfiles/wallpaper.desktop
 
+
 mkdir -p gnome
 wget -O ~/gnome/custom-keys.dconf https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/dotfiles/custom-keys.dconf
 wget -O ~/gnome/custom-values.dconf https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/dotfiles/custom-values.dconf
@@ -31,6 +32,8 @@ wget -O ~/gnome/keybindings.dconf https://raw.githubusercontent.com/Ciberbago/ci
 wget -O ~/gnome.sh https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts/gnome.sh
 wget -O ~/ext.sh https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts/ext.sh
 wget -O ~/wallpaper.sh https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts/wallpaper.sh
+wget -O ~/gnomeconfig.sh https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts/gnomeconfig.sh
+wget -O ~/dashtopanel.conf https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/dotfiles/dashtopanel.conf
 
 mkdir -p ~/.config/obs-studio/basic/profiles/Untitled/
 wget -O ~/.config/obs-studio/basic/profiles/Untitled/basic.ini https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/dotfiles/obsprofile.ini
@@ -41,6 +44,7 @@ wget -O ~/.config/obs-studio/global.ini https://raw.githubusercontent.com/Ciberb
 chmod +x ~/ext.sh
 chmod +x ~/gnome.sh
 chmod +x ~/wallpaper.sh
+chmod +x ~/gnomeconfig.sh
 
 sudo gpasswd -a $USER vboxusers
 #Servicios
