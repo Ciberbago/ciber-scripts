@@ -4,11 +4,12 @@ sudo sed -i '/\[multilib\]/,/Include/s/^#//' /etc/pacman.conf && sudo pacman -Sy
 sudo sed -i 's/^#MAKEFLAGS/MAKEFLAGS/' /etc/makepkg.conf && sudo sed -i 's/.*-j[0-9].*/MAKEFLAGS="-j$(nproc)"/' /etc/makepkg.conf
 sudo sed -i 's/^#BUILDDIR/BUILDDIR/' /etc/makepkg.conf
 #Paquetes normales
-sudo pacman -S android-tools baobab base-devel bat bluez bluez-utils btop celluloid chromium discord ethtool exa fastfetch ffmpegthumbnailer file-roller firefox fish fisher fragments freerdp fzf gdm gdu git gnome-bluetooth-3.0 gnome-calculator gnome-characters gnome-control-center gnome-disk-utility gnome-font-viewer gnome-keyring gnome-shell gnome-tweaks gvfs gvfs-smb handbrake imagemagick iperf3 less libva-mesa-driver linux-lts mangohud mc micro ntfs-3g pacman-contrib p7zip pcmanfm-gtk3 qt5ct qt6-base qt6-wayland radeontop remmina rust smbclient steam tailscale traceroute ttf-firacode-nerd tumbler uget unrar usbutils virtualbox virtualbox-guest-iso vulkan-radeon wget xclip xdg-desktop-portal-gnome --noconfirm --needed
+sudo pacman -S android-tools baobab base-devel bat bluez bluez-utils btop celluloid chromium discord ethtool exa fastfetch ffmpegthumbnailer file-roller firefox fish fisher fragments freerdp fzf gdm gdu git gnome-bluetooth-3.0 gnome-calculator gnome-characters gnome-control-center gnome-disk-utility gnome-font-viewer gnome-keyring gnome-shell gnome-screenshot gnome-tweaks gvfs gvfs-smb handbrake imagemagick iperf3 less libva-mesa-driver linux-lts mangohud mc micro ntfs-3g pacman-contrib p7zip pcmanfm-gtk3 qt5ct qt6-base qt6-wayland radeontop remmina rust smbclient steam swappy tailscale traceroute ttf-firacode-nerd tumbler uget unrar usbutils virtualbox virtualbox-guest-iso vulkan-radeon wget wl-clipboard xclip xdg-desktop-portal-gnome --noconfirm --needed
 
 interfaz=$(ip r | grep default | cut -d ' ' -f 5 | head -n1)
 
 sudo wget -O /etc/systemd/system/wol@.service https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/dotfiles/wol@.service
+sudo wget -O /usr/local/bin/swapshot https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts/swapshot
 
 sudo sh -c 'bat << EOF > /etc/modules-load.d/virtualbox.conf
 vboxdrv
@@ -45,6 +46,7 @@ chmod +x ~/ext.sh
 chmod +x ~/gnome.sh
 chmod +x ~/wallpaper.sh
 chmod +x ~/gnomeconfig.sh
+sudo chmod +x /usr/local/bin/swapshot
 
 sudo gpasswd -a $USER vboxusers
 #Servicios
