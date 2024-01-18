@@ -35,6 +35,7 @@ wget -O ~/ext.sh https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/
 wget -O ~/wallpaper.sh https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts/wallpaper.sh
 wget -O ~/gnomeconfig.sh https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts/gnomeconfig.sh
 wget -O ~/dashtopanel.conf https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/dotfiles/dashtopanel.conf
+wget -O ~/hideapps.sh https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts/hideapps.sh
 
 mkdir -p ~/.config/obs-studio/basic/profiles/Untitled/
 wget -O ~/.config/obs-studio/basic/profiles/Untitled/basic.ini https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/dotfiles/obsprofile.ini
@@ -46,6 +47,7 @@ chmod +x ~/ext.sh
 chmod +x ~/gnome.sh
 chmod +x ~/wallpaper.sh
 chmod +x ~/gnomeconfig.sh
+chmod +x ~/hideapps.sh
 sudo chmod +x /usr/local/bin/swapshot
 
 sudo gpasswd -a $USER vboxusers
