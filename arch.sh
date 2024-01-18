@@ -48,10 +48,7 @@ export EDITOR=micro
 chsh -s /usr/bin/fish
 
 #Servicios
-sudo systemctl enable gdm.service
-sudo systemctl enable bluetooth.service
-sudo systemctl enable tailscaled
-sudo systemctl enable wol@$interfaz.service
+sudo systemctl enable gdm.service bluetooth.service tailscaled wol@$interfaz.service
 sudo modprobe vboxdrv vboxnetadp vboxnetflt vboxpci
 
 #instalar yay
