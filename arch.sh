@@ -6,51 +6,47 @@ sudo sed -i 's/^#BUILDDIR/BUILDDIR/' /etc/makepkg.conf
 #Paquetes normales
 sudo pacman -S android-tools baobab base-devel bat bluez bluez-utils btop celluloid chromium discord ethtool exa fastfetch ffmpegthumbnailer file-roller firefox fish fisher fragments freerdp fzf gdm gdu git gnome-bluetooth-3.0 gnome-calculator gnome-characters gnome-control-center gnome-disk-utility gnome-font-viewer gnome-keyring gnome-shell gnome-screenshot gnome-tweaks gvfs gvfs-smb handbrake imagemagick iperf3 less libmad libva-mesa-driver linux-lts mangohud mc micro ntfs-3g pacman-contrib p7zip pcmanfm-gtk3 qt5ct qt6-base qt6-wayland radeontop remmina rust smbclient steam swappy tailscale traceroute ttf-firacode-nerd tumbler uget unrar usbutils virtualbox virtualbox-guest-iso vulkan-radeon wget wl-clipboard xclip xdg-desktop-portal-gnome --noconfirm --needed
 
+#Variables
+dotfiles='https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/dotfiles'
+scriptsv='https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts'
 interfaz=$(ip r | grep default | cut -d ' ' -f 5 | head -n1)
 
-sudo wget -O /etc/systemd/system/wol@.service https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/dotfiles/wol@.service
-sudo wget -O /usr/local/bin/swapshot https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts/swapshot
-
-sudo sh -c 'bat << EOF > /etc/modules-load.d/virtualbox.conf
-vboxdrv
-vboxnetadp
-vboxnetflt
-vboxpci
-EOF'
-
-wget -O ~/mpv.conf https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/dotfiles/mpv.conf
-
-echo "export QT_QPA_PLATFORMTHEME=qt5ct" | sudo tee /etc/environment
-
+#Crear carpetas
 mkdir -p ~/.config/autostart
-wget -O ~/.config/autostart/wallpaper.desktop https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/dotfiles/wallpaper.desktop
-
-
-mkdir -p gnome
-wget -O ~/gnome/custom-keys.dconf https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/dotfiles/custom-keys.dconf
-wget -O ~/gnome/custom-values.dconf https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/dotfiles/custom-values.dconf
-wget -O ~/gnome/keybindings.dconf https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/dotfiles/keybindings.dconf
-wget -O ~/gnome.sh https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts/gnome.sh
-wget -O ~/ext.sh https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts/ext.sh
-wget -O ~/wallpaper.sh https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts/wallpaper.sh
-wget -O ~/gnomeconfig.sh https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts/gnomeconfig.sh
-wget -O ~/dashtopanel.conf https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/dotfiles/dashtopanel.conf
-wget -O ~/hideapps.sh https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts/hideapps.sh
-
 mkdir -p ~/.config/obs-studio/basic/profiles/Untitled/
-wget -O ~/.config/obs-studio/basic/profiles/Untitled/basic.ini https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/dotfiles/obsprofile.ini
-wget -O ~/.config/obs-studio/basic/profiles/Untitled/recordEncoder.json https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/dotfiles/obsrecorder.json
-wget -O ~/.config/obs-studio/global.ini https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/dotfiles/obsglobal.ini
+mkdir -p ~/.config/yay
+mkdir -p gnome
 
+#Dotfiles
+wget -O ~/mpv.conf ${dotfiles}/mpv.conf
+wget -O ~/dashtopanel.conf ${dotfiles}/dashtopanel.conf
+wget -O ~/gnome/custom-keys.dconf ${dotfiles}/custom-keys.dconf
+wget -O ~/gnome/custom-values.dconf ${dotfiles}/custom-values.dconf
+wget -O ~/gnome/keybindings.dconf ${dotfiles}/keybindings.dconf
+wget -O ~/.config/obs-studio/basic/profiles/Untitled/basic.ini ${dotfiles}/obsprofile.ini
+wget -O ~/.config/obs-studio/basic/profiles/Untitled/recordEncoder.json ${dotfiles}/obsrecorder.json
+wget -O ~/.config/obs-studio/global.ini ${dotfiles}/obsglobal.ini
+wget -O ~/.config/yay/config.json ${dotfiles}/yayconfig.json
+sudo wget -O /etc/modules-load.d/virtualbox.conf ${dotfiles}/virtualbox.conf
+sudo wget -O /etc/systemd/system/wol@.service ${dotfiles}/wol@.service
+sudo wget -O /usr/local/bin/swapshot ${scripts}/swapshot
 
-chmod +x ~/ext.sh
-chmod +x ~/gnome.sh
-chmod +x ~/wallpaper.sh
-chmod +x ~/gnomeconfig.sh
-chmod +x ~/hideapps.sh
-sudo chmod +x /usr/local/bin/swapshot
+#Scripts y programas
+wget -O ~/.config/autostart/wallpaper.desktop ${dotfiles}/wallpaper.desktop
+wget -O ~/gnome.sh ${scripts}/gnome.sh
+wget -O ~/ext.sh ${scripts}/ext.sh
+wget -O ~/wallpaper.sh ${scripts}/wallpaper.sh
+wget -O ~/gnomeconfig.sh ${scripts}/gnomeconfig.sh
+wget -O ~/hideapps.sh ${scripts}/hideapps.sh
 
+#Configuraciones
+echo "export QT_QPA_PLATFORMTHEME=qt5ct" | sudo tee /etc/environment
+chmod +x *.sh
+sudo chmod +x /usr/local/bin/*
 sudo gpasswd -a $USER vboxusers
+export EDITOR=micro
+chsh -s /usr/bin/fish
+
 #Servicios
 sudo systemctl enable gdm.service
 sudo systemctl enable bluetooth.service
@@ -59,8 +55,6 @@ sudo systemctl enable wol@$interfaz.service
 sudo modprobe vboxdrv vboxnetadp vboxnetflt vboxpci
 
 #instalar yay
-mkdir -p ~/.config/yay
-wget -O ~/.config/yay/config.json https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/dotfiles/yayconfig.json
 git clone https://aur.archlinux.org/yay.git
 cd yay
 makepkg -si
@@ -69,9 +63,6 @@ read -p "Instalar paquetes del AUR? (Y/n): " answer
 if [[ $answer == "" || $answer == "y" ]]; then
     yay -S adw-gtk3-git authy blackbox-terminal blender-lts-bin clicker-git czkawka-gui-bin deadbeef fsearch gnome-extensions-cli headsetcontrol heroic-games-launcher-bin impression insync lite-xl-bin obs-cmd obs-studio-av1 pacleaner prismlauncher-qt5-bin qimgv resources speedtest++ steamtinkerlaunch-git video-trimmer --noconfirm
 fi
-
-export EDITOR=micro
-chsh -s /usr/bin/fish
 
 fish <<'EOF'
 alias historial="history | fzf" && funcsave historial
