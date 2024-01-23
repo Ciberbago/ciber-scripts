@@ -1,3 +1,4 @@
+#<-------Ajustes de pacman------->
 sudo sed -i 's/#Color/Color/g' /etc/pacman.conf
 sudo sed -i '/ParallelDownloads/s/^#//g' /etc/pacman.conf
 sudo sed -i '/\[multilib\]/,/Include/s/^#//' /etc/pacman.conf && sudo pacman -Syy
