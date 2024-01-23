@@ -17,6 +17,7 @@ mkdir -p ~/.config/autostart
 mkdir -p ~/.config/obs-studio/basic/profiles/Untitled/
 mkdir -p ~/.config/yay
 mkdir -p gnome
+mkdir -p Screenshots/tmp
 
 #<-------Dotfiles------->
 wget -O ~/mpv.conf ${dotfiles}/mpv.conf
