@@ -25,6 +25,7 @@ wget -O ~/dashtopanel.conf ${dotfiles}/dashtopanel.conf
 wget -O ~/gnome/custom-keys.dconf ${dotfiles}/custom-keys.dconf
 wget -O ~/gnome/custom-values.dconf ${dotfiles}/custom-values.dconf
 wget -O ~/gnome/keybindings.dconf ${dotfiles}/keybindings.dconf
+wget -O ~/.config/autostart/wallpaper.desktop ${dotfiles}/wallpaper.desktop
 wget -O ~/.config/obs-studio/basic/profiles/Untitled/basic.ini ${dotfiles}/obsprofile.ini
 wget -O ~/.config/obs-studio/basic/profiles/Untitled/recordEncoder.json ${dotfiles}/obsrecorder.json
 wget -O ~/.config/obs-studio/global.ini ${dotfiles}/obsglobal.ini
@@ -33,13 +34,12 @@ sudo wget -O /etc/modules-load.d/virtualbox.conf ${dotfiles}/virtualbox.conf
 sudo wget -O /etc/systemd/system/wol@.service ${dotfiles}/wol@.service
 
 #<-------Scripts y programas------->
-wget -O ~/.config/autostart/wallpaper.desktop ${dotfiles}/wallpaper.desktop
-wget -O ~/gnome.sh ${scripts}/gnome.sh
-wget -O ~/ext.sh ${scripts}/ext.sh
-wget -O ~/wallpaper.sh ${scripts}/wallpaper.sh
-wget -O ~/gnomeconfig.sh ${scripts}/gnomeconfig.sh
-wget -O ~/hideapps.sh ${scripts}/hideapps.sh
-sudo wget -O /usr/local/bin/swapshot ${scripts}/swapshot
+wget -O ~/gnome.sh ${scriptsv}/gnome.sh
+wget -O ~/ext.sh ${scriptsv}/ext.sh
+wget -O ~/wallpaper.sh ${scriptsv}/wallpaper.sh
+wget -O ~/gnomeconfig.sh ${scriptsv}/gnomeconfig.sh
+wget -O ~/hideapps.sh ${scriptsv}/hideapps.sh
+sudo wget -O /usr/local/bin/swapshot ${scriptsv}/swapshot
 
 #<-------Configuraciones------->
 echo "export QT_QPA_PLATFORMTHEME=qt5ct" | sudo tee /etc/environment
