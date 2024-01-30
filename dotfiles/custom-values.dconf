@@ -42,3 +42,8 @@ name='OBS start'
 binding='<Super>bracketright'
 command='obs-cmd recording stop'
 name='OBS Stop'
+
+[custom9]
+binding='<Control>minus'
+command='swapshot -a'
+name='Swapshot'

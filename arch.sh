@@ -5,7 +5,7 @@ sudo sed -i '/\[multilib\]/,/Include/s/^#//' /etc/pacman.conf && sudo pacman -Sy
 sudo sed -i 's/^#MAKEFLAGS/MAKEFLAGS/' /etc/makepkg.conf && sudo sed -i 's/.*-j[0-9].*/MAKEFLAGS="-j$(nproc)"/' /etc/makepkg.conf
 sudo sed -i 's/^#BUILDDIR/BUILDDIR/' /etc/makepkg.conf
 #<-------Paquetes normales------->
-sudo pacman -S android-tools baobab base-devel bat bluez bluez-utils btop celluloid chromium discord dkms ethtool exa fastfetch ffmpegthumbnailer file-roller firefox fish fisher fragments freerdp fzf gdm gdu git gnome-bluetooth-3.0 gnome-calculator gnome-characters gnome-control-center gnome-disk-utility gnome-font-viewer gnome-keyring gnome-shell gnome-screenshot gnome-tweaks gvfs gvfs-smb handbrake imagemagick iperf3 less libmad libva-mesa-driver linux-headers linux-lts mangohud mc micro ntfs-3g pacman-contrib p7zip pcmanfm-gtk3 qt5ct qt6-base qt6-wayland radeontop remmina rust smbclient steam swappy tailscale traceroute ttf-firacode-nerd tumbler uget unrar usbutils virtualbox virtualbox-guest-iso vulkan-radeon wget wl-clipboard xclip xdg-desktop-portal-gnome --noconfirm --needed
+sudo pacman -S android-tools baobab base-devel bat bluez bluez-utils btop celluloid chromium dkms ethtool exa fastfetch ffmpegthumbnailer file-roller firefox fish fisher fragments freerdp fzf gdm gdu git gnome-bluetooth-3.0 gnome-calculator gnome-characters gnome-control-center gnome-disk-utility gnome-font-viewer gnome-keyring gnome-shell gnome-screenshot gnome-tweaks gvfs gvfs-smb handbrake imagemagick iperf3 less libmad libva-mesa-driver linux-headers linux-lts mangohud mc micro net-tools ntfs-3g pacman-contrib p7zip pcmanfm-gtk3 qt5ct qt6-base qt6-wayland radeontop remmina rust scrcpy smbclient steam swappy tailscale traceroute ttf-firacode-nerd tumbler uget unrar usbutils virtualbox virtualbox-guest-iso vulkan-radeon wget wl-clipboard xclip xdg-desktop-portal-gnome yuzu --noconfirm --needed
 
 #<-------Variables------->
 dotfiles='https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/dotfiles'
@@ -20,8 +20,10 @@ mkdir -p gnome
 mkdir -p Screenshots/tmp
 
 #<-------Dotfiles------->
-wget -O ~/mpv.conf ${dotfiles}/mpv.conf
-wget -O ~/dashtopanel.conf ${dotfiles}/dashtopanel.conf
+wget -O ~/.config/mpv.conf ${dotfiles}/mpv.conf
+wget -O ~/.config/dashtopanel.conf ${dotfiles}/dashtopanel.conf
+wget -O ~/.config/blackbox.conf ${dotfiles}/blackbox.conf
+wget -O ~/.config/celluloid.conf ${dotfiles}/celluloid.conf
 wget -O ~/gnome/custom-keys.dconf ${dotfiles}/custom-keys.dconf
 wget -O ~/gnome/custom-values.dconf ${dotfiles}/custom-values.dconf
 wget -O ~/gnome/keybindings.dconf ${dotfiles}/keybindings.dconf
@@ -39,6 +41,7 @@ wget -O ~/ext.sh ${scriptsv}/ext.sh
 wget -O ~/wallpaper.sh ${scriptsv}/wallpaper.sh
 wget -O ~/gnomeconfig.sh ${scriptsv}/gnomeconfig.sh
 wget -O ~/hideapps.sh ${scriptsv}/hideapps.sh
+wget -O ~/removeapps.sh ${scriptsv}/removeapps.sh
 sudo wget -O /usr/local/bin/swapshot ${scriptsv}/swapshot
 
 #<-------Configuraciones------->
@@ -57,10 +60,8 @@ sudo modprobe vboxdrv vboxnetadp vboxnetflt vboxpci
 git clone https://aur.archlinux.org/yay.git
 cd yay
 makepkg -si
-read -p "Instalar paquetes del AUR? (Y/n): " answer
-if [[ $answer == "" || $answer == "y" ]]; then
-    yay -S adw-gtk3-git authy blackbox-terminal blender-lts-bin clicker-git czkawka-gui-bin deadbeef fsearch gnome-extensions-cli headsetcontrol heroic-games-launcher-bin impression insync lite-xl-bin obs-cmd obs-studio-av1 pacleaner prismlauncher-qt5-bin qimgv resources speedtest++ steamtinkerlaunch-git video-trimmer --noconfirm
-fi
+
+yay -S adw-gtk3-git authy blackbox-terminal blender-lts-bin clicker-git czkawka-gui-bin deadbeef fsearch gnome-extensions-cli headsetcontrolheroic-games-launcher-bin impression insync lite-xl-bin obs-cmd obs-studio-av1 pacleaner prismlauncher-qt5-bin qimgv resources speedtest++ steamtinkerlaunch-gitvideo-trimmer --noconfirm
 
 #<-------Crear aliases e instalar extensiones en fish shell------->
 fish <<'EOF'
