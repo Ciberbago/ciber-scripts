@@ -5,7 +5,7 @@ sudo sed -i '/\[multilib\]/,/Include/s/^#//' /etc/pacman.conf && sudo pacman -Sy
 sudo sed -i 's/^#MAKEFLAGS/MAKEFLAGS/' /etc/makepkg.conf && sudo sed -i 's/.*-j[0-9].*/MAKEFLAGS="-j$(nproc)"/' /etc/makepkg.conf
 sudo sed -i 's/^#BUILDDIR/BUILDDIR/' /etc/makepkg.conf
 #<-------Paquetes normales------->
-sudo pacman -S android-tools baobab base-devel bat bluez bluez-utils btop celluloid chromium dkms ethtool exa fastfetch ffmpegthumbnailer file-roller firefox fish fisher fragments freerdp fzf gdm gdu git gnome-bluetooth-3.0 gnome-calculator gnome-characters gnome-control-center gnome-disk-utility gnome-font-viewer gnome-keyring gnome-shell gnome-screenshot gnome-tweaks gvfs gvfs-smb handbrake imagemagick iperf3 less libmad libva-mesa-driver linux-headers linux-lts mangohud mc micro net-tools ntfs-3g pacman-contrib p7zip pcmanfm-gtk3 qt5ct qt6-base qt6-wayland radeontop remmina rust scrcpy smbclient steam swappy tailscale traceroute ttf-firacode-nerd tumbler uget unrar usbutils virtualbox virtualbox-guest-iso vulkan-radeon wget wl-clipboard xclip xdg-desktop-portal-gnome yuzu --noconfirm --needed
+sudo pacman -S android-tools baobab base-devel bat bluez bluez-utils btop celluloid chromium dkms ethtool exa fastfetch ffmpegthumbnailer file-roller firefox fish fisher fragments freerdp fzf gdm gdu git gnome-bluetooth-3.0 gnome-calculator gnome-characters gnome-control-center gnome-disk-utility gnome-font-viewer gnome-keyring gnome-shell gnome-screenshot gnome-tweaks gvfs gvfs-smb handbrake imagemagick iperf3 less libmad libva-mesa-driver linux-headers linux-lts mangohud micro net-tools ntfs-3g pacman-contrib p7zip pcmanfm-gtk3 qt5ct qt6-base qt6-wayland radeontop ranger remmina rust scrcpy smbclient steam swappy tailscale traceroute ttf-firacode-nerd tumbler uget unrar usbutils virtualbox virtualbox-guest-iso vulkan-radeon wget wl-clipboard xclip xdg-desktop-portal-gnome yuzu --noconfirm --needed
 
 #<-------Variables------->
 dotfiles='https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/dotfiles'
@@ -18,6 +18,7 @@ mkdir -p ~/.config/obs-studio/basic/profiles/Untitled/
 mkdir -p ~/.config/yay
 mkdir -p gnome
 mkdir -p Screenshots/tmp
+mkdir -p ~/.config/fish
 
 #<-------Dotfiles------->
 wget -O ~/.config/mpv.conf ${dotfiles}/mpv.conf
@@ -31,6 +32,7 @@ wget -O ~/.config/autostart/wallpaper.desktop ${dotfiles}/wallpaper.desktop
 wget -O ~/.config/obs-studio/basic/profiles/Untitled/basic.ini ${dotfiles}/obsprofile.ini
 wget -O ~/.config/obs-studio/basic/profiles/Untitled/recordEncoder.json ${dotfiles}/obsrecorder.json
 wget -O ~/.config/obs-studio/global.ini ${dotfiles}/obsglobal.ini
+wget -O ~/.config/fish/config.fish ${dotfiles}/config.fish
 wget -O ~/.config/yay/config.json ${dotfiles}/yayconfig.json
 sudo wget -O /etc/modules-load.d/virtualbox.conf ${dotfiles}/virtualbox.conf
 sudo wget -O /etc/systemd/system/wol@.service ${dotfiles}/wol@.service
