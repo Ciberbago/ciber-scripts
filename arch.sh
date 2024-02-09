@@ -83,3 +83,4 @@ function img2mp4; for file in *.gif; ffmpeg -i $file "$file.mp4"; end; end; and 
 fisher install IlanCosman/tide@v6
 fisher install oh-my-fish/plugin-bang-bang
 EOF
+#HOLELELEL
