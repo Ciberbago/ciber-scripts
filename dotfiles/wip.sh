@@ -13,15 +13,16 @@ interfaz=$(ip r | grep default | cut -d ' ' -f 5 | head -n1)
 mkdir -p ~/scripts
 mkdir -p ~/.config/nvim/vim-plug
 mkdir -p ~/.config/nvim/autoload/plugged
+sudo mkdir -p /opt/yacht/compose
 #Descarga de scripts
-wget -O /usr/local/bin/nvim https://github.com/neovim/neovim/releases/latest/download/nvim.appimage
-wget -O /usr/local/bin/ufetch ${scriptsv}/ufetch.sh
 wget -O ~/scripts/backup.sh ${scriptsv}/backupdebian.sh
 wget -O ~/scripts/portainerupdate.sh ${scriptsv}/portainerupdate.sh
 wget -O ~/.config/nvim/init.vim ${dotfiles}/init.vim
 wget -O ~/.config/nvim/vim-plug/plugins.vim ${dotfiles}/plugins.vim
 sudo wget -O /etc/pam.d/sshd ${dotfiles}/sshd
 sudo wget -O /etc/ssh/sshd_config ${dotfiles}/sshd_config
+sudo wget -O /usr/local/bin/nvim https://github.com/neovim/neovim/releases/latest/download/nvim.appimage
+sudo wget -O /usr/local/bin/ufetch ${scriptsv}/ufetch.sh
 #Instalacion de tailscale
 curl -fsSL https://tailscale.com/install.sh | sh
 #Instalacion docker
@@ -40,6 +41,7 @@ echo 'source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh' >>~
 #Doy permiso a los scripts y programas descargados
 sudo chmod +x ~/scripts/*
 sudo chmod +x /usr/local/bin/*
+sudo chown jaime /opt/yacht/compose
 sudo chsh -s $(which zsh) $(whoami)
 #Mejoro la sesion SSH
 sudo rm /etc/motd
@@ -48,7 +50,7 @@ echo "ufetch" | sudo tee /etc/zsh/zprofile
 truncate -s 0 .config/micro/settings.json
 echo '{ "clipboard": "terminal" }' | >> .config/micro/settings.json
 echo 'SELECTED_EDITOR="/usr/bin/micro"' | >> .selected_editor
-
+echo "alias vim='nvim'" | tee -a .zshrc
 echo "alias buscar='history 1 | fzf'" | tee -a .zshrc
 echo "alias cat='batcat'" | tee -a .zshrc
 echo "alias cc='cd && clear'" | tee -a .zshrc
@@ -68,7 +70,6 @@ echo "SAVEHIST=1000" | tee -a .zshrc
 echo "setopt SHARE_HISTORY " | tee -a .zshrc
 
 #Servicios
-sudo mkdir /opt/yacht/compose
 git clone https://github.com/ciberbago/ciber-docker /opt/yacht/compose
 sudo dpkg-reconfigure --priority=low unattended-upgrades
 sudo systemctl restart sshd
