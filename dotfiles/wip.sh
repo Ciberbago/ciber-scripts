@@ -25,9 +25,10 @@ sudo wget -O /etc/ssh/sshd_config ${dotfiles}/sshd_config
 #Instalacion de tailscale
 curl -fsSL https://tailscale.com/install.sh | sh
 #Instalacion docker
-curl -fsSL https://get.docker.com -o get-docker.sh && sudo sh get-docker.sh
+curl -fsSL https://get.docker.com | sudo sh
 sudo usermod -aG docker $USER
 newgrp docker
+echo Instalacion docker completa
 docker run hello-world
 #Instalar vim-plug para nvim
 curl -fLo ~/.config/nvim/autoload/plug.vim --create-dirs \
