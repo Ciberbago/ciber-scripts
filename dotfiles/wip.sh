@@ -2,7 +2,7 @@
 sudo apt update
 #Instalacion de paquetes
 sudo apt install -y nala
-sudo nala install -y bat curl duf exa fzf git htop lm-sensors lshw micro ncdu nload powertop radeontop rclone time timeshift unattended-upgrades wakeonlan zsh
+sudo nala install -y bat curl duf exa fuse fzf git htop lm-sensors lshw micro ncdu nload npm powertop radeontop rclone time timeshift unattended-upgrades wakeonlan zsh zsh-autosuggestions zsh-syntax-highlighting zsh-theme-powerlevel9k
 
 #<-------Variables------->
 dotfiles='https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/dotfiles'
@@ -11,11 +11,15 @@ interfaz=$(ip r | grep default | cut -d ' ' -f 5 | head -n1)
 
 #Crear carpetas
 mkdir -p ~/scripts
+mkdir -p ~/.config/nvim/vim-plug
+mkdir -p ~/.config/nvim/autoload/plugged
 #Descarga de scripts
 wget -O /usr/local/bin/nvim https://github.com/neovim/neovim/releases/latest/download/nvim.appimage
 wget -O /usr/local/bin/ufetch ${scriptsv}/ufetch.sh
 wget -O ~/scripts/backup.sh ${scriptsv}/backupdebian.sh
 wget -O ~/scripts/portainerupdate.sh ${scriptsv}/portainerupdate.sh
+wget -O ~/.config/nvim/init.vim ${dotfiles}/init.vim
+wget -O ~/.config/nvim/vim-plug/plugins.vim ${dotfiles}/plugins.vim
 sudo wget -O /etc/pam.d/sshd ${dotfiles}/sshd
 sudo wget -O /etc/ssh/sshd_config ${dotfiles}/sshd_config
 #Instalacion de tailscale
@@ -26,16 +30,14 @@ sudo groupadd docker
 sudo usermod -aG docker $USER
 newgrp docker
 docker run hello-world
-
+#Instalar vim-plug para nvim
+curl -fLo ~/.config/nvim/autoload/plug.vim --create-dirs \
+    https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 #Tema para la shell asi como 2 plugins muy utiles, auto completado y syntax highlighting
-git clone https://github.com/zsh-users/zsh-autosuggestions.git ~/.zsh/zsh-autosuggestions
-git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ~/.zsh/zsh-syntax-highlighting
-git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/.zsh/powerlevel10k
-echo 'source ~/.zsh/powerlevel10k/powerlevel10k.zsh-theme' >>~/.zshrc
-echo 'source ~/.zsh/zsh-autosuggestions/zsh-autosuggestions.plugin.zsh' >>~/.zshrc
-echo 'source ~/.zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.plugin.zsh' >>~/.zshrc
-
-
+echo 'source /usr/share/powerlevel9k/powerlevel9k.zsh-theme' >>~/.zshrc
+echo 'source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh' >>~/.zshrc
+echo 'source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh' >>~/.zshrc
+#Doy permiso a los scripts y programas descargados
 sudo chmod +x ~/scripts/*
 sudo chmod +x /usr/local/bin/*
 sudo chsh -s $(which zsh) $(whoami)
@@ -60,9 +62,6 @@ echo "alias sin='sudo nala install -y'" | tee -a .zshrc
 echo "alias sup='sudo nala update'" | tee -a .zshrc
 echo "alias top='gotop'" | tee -a .zshrc
 echo "alias tree='exa -lha --tree --long --icons'" | tee -a .zshrc
-
-echo 'find() { /usr/bin/find . -type f -iname "*$1*"; }' | tee -a .zshrc
-
 echo "HISTFILE=~/.zsh_history" | tee -a .zshrc
 echo "HISTSIZE=10000" | tee -a .zshrc
 echo "SAVEHIST=1000" | tee -a .zshrc
