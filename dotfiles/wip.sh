@@ -12,6 +12,7 @@ interfaz=$(ip r | grep default | cut -d ' ' -f 5 | head -n1)
 #Crear carpetas
 mkdir -p ~/scripts
 #Descarga de scripts
+wget -O /usr/local/bin/nvim https://github.com/neovim/neovim/releases/latest/download/nvim.appimage
 wget -O /usr/local/bin/ufetch ${scriptsv}/ufetch.sh
 wget -O ~/scripts/backup.sh ${scriptsv}/backupdebian.sh
 wget -O ~/scripts/portainerupdate.sh ${scriptsv}/portainerupdate.sh

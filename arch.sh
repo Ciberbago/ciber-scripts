@@ -11,7 +11,6 @@ sudo pacman -S android-tools baobab base-devel bat bluez bluez-utils btop cellul
 dotfiles='https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/dotfiles'
 scriptsv='https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts'
 interfaz=$(ip r | grep default | cut -d ' ' -f 5 | head -n1)
-
 #<-------Crear carpetas------->
 mkdir -p ~/.config/autostart
 mkdir -p ~/.config/obs-studio/basic/profiles/Untitled/
