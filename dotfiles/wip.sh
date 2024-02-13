@@ -2,7 +2,7 @@
 sudo apt update
 #Instalacion de paquetes
 sudo apt install -y nala
-sudo nala install -y bat curl duf exa fuse fzf gdu git htop lm-sensors lshw micro nload powertop radeontop rclone time timeshift unattended-upgrades wakeonlan zsh zsh-autosuggestions zsh-syntax-highlighting zsh-theme-powerlevel9k
+sudo nala install -y bat curl duf exa fuse fzf gdu git htop lm-sensors lshw micro nload powertop radeontop rclone time unattended-upgrades wakeonlan zsh zsh-autosuggestions zsh-syntax-highlighting zsh-theme-powerlevel9k
 
 #<-------Variables------->
 dotfiles='https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/dotfiles'
