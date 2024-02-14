@@ -2,7 +2,7 @@
 sudo apt update
 #Instalacion de paquetes
 sudo apt install -y nala
-sudo nala install -y bat curl duf exa fuse fzf gdu git htop lm-sensors lshw micro nload powertop radeontop rclone time unattended-upgrades wakeonlan zsh zsh-autosuggestions zsh-syntax-highlighting zsh-theme-powerlevel9k
+sudo nala install -y bat curl duf exa fish fuse fzf gdu git htop lm-sensors lshw micro nload powertop radeontop rclone time unattended-upgrades wakeonlan 
 
 #<-------Variables------->
 dotfiles='https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/dotfiles'
@@ -19,8 +19,7 @@ wget -O ~/scripts/backup.sh ${scriptsv}/backupdebian.sh
 wget -O ~/scripts/portainerupdate.sh ${scriptsv}/portainerupdate.sh
 wget -O ~/.config/nvim/init.vim ${dotfiles}/init.vim
 wget -O ~/.config/nvim/vim-plug/plugins.vim ${dotfiles}/plugins.vim
-sudo wget -O /etc/pam.d/sshd ${dotfiles}/sshd
-sudo wget -O /etc/ssh/sshd_config ${dotfiles}/sshd_config
+wget -O ~/.config/nvim/autoload/plug.vim https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 sudo wget -O /usr/local/bin/nvim https://github.com/neovim/neovim/releases/latest/download/nvim.appimage
 sudo wget -O /usr/local/bin/ufetch ${scriptsv}/ufetch.sh
 #Instalacion de tailscale
@@ -29,49 +28,35 @@ curl -fsSL https://tailscale.com/install.sh | sh
 curl -fsSL https://get.docker.com | sudo sh
 sudo usermod -aG docker $USER
 newgrp docker
-echo Instalacion docker completa
 docker run hello-world
-#Instalar vim-plug para nvim
-curl -fLo ~/.config/nvim/autoload/plug.vim --create-dirs \
-    https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-#Tema para la shell asi como 2 plugins muy utiles, auto completado y syntax highlighting
-echo 'source /usr/share/powerlevel9k/powerlevel9k.zsh-theme' >>~/.zshrc
-echo 'source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh' >>~/.zshrc
-echo 'source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh' >>~/.zshrc
 #Doy permiso a los scripts y programas descargados
 sudo chmod +x ~/scripts/*
 sudo chmod +x /usr/local/bin/*
 sudo chown jaime /opt/yacht/compose
-sudo chsh -s $(which zsh) $(whoami)
-#Mejoro la sesion SSH
-sudo rm /etc/motd
-echo "ufetch" | sudo tee /etc/zsh/zprofile
+sudo chsh -s $(which fish) $(whoami)
 #Configuro micro para que use el portapeles de SSH
 truncate -s 0 .config/micro/settings.json
 echo '{ "clipboard": "terminal" }' | >> .config/micro/settings.json
 echo 'SELECTED_EDITOR="/usr/bin/micro"' | >> .selected_editor
-echo "alias vim='nvim'" | tee -a .zshrc
-echo "alias buscar='history 1 | fzf'" | tee -a .zshrc
-echo "alias cat='batcat'" | tee -a .zshrc
-echo "alias cc='cd && clear'" | tee -a .zshrc
-echo "alias cheat='f() { curl cheat.sh/\$1; };f'" | tee -a .zshrc
-echo "alias espacio='sudo ncdu / --exclude=/media' " | tee -a .zshrc
-echo "alias ls='exa -lha --icons'" | tee -a .zshrc
-echo "alias lsxt='exa -lha --icons --tree --level=3'" | tee -a .zshrc
-echo "alias mkdir='mkdir -pv'" | tee -a .zshrc
-echo "alias nload='nload enp4s0'" | tee -a .zshrc
-echo "alias sin='sudo nala install -y'" | tee -a .zshrc
-echo "alias sup='sudo nala update'" | tee -a .zshrc
-echo "alias top='gotop'" | tee -a .zshrc
-echo "alias tree='exa -lha --tree --long --icons'" | tee -a .zshrc
-echo "HISTFILE=~/.zsh_history" | tee -a .zshrc
-echo "HISTSIZE=10000" | tee -a .zshrc
-echo "SAVEHIST=1000" | tee -a .zshrc
-echo "setopt SHARE_HISTORY " | tee -a .zshrc
-
 #Servicios
-git clone https://github.com/ciberbago/ciber-docker /opt/yacht/compose
-sudo dpkg-reconfigure --priority=low unattended-upgrades
-sudo systemctl restart sshd
+git clone git@github.com:Ciberbago/ciber-docker.git /opt/yacht/compose
+git clone git@github.com:Ciberbago/ciber-scripts.git
+nvim -es -u ~/.config/nvim/init.vim -i NONE -c "PlugInstall" -c "qa"
+fish <<'EOF'
+alias vim="nvim" && funcsave vim
+alias sin="sudo nala install" && funcsave sin
+alias sup="sudo nala update" && funcsave sup
+alias historial="history | fzf" && funcsave historial
+alias cat="batcat" && funcsave cat
+alias cc="cd && clear" && funcsave cc
+alias ls="exa -lha --icons" && funcsave ls
+alias mkdir="mkdir -pv" && funcsave mkdir
+alias espacio="gdu /" && funcsave espacio
+alias rebootuefi='sudo systemctl reboot --firmware-setup' && funcsave rebootuefi
+function cheat; curl cheat.sh/$argv; end; and funcsave cheat
+curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source && fisher install jorgebucaran/fisher
+fisher install IlanCosman/tide@v6
+fisher install oh-my-fish/plugin-bang-bang
+EOF
 
-echo "Ejecuta ZSH para terminar la configuración"
+echo "Ejecuta fish para terminar la configuración"
