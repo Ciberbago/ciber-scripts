@@ -19,7 +19,7 @@ mkdir -p ~/.config/yay
 mkdir -p gnome
 mkdir -p Screenshots/tmp
 mkdir -p ~/.config/fish
-
+#Prueba ssh clone
 #<-------Dotfiles------->
 wget -O ~/.config/mpv.conf ${dotfiles}/mpv.conf
 wget -O ~/.config/dashtopanel.conf ${dotfiles}/dashtopanel.conf
