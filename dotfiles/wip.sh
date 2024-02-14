@@ -2,7 +2,7 @@
 sudo apt update
 #Instalacion de paquetes
 sudo apt install -y nala
-sudo nala install -y bat curl duf exa fish fuse fzf gdu git htop lm-sensors lshw micro nload powertop radeontop rclone time unattended-upgrades wakeonlan 
+sudo nala install -y bat curl duf exa fish fuse fzf gdu git htop lm-sensors lshw micro nload powertop radeontop rclone time tmux unattended-upgrades wakeonlan 
 
 #<-------Variables------->
 dotfiles='https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/dotfiles'
@@ -11,6 +11,7 @@ interfaz=$(ip r | grep default | cut -d ' ' -f 5 | head -n1)
 
 #Crear carpetas
 mkdir -p ~/scripts
+mkdir -p ~/.config/micro
 mkdir -p ~/.config/nvim/vim-plug
 mkdir -p ~/.config/nvim/autoload/plugged
 sudo mkdir -p /opt/yacht/compose
@@ -35,14 +36,13 @@ sudo chmod +x /usr/local/bin/*
 sudo chown jaime /opt/yacht/compose
 sudo chsh -s $(which fish) $(whoami)
 #Configuro micro para que use el portapeles de SSH
-truncate -s 0 .config/micro/settings.json
 echo '{ "clipboard": "terminal" }' | >> .config/micro/settings.json
-echo 'SELECTED_EDITOR="/usr/bin/micro"' | >> .selected_editor
 #Servicios
 git clone git@github.com:Ciberbago/ciber-docker.git /opt/yacht/compose
 git clone git@github.com:Ciberbago/ciber-scripts.git
 nvim -es -u ~/.config/nvim/init.vim -i NONE -c "PlugInstall" -c "qa"
 fish <<'EOF'
+set -Ux EDITOR nvim
 alias vim="nvim" && funcsave vim
 alias sin="sudo nala install" && funcsave sin
 alias sup="sudo nala update" && funcsave sup
