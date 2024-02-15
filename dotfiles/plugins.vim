@@ -1,11 +1,12 @@
 call plug#begin('~/.config/nvim/autoload/plugged')
-  Plug 'Xuyuanp/nerdtree-git-plugin'
-  Plug 'ryanoasis/vim-devicons'
-  Plug 'zefei/vim-wintabs'
-  Plug 'zefei/vim-wintabs-powerline'
+  Plug 'fedepujol/move.nvim'
   Plug 'lukas-reineke/indent-blankline.nvim'
   Plug 'nvim-lualine/lualine.nvim'
-  Plug 'windwp/nvim-autopairs'
   Plug 'preservim/nerdtree'
   Plug 'rafalbromirski/vim-aurora'
+  Plug 'ryanoasis/vim-devicons'
+  Plug 'windwp/nvim-autopairs'
+  Plug 'Xuyuanp/nerdtree-git-plugin'
+  Plug 'zefei/vim-wintabs'
+  Plug 'zefei/vim-wintabs-powerline'
 call plug#end()
