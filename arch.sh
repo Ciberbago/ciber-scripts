@@ -50,7 +50,6 @@ echo "export QT_QPA_PLATFORMTHEME=qt5ct" | sudo tee /etc/environment
 chmod +x *.sh
 sudo chmod +x /usr/local/bin/*
 sudo gpasswd -a $USER vboxusers
-export EDITOR=micro
 chsh -s /usr/bin/fish
 
 #<-------Servicios------->
@@ -62,10 +61,11 @@ git clone https://aur.archlinux.org/yay.git
 cd yay
 makepkg -si --noconfirm
 
-yay -S adw-gtk3-git authy blackbox-terminal blender-lts-bin clicker-git czkawka-gui-bin deadbeef fsearch gnome-extensions-cli headsetcontrol heroic-games-launcher-bin impression insync lite-xl-bin obs-cmd obs-studio-av1 pacleaner prismlauncher-qt5-bin qimgv resources speedtest++ steamtinkerlaunch-git video-trimmer --noconfirm
+yay -S adw-gtk3-git authy blackbox-terminal blender-lts-bin clicker-git czkawka-gui-bin deadbeef fsearch gnome-extensions-cli headsetcontrol heroic-games-launcher-bin impression insync lite-xl-bin obs-cmd obs-studio-av1 pacleaner prismlauncher-qt5-bin qimgv resources steamtinkerlaunch-git video-trimmer --noconfirm
 
 #<-------Crear aliases e instalar extensiones en fish shell------->
 fish <<'EOF'
+set -Ux EDITOR micro
 alias historial="history | fzf" && funcsave historial
 alias cat="bat" && funcsave cat
 alias cc="cd && clear" && funcsave cc
@@ -82,4 +82,3 @@ function img2mp4; for file in *.gif; ffmpeg -i $file "$file.mp4"; end; end; and 
 fisher install IlanCosman/tide@v6
 fisher install oh-my-fish/plugin-bang-bang
 EOF
-#HOLELELEL
