@@ -12,7 +12,9 @@ let NERDTreeShowHidden=1
 let NERDTreeShowBookmarks=1
 syntax on
 
-colorscheme dracula
+set termguicolors
+
+colorscheme aurora
 set mouse=a
 set number
 
