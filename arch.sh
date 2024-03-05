@@ -5,7 +5,7 @@ sudo sed -i '/\[multilib\]/,/Include/s/^#//' /etc/pacman.conf && sudo pacman -Sy
 sudo sed -i 's/^#MAKEFLAGS/MAKEFLAGS/' /etc/makepkg.conf && sudo sed -i 's/.*-j[0-9].*/MAKEFLAGS="-j$(nproc)"/' /etc/makepkg.conf
 sudo sed -i 's/^#BUILDDIR/BUILDDIR/' /etc/makepkg.conf
 #<-------Paquetes normales------->
-sudo pacman -S android-tools baobab base-devel bat bluez bluez-utils btop celluloid chromium dkms ethtool exa fastfetch ffmpegthumbnailer file-roller firefox fish fisher fragments freerdp fzf gdm gdu git gnome-bluetooth-3.0 gnome-calculator gnome-characters gnome-control-center gnome-disk-utility gnome-font-viewer gnome-keyring gnome-shell gnome-screenshot gnome-tweaks gvfs gvfs-smb handbrake imagemagick iperf3 less libmad libva-mesa-driver linux-headers linux-lts mangohud micro net-tools nnn ntfs-3g pacman-contrib p7zip pcmanfm-gtk3 pkgfile python-tqdm qt5ct qt6-base qt6-wayland radeontop remmina rust scrcpy smbclient steam swappy tailscale traceroute ttf-firacode-nerd tumbler uget unrar usbutils virtualbox virtualbox-guest-iso vulkan-radeon wget wl-clipboard xclip xdg-desktop-portal-gnome yuzu --noconfirm --needed
+sudo pacman -S android-tools baobab base-devel bat bluez bluez-utils btop chromium dkms ethtool exa fastfetch ffmpegthumbnailer file-roller firefox fish fisher fragments freerdp fzf gdm gdu git gnome-bluetooth-3.0 gnome-calculator gnome-characters gnome-control-center gnome-disk-utility gnome-font-viewer gnome-keyring gnome-shell gnome-screenshot gnome-tweaks gvfs gvfs-smb handbrake imagemagick iperf3 less libmad libva-mesa-driver linux-headers linux-lts mangohud micro net-tools nnn ntfs-3g pacman-contrib p7zip pcmanfm-gtk3 pkgfile python-tqdm qt5ct qt6-base qt6-wayland radeontop remmina rust scrcpy smbclient steam swappy tailscale traceroute ttf-firacode-nerd tumbler uget unrar usbutils virtualbox virtualbox-guest-iso vulkan-radeon wget wl-clipboard xclip xdg-desktop-portal-gnome yuzu --noconfirm --needed
 #<-----Update repos for when a command is not found----->
 sudo pkgfile --update
 #<-------Variables------->
@@ -14,13 +14,18 @@ scriptsv='https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts
 interfaz=$(ip r | grep default | cut -d ' ' -f 5 | head -n1)
 #<-------Crear carpetas------->
 mkdir -p ~/.config/autostart
+mkdir -p ~/.config/mpv/fonts
+mkdir -p ~/.config/mpv/scripts
 mkdir -p ~/.config/obs-studio/basic/profiles/Untitled/
 mkdir -p ~/.config/yay
 mkdir -p gnome
 mkdir -p Screenshots/tmp
 mkdir -p ~/.config/fish
 #<-------Dotfiles------->
-wget -O ~/.config/mpv.conf ${dotfiles}/mpv.conf
+wget -O ~/.config/mpv/mpv.conf ${dotfiles}/mpv.conf
+wget -O ~/.config/mpv/scripts/modern.lua ${dotfiles}/modern.lua
+wget -O ~/.config/mpv/scripts/thumbfast.lua ${dotfiles}/thumbfast.lua
+wget -O ~/.config/mpv/fonts/Material-Design-Iconic-Font.ttf ${dotfiles}/Material-Design-Iconic-Font.ttf 
 wget -O ~/.config/dashtopanel.conf ${dotfiles}/dashtopanel.conf
 wget -O ~/.config/blackbox.conf ${dotfiles}/blackbox.conf
 wget -O ~/.config/celluloid.conf ${dotfiles}/celluloid.conf
