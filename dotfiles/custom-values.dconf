@@ -1,6 +1,6 @@
 [custom0]
 binding='<Super>t'
-command='blackbox'
+command='tilix'
 name='Terminal'
 
 [custom1]
