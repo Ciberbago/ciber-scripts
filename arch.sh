@@ -66,7 +66,7 @@ git clone https://aur.archlinux.org/yay.git
 cd yay
 makepkg -si --noconfirm
 
-yay -S adw-gtk3-git authy blackbox-terminal blender-lts-bin clicker-git czkawka-gui-bin deadbeef fsearch gnome-extensions-cli headsetcontrol heroic-games-launcher-bin impression insync lite-xl-bin obs-cmd obs-studio-av1 prismlauncher-qt5-bin qimgv resources steamtinkerlaunch-git video-trimmer --noconfirm
+yay -S adw-gtk3-git blackbox-terminal blender-lts-bin clicker-git czkawka-gui-bin deadbeef fsearch gnome-extensions-cli headsetcontrol heroic-games-launcher-bin impression insync lite-xl-bin obs-cmd obs-studio-av1 prismlauncher-qt5-bin qimgv resources steamtinkerlaunch-git video-trimmer --noconfirm
 
 #<-------Crear aliases e instalar extensiones en fish shell------->
 fish <<'EOF'
