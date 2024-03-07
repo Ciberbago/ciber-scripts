@@ -19,6 +19,8 @@ gsettings set org.gnome.desktop.interface gtk-theme 'adw-gtk3-dark'
 #Import dash to panel config
 dconf load /org/gnome/shell/extensions/dash-to-panel/ < ~/.config/dashtopanel.conf
 #Configuracion de blackbox
-dconf load /com/raggesilver/BlackBox/ < ~/.config/blackbox.conf
+#dconf load /com/raggesilver/BlackBox/ < ~/.config/blackbox.conf
 #Reproductor de video
-dconf load /io/github/celluloid-player/celluloid/ < ~/.config/celluloid.conf
+#dconf load /io/github/celluloid-player/celluloid/ < ~/.config/celluloid.conf
+#Configuracion de tilix minimalista
+dconf load /com/gexperts/Tilix/ < ~/.config/tilix.conf

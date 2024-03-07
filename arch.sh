@@ -5,7 +5,7 @@ sudo sed -i '/\[multilib\]/,/Include/s/^#//' /etc/pacman.conf && sudo pacman -Sy
 sudo sed -i 's/^#MAKEFLAGS/MAKEFLAGS/' /etc/makepkg.conf && sudo sed -i 's/.*-j[0-9].*/MAKEFLAGS="-j$(nproc)"/' /etc/makepkg.conf
 sudo sed -i 's/^#BUILDDIR/BUILDDIR/' /etc/makepkg.conf
 #<-------Paquetes normales------->
-sudo pacman -S android-tools baobab base-devel bat bluez bluez-utils btop chromium dkms ethtool exa fastfetch ffmpegthumbnailer file-roller firefox fish fisher fragments freerdp fzf gdm gdu git gnome-bluetooth-3.0 gnome-calculator gnome-characters gnome-control-center gnome-disk-utility gnome-font-viewer gnome-keyring gnome-shell gnome-screenshot gnome-tweaks gvfs gvfs-smb handbrake imagemagick iperf3 less libmad libva-mesa-driver linux-headers linux-lts mangohud micro net-tools nnn ntfs-3g pacman-contrib p7zip pcmanfm-gtk3 pkgfile python-tqdm qt5ct qt6-base qt6-wayland radeontop remmina rust scrcpy smbclient steam swappy tailscale traceroute ttf-firacode-nerd tumbler uget unrar usbutils virtualbox virtualbox-guest-iso vulkan-radeon wget wl-clipboard xclip xdg-desktop-portal-gnome --noconfirm --needed
+sudo pacman -S android-tools baobab base-devel bat bluez bluez-utils btop chromium dkms ethtool exa fastfetch ffmpegthumbnailer file-roller firefox fish fisher fragments freerdp fzf gdm gdu git gnome-bluetooth-3.0 gnome-calculator gnome-characters gnome-control-center gnome-disk-utility gnome-font-viewer gnome-keyring gnome-shell gnome-screenshot gnome-tweaks gvfs gvfs-smb handbrake imagemagick iperf3 less libmad libva-mesa-driver linux-headers linux-lts mangohud micro net-tools nnn ntfs-3g pacman-contrib p7zip pcmanfm-gtk3 pkgfile python-tqdm qt5ct qt6-base qt6-wayland radeontop remmina rust scrcpy smbclient steam swappy tailscale tilix traceroute ttf-firacode-nerd tumbler uget unrar usbutils virtualbox virtualbox-guest-iso vulkan-radeon wget wl-clipboard xclip xdg-desktop-portal-gnome --noconfirm --needed
 #<-----Update repos for when a command is not found----->
 sudo pkgfile --update
 #<-------Variables------->
@@ -27,8 +27,7 @@ wget -O ~/.config/mpv/scripts/modern.lua ${dotfiles}/modern.lua
 wget -O ~/.config/mpv/scripts/thumbfast.lua ${dotfiles}/thumbfast.lua
 wget -O ~/.config/mpv/fonts/Material-Design-Iconic-Font.ttf ${dotfiles}/Material-Design-Iconic-Font.ttf 
 wget -O ~/.config/dashtopanel.conf ${dotfiles}/dashtopanel.conf
-wget -O ~/.config/blackbox.conf ${dotfiles}/blackbox.conf
-wget -O ~/.config/celluloid.conf ${dotfiles}/celluloid.conf
+wget -O ~/.config/tilix.conf ${dotfiles}/tilix.conf
 wget -O ~/gnome/custom-keys.dconf ${dotfiles}/custom-keys.dconf
 wget -O ~/gnome/custom-values.dconf ${dotfiles}/custom-values.dconf
 wget -O ~/gnome/keybindings.dconf ${dotfiles}/keybindings.dconf
@@ -66,7 +65,7 @@ git clone https://aur.archlinux.org/yay.git
 cd yay
 makepkg -si --noconfirm
 
-yay -S adw-gtk3-git blackbox-terminal blender-lts-bin clicker-git czkawka-gui-bin deadbeef fsearch gnome-extensions-cli headsetcontrol heroic-games-launcher-bin impression insync lite-xl-bin obs-cmd obs-studio-av1 prismlauncher-qt5-bin qimgv resources steamtinkerlaunch-git video-trimmer --noconfirm
+yay -S adw-gtk3-git blender-lts-bin clicker-git czkawka-gui-bin deadbeef fsearch gnome-extensions-cli headsetcontrol heroic-games-launcher-bin impression insync lite-xl-bin obs-cmd obs-studio-git prismlauncher-qt5-bin qimgv resources steamtinkerlaunch-git video-trimmer --noconfirm
 
 #<-------Crear aliases e instalar extensiones en fish shell------->
 fish <<'EOF'
