@@ -43,11 +43,11 @@ sudo wget -O /etc/systemd/system/wol@.service ${dotfiles}/wol@.service
 #<-------Scripts y programas------->
 wget -O ~/gnome.sh ${scriptsv}/gnome.sh
 wget -O ~/ext.sh ${scriptsv}/ext.sh
-wget -O ~/wallpaper.sh ${scriptsv}/wallpaper.sh
 wget -O ~/gnomeconfig.sh ${scriptsv}/gnomeconfig.sh
 wget -O ~/hideapps.sh ${scriptsv}/hideapps.sh
 wget -O ~/removeapps.sh ${scriptsv}/removeapps.sh
 sudo wget -O /usr/local/bin/swapshot ${scriptsv}/swapshot
+sudo wget -O /usr/local/bin/wallpaper ${scriptsv}/wallpaper.sh
 
 #<-------Configuraciones------->
 echo "export QT_QPA_PLATFORMTHEME=qt5ct" | sudo tee /etc/environment

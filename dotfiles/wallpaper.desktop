@@ -2,7 +2,7 @@
 Name=Wallpaper
 GenericName=Random-wallpaper
 Comment=Random wallpaper at login
-Exec=/home/jaime/wallpaper.sh
+Exec=wallpaper
 Terminal=false
 Type=Application
 X-GNOME-Autostart-enabled=true
