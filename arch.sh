@@ -1,3 +1,7 @@
+#<-------Variables------->
+dotfiles='https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/dotfiles'
+scriptsv='https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts'
+interfaz=$(ip r | grep default | cut -d ' ' -f 5 | head -n1)
 #<-------Ajustes de pacman------->
 sudo sed -i 's/#Color/Color/g' /etc/pacman.conf
 sudo sed -i '/ParallelDownloads/s/^#//g' /etc/pacman.conf
@@ -8,10 +12,6 @@ sudo sed -i 's/^#BUILDDIR/BUILDDIR/' /etc/makepkg.conf
 sudo pacman -S android-tools baobab base-devel bat bluez bluez-utils btop chromium dkms ethtool exa fastfetch ffmpegthumbnailer file-roller firefox fish fisher fragments freerdp fzf gdm gdu git gnome-bluetooth-3.0 gnome-calculator gnome-characters gnome-control-center gnome-disk-utility gnome-font-viewer gnome-keyring gnome-shell gnome-screenshot gnome-tweaks gvfs gvfs-smb handbrake imagemagick iperf3 less libmad libva-mesa-driver linux-headers linux-lts mangohud micro net-tools nnn noto-fonts-cjk ntfs-3g pacman-contrib p7zip pcmanfm-gtk3 pkgfile python-tqdm qt5ct qt6-base qt6-wayland radeontop remmina rust scrcpy smbclient steam swappy tailscale tilix traceroute ttf-firacode-nerd tumbler uget unrar usbutils virtualbox virtualbox-guest-iso vulkan-radeon wget wl-clipboard xclip xdg-desktop-portal-gnome --noconfirm --needed
 #<-----Update repos for when a command is not found----->
 sudo pkgfile --update
-#<-------Variables------->
-dotfiles='https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/dotfiles'
-scriptsv='https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts'
-interfaz=$(ip r | grep default | cut -d ' ' -f 5 | head -n1)
 #<-------Crear carpetas------->
 mkdir -p ~/.config/autostart
 mkdir -p ~/.config/mpv/fonts
