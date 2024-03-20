@@ -26,7 +26,7 @@ for pkg in "${pkgs_202[@]}"; do
   fi
 done
 
-pacman -S --needed --noconfirm "${pkgs_200[@]}" "${pkgs_301[@]}"
+sudo pacman -S --needed --noconfirm "${pkgs_200[@]}" "${pkgs_301[@]}"
 #<-----Update repos for when a command is not found----->
 sudo pkgfile --update
 #<-------Crear carpetas------->
