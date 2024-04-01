@@ -12,7 +12,7 @@ sudo sed -i 's/^#BUILDDIR/BUILDDIR/' /etc/makepkg.conf
 declare -a pkgs pkgs_200 pkgs_202 pkgs_404
 declare -A pkgs_301
 
-pkgs=(android-tools baobab base-devel bat bluez bluez-utils btop chromium dkms ethtool eza fastfetch ffmpegthumbnailer file-roller firefox fish fisher fragments freerdp fzf gdm gdu git gnome-bluetooth-3.0 gnome-calculator gnome-characters gnome-control-center gnome-disk-utility gnome-font-viewer gnome-keyring gnome-shell gnome-screenshot gnome-tweaks gvfs gvfs-smb handbrake imagemagick iperf3 less libmad libva-mesa-driver linux-headers linux-lts mangohud micro nautilus net-tools nnn noto-fonts-cjk ntfs-3g pacman-contrib p7zip pkgfile pragha python-tqdm qt5ct qt6-base qt6-wayland radeontop remmina rust scrcpy shotwell smbclient steam swappy tailscale tilix traceroute ttf-firacode-nerd tumbler uget unrar usbutils virtualbox virtualbox-guest-iso vulkan-radeon wget wl-clipboard xclip xdg-desktop-portal-gnome yuzu yt-dlp)
+pkgs=(android-tools baobab base-devel bat bluez bluez-utils btop chromium dkms ethtool eza fastfetch ffmpegthumbnailer file-roller firefox fish fisher fragments freerdp fzf gdm gdu git gnome-bluetooth-3.0 gnome-calculator gnome-characters gnome-control-center gnome-disk-utility gnome-font-viewer gnome-keyring gnome-remote-desktop gnome-shell gnome-screenshot gnome-tweaks gvfs gvfs-smb handbrake imagemagick iperf3 less libmad libva-mesa-driver linux-headers linux-lts mangohud micro mpv-mpris nautilus net-tools nnn noto-fonts-cjk ntfs-3g pacman-contrib p7zip pkgfile pragha python-tqdm qt5ct qt6-base qt6-wayland radeontop remmina rocm-smi-lib rust scrcpy shotwell smbclient steam swappy tailscale tilix traceroute ttf-firacode-nerd tumbler uget unrar usbutils virtualbox virtualbox-guest-iso vulkan-radeon wget wl-clipboard xclip xdg-desktop-portal-gnome yt-dlp)
 
 pkgs=($(printf '%s\n' "${pkgs[@]}"|sort -u))
 pkgs_200=($(comm -12 <(pacman -Slq|sort -u) <(printf '%s\n' "${pkgs[@]}")))
@@ -82,7 +82,7 @@ git clone https://aur.archlinux.org/yay.git
 cd yay
 makepkg -si --noconfirm
 
-yay -S adw-gtk3-git blender-lts-bin clicker-git czkawka-gui-bin fsearch gnome-extensions-cli headsetcontrol heroic-games-launcher-bin insync lite-xl-bin obs-cmd obs-studio-git prismlauncher-qt5-bin resources steamtinkerlaunch-git webtorrent-mpv-hook --noconfirm
+yay -S adw-gtk3-git blender-lts-bin clicker-git czkawka-gui-bin fsearch gnome-extensions-cli headsetcontrol heroic-games-launcher-bin insync obs-cmd obs-studio-git prismlauncher-qt5-bin resources steamtinkerlaunch-git webtorrent-mpv-hook --noconfirm
 
 #<-------Crear aliases e instalar extensiones en fish shell------->
 fish <<'EOF'
