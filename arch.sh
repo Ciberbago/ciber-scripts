@@ -8,6 +8,7 @@ sudo sed -i '/ParallelDownloads/s/^#//g' /etc/pacman.conf
 sudo sed -i '/\[multilib\]/,/Include/s/^#//' /etc/pacman.conf && sudo pacman -Syy
 sudo sed -i 's/^#MAKEFLAGS/MAKEFLAGS/' /etc/makepkg.conf && sudo sed -i 's/.*-j[0-9].*/MAKEFLAGS="-j$(nproc)"/' /etc/makepkg.conf
 sudo sed -i 's/^#BUILDDIR/BUILDDIR/' /etc/makepkg.conf
+sudo sed -i '/^OPTIONS=/s/debug/!debug/' /etc/makepkg.conf
 #<-------Instalacion de paquetes con comprobacion de errores------->
 declare -a pkgs pkgs_200 pkgs_202 pkgs_404
 declare -A pkgs_301
