@@ -5,7 +5,7 @@ name='Terminal'
 
 [custom1]
 binding='<Super>e'
-command='pcmanfm'
+command='nautilus'
 name='Archivos'
 
 [custom2]
@@ -25,7 +25,7 @@ name='r click'
 
 [custom5]
 binding='<Shift><Control>semicolon'
-command="blackbox --working-directory=/run/media/storage/jaimedrive/notas -e 'micro -autosave 1'"
+  command="tilix --working-directory=/run/media/storage/jaimedrive/notas -e 'micro -autosave 1'"
 name='Notas'
 
 [custom6]
