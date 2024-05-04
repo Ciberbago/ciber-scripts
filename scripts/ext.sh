@@ -6,3 +6,4 @@ gext install 5823
 gext install 5940
 gext install 2917
 gext install 6655
+gext install 6784
