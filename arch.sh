@@ -66,6 +66,8 @@ wget -O ~/hideapps.sh ${scriptsv}/hideapps.sh
 wget -O ~/removeapps.sh ${scriptsv}/removeapps.sh
 sudo wget -O /usr/local/bin/swapshot ${scriptsv}/swapshot
 sudo wget -O /usr/local/bin/wallpaper ${scriptsv}/wallpaper.sh
+sudo wget -O /usr/local/bin/prismlauncher http://github.com/PrismLauncher/PrismLauncher/releases/latest/download/PrismLauncher-Linux-x86_64.AppImage
+sudo wget -O /usr/local/bin/deadbeef ${scriptsv}/deadbeef.AppImage
 
 #<-------Configuraciones------->
 echo "export QT_QPA_PLATFORMTHEME=qt5ct" | sudo tee /etc/environment
@@ -83,7 +85,7 @@ git clone https://aur.archlinux.org/yay.git
 cd yay
 makepkg -si --noconfirm
 
-yay -S adw-gtk3-git blender-lts-bin clicker-git czkawka-gui-bin fsearch gnome-extensions-cli headsetcontrol heroic-games-launcher-bin insync obs-cmd obs-studio-git prismlauncher-qt5-bin resources steamtinkerlaunch-git webtorrent-mpv-hook --noconfirm
+yay -S adw-gtk3-git blender-lts-bin clicker-git czkawka-gui-bin fsearch gnome-extensions-cli headsetcontrol heroic-games-launcher-bin insync obs-cmd obs-studio-git resources steamtinkerlaunch-git webtorrent-mpv-hook --noconfirm
 
 #<-------Crear aliases e instalar extensiones en fish shell------->
 fish <<'EOF'
