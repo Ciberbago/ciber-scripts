@@ -39,6 +39,7 @@ mkdir -p ~/.config/obs-studio/basic/profiles/Untitled/
 mkdir -p ~/.config/yay
 mkdir -p gnome
 mkdir -p Screenshots/tmp
+sudo mkdir -p /usr/local/share/applications
 #<-------Dotfiles------->
 wget -O ~/.config/dashtopanel.conf ${dotfiles}/dashtopanel.conf
 wget -O ~/.config/tilix.conf ${dotfiles}/tilix.conf
@@ -57,6 +58,8 @@ wget -O ~/gnome/custom-values.dconf ${dotfiles}/custom-values.dconf
 wget -O ~/gnome/keybindings.dconf ${dotfiles}/keybindings.dconf
 sudo wget -O /etc/modules-load.d/virtualbox.conf ${dotfiles}/virtualbox.conf
 sudo wget -O /etc/systemd/system/wol@.service ${dotfiles}/wol@.service
+sudo wget -O /usr/local/share/applications/deadbeef.desktop ${dotfiles}/deadbeef.desktop
+sudo wget -O /usr/local/share/applications/prismlauncher.desktop ${dotfiles}/prismlauncher.desktop
 
 #<-------Scripts y programas------->
 wget -O ~/gnome.sh ${scriptsv}/gnome.sh
