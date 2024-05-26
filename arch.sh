@@ -43,6 +43,7 @@ sudo mkdir -p /usr/local/share/applications
 #<-------Dotfiles------->
 wget -O ~/.config/dashtopanel.conf ${dotfiles}/dashtopanel.conf
 wget -O ~/.config/tilix.conf ${dotfiles}/tilix.conf
+wget -O ~/.config/executor.conf ${dotfiles}/executor.conf
 wget -O ~/.config/autostart/wallpaper.desktop ${dotfiles}/wallpaper.desktop
 wget -O ~/.config/fish/config.fish ${dotfiles}/config.fish
 wget -O ~/.config/mpv/mpv.conf ${dotfiles}/mpv.conf

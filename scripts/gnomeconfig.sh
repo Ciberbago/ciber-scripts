@@ -24,3 +24,5 @@ dconf load /org/gnome/shell/extensions/dash-to-panel/ < ~/.config/dashtopanel.co
 #dconf load /io/github/celluloid-player/celluloid/ < ~/.config/celluloid.conf
 #Configuracion de tilix minimalista
 dconf load /com/gexperts/Tilix/ < ~/.config/tilix.conf
+#Configuracion barra de tareas comandos para audifonos
+dconf load /org/gnome/shell/extensions/executor/ < ~/.config/executor.conf
