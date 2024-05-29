@@ -25,7 +25,7 @@ name='r click'
 
 [custom5]
 binding='<Shift><Control>semicolon'
-  command="tilix --working-directory=/run/media/storage/jaimedrive/notas -e 'micro -autosave 1'"
+command="tilix --working-directory=/run/media/storage/jaimedrive/notas -e 'micro -autosave 1'"
 name='Notas'
 
 [custom6]
@@ -45,5 +45,6 @@ name='OBS Stop'
 
 [custom9]
 binding='<Control>minus'
-command='swapshot -a'
-name='Swapshot'
+command='flameshot gui'
+name='Flameshot'
+
