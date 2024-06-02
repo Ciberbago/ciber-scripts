@@ -45,6 +45,6 @@ name='OBS Stop'
 
 [custom9]
 binding='<Control>minus'
-command='flameshot gui'
+command='script --command "flameshot gui" /dev/null'
 name='Flameshot'
 
