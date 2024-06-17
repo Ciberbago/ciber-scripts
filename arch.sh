@@ -13,7 +13,7 @@ sudo sed -i '/^OPTIONS=/s/debug/!debug/' /etc/makepkg.conf
 declare -a pkgs pkgs_200 pkgs_202 pkgs_404
 declare -A pkgs_301
 
-pkgs=(android-tools baobab base-devel bat bluez bluez-utils btop chromium dkms ethtool eza fastfetch ffmpegthumbnailer file-roller firefox fish fisher flameshot fragments freerdp fzf gdm gdu git gnome-bluetooth-3.0 gnome-calculator gnome-characters gnome-control-center gnome-disk-utility gnome-font-viewer gnome-keyring gnome-remote-desktop gnome-shell gnome-tweaks gvfs gvfs-smb handbrake imagemagick jre8-openjdk jre17-openjdk jre21-openjdk iperf3 less libmad libva-mesa-driver linux-headers linux-lts mangohud micro mpv-mpris nautilus net-tools nnn noto-fonts-cjk ntfs-3g pacman-contrib p7zip pkgfile pragha python-tqdm qt5ct qt6-base qt6-wayland radeontop reflector remmina rocm-smi-lib rust scrcpy shotwell smbclient steam tailscale tilix traceroute ttf-firacode-nerd tumbler uget unrar usbutils virtualbox virtualbox-guest-iso vulkan-radeon wget wl-clipboard xdg-desktop-portal-gnome yt-dlp)
+pkgs=(android-tools baobab base-devel bat bluez bluez-utils btop dkms ethtool eza fastfetch ffmpegthumbnailer file-roller firefox fish fisher flameshot fragments freerdp fzf gdm gdu git gnome-bluetooth-3.0 gnome-calculator gnome-characters gnome-control-center gnome-disk-utility gnome-font-viewer gnome-keyring gnome-remote-desktop gnome-shell gnome-tweaks gvfs gvfs-smb handbrake imagemagick jre8-openjdk jre17-openjdk jre21-openjdk jq iperf3 less libmad libva-mesa-driver linux-headers linux-lts mangohud micro mpv-mpris nautilus net-tools nnn noto-fonts-cjk ntfs-3g pacman-contrib p7zip pkgfile pragha python-tqdm qt5ct qt6-base qt6-wayland radeontop reflector remmina rocm-smi-lib rust scrcpy shotwell smbclient steam tailscale tilix traceroute ttf-firacode-nerd tumbler uget unrar usbutils virtualbox virtualbox-guest-iso vulkan-radeon wget wl-clipboard xdg-desktop-portal-gnome yt-dlp)
 
 pkgs=($(printf '%s\n' "${pkgs[@]}"|sort -u))
 pkgs_200=($(comm -12 <(pacman -Slq|sort -u) <(printf '%s\n' "${pkgs[@]}")))
@@ -30,6 +30,9 @@ done
 sudo pacman -S --needed --noconfirm "${pkgs_200[@]}" "${pkgs_301[@]}"
 #<-----Update repos for when a command is not found----->
 sudo pkgfile --update
+#<-----Installing appimage manager and apps----->
+wget https://raw.githubusercontent.com/ivan-hc/AM/main/INSTALL && chmod a+x ./INSTALL && sudo ./INSTALL
+am -i blender czkawka deadbeef-devel google-chrome heroic-games-launcher prismlauncher protonup-qt suyu ventoy
 #<-------Crear carpetas------->
 mkdir -p ~/.config/autostart
 mkdir -p ~/.config/fish
@@ -61,8 +64,6 @@ wget -O ~/gnome/keybindings.dconf ${dotfiles}/keybindings.dconf
 sudo wget -O /etc/xdg/reflector/reflector.conf ${dotfiles}/reflector.con
 sudo wget -O /etc/modules-load.d/virtualbox.conf ${dotfiles}/virtualbox.conf
 sudo wget -O /etc/systemd/system/wol@.service ${dotfiles}/wol@.service
-sudo wget -O /usr/local/share/applications/deadbeef.desktop ${dotfiles}/deadbeef.desktop
-sudo wget -O /usr/local/share/applications/prismlauncher.desktop ${dotfiles}/prismlauncher.desktop
 
 #<-------Scripts y programas------->
 wget -O ~/gnome.sh ${scriptsv}/gnome.sh
@@ -71,8 +72,6 @@ wget -O ~/gnomeconfig.sh ${scriptsv}/gnomeconfig.sh
 wget -O ~/hideapps.sh ${scriptsv}/hideapps.sh
 wget -O ~/removeapps.sh ${scriptsv}/removeapps.sh
 sudo wget -O /usr/local/bin/wallpaper ${scriptsv}/wallpaper.sh
-sudo wget -O /usr/local/bin/prismlauncher http://github.com/PrismLauncher/PrismLauncher/releases/latest/download/PrismLauncher-Linux-x86_64.AppImage
-sudo wget -O /usr/local/bin/deadbeef ${scriptsv}/deadbeef.AppImage
 
 #<-------Configuraciones------->
 echo "export QT_QPA_PLATFORMTHEME=qt5ct" | sudo tee /etc/environment
@@ -90,7 +89,7 @@ git clone https://aur.archlinux.org/yay.git
 cd yay
 makepkg -si --noconfirm
 
-yay -S adw-gtk3-git blender-lts-bin clicker-git czkawka-gui-bin fsearch gnome-extensions-cli headsetcontrol heroic-games-launcher-bin insync obs-cmd obs-studio-git resources steamtinkerlaunch-git webtorrent-mpv-hook --noconfirm
+yay -S adw-gtk3-git clicker-git fsearch gnome-extensions-cli headsetcontrol insync obs-cmd resources webtorrent-mpv-hook --noconfirm
 
 #<-------Crear aliases e instalar extensiones en fish shell------->
 fish <<'EOF'
