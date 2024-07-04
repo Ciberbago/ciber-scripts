@@ -14,7 +14,7 @@ mkdir -p ~/scripts
 mkdir -p ~/.config/micro
 mkdir -p ~/.config/nvim/vim-plug
 mkdir -p ~/.config/nvim/autoload/plugged
-sudo mkdir -p /opt/yacht/compose
+sudo mkdir -p /opt/docker
 #Descarga de scripts
 wget -O ~/scripts/backup.sh ${scriptsv}/backupdebian.sh
 wget -O ~/scripts/portainerupdate.sh ${scriptsv}/portainerupdate.sh
@@ -33,16 +33,16 @@ docker run hello-world
 #Doy permiso a los scripts y programas descargados
 sudo chmod +x ~/scripts/*
 sudo chmod +x /usr/local/bin/*
-sudo chown jaime /opt/yacht/compose
+sudo chown jaime /opt/docker
 sudo chsh -s $(which fish) $(whoami)
 #Configuro micro para que use el portapeles de SSH
 echo '{ "clipboard": "terminal" }' | >> .config/micro/settings.json
 #Servicios
-git clone git@github.com:Ciberbago/ciber-docker.git /opt/yacht/compose
-git clone git@github.com:Ciberbago/ciber-scripts.git
+git clone https://github.com/Ciberbago/ciber-docker.git /opt/docker
 nvim -es -u ~/.config/nvim/init.vim -i NONE -c "PlugInstall" -c "qa"
 fish <<'EOF'
 set -Ux EDITOR nvim
+alias ffmpeg="docker run -v $(pwd):$(pwd) -w $(pwd) --device /dev/dri:/dev/dri linuxserver/ffmpeg" && funcsave ffmpeg
 alias vim="nvim" && funcsave vim
 alias sin="sudo nala install" && funcsave sin
 alias sup="sudo nala update" && funcsave sup
