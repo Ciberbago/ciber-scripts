@@ -71,6 +71,7 @@ wget -O ~/gnomeconfig.sh ${scriptsv}/gnomeconfig.sh
 wget -O ~/hideapps.sh ${scriptsv}/hideapps.sh
 wget -O ~/removeapps.sh ${scriptsv}/removeapps.sh
 wget -O ~/appimages.sh ${scriptsv}/appimages.sh
+wget -O ~/postinstall.sh ${scriptsv}/postinstall.sh
 sudo wget -O /usr/local/bin/wallpaper ${scriptsv}/wallpaper.sh
 
 #<-------Configuraciones------->
