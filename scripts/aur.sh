@@ -5,5 +5,5 @@ sudo pacman -U 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-mirrorlist.pkg
 echo "[chaotic-aur]
 Include = /etc/pacman.d/chaotic-mirrorlist" | sudo tee -a /etc/pacman.conf
 sudo pacman -Syu
-yay -S chaotic-aur/adw-gtk3-git clicker-git chaotic-aur/fsearch gnome-extensions-cli headsetcontrol-git chaotic-aur/insync obs-cmd chaotic-aur/resources webtorrent-mpv-hook chaotic-aur/obs-studio-git --noconfirm
+yay -S chaotic-aur/ani-cli chaotic-aur/adw-gtk3-git clicker-git chaotic-aur/fsearch gnome-extensions-cli headsetcontrol-git chaotic-aur/insync obs-cmd chaotic-aur/resources webtorrent-mpv-hook chaotic-aur/obs-studio-git --noconfirm
 
