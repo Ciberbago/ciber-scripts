@@ -32,6 +32,13 @@ sudo pacman -S --needed --noconfirm "${pkgs_200[@]}" "${pkgs_301[@]}"
 sudo pkgfile --update
 #<-----Installing appimage manager and apps----->
 wget https://raw.githubusercontent.com/ivan-hc/AM/main/INSTALL && chmod a+x ./INSTALL && sudo ./INSTALL
+#<-----Installing chaotic aur----->#
+sudo pacman-key --recv-key 3056513887B78AEB --keyserver keyserver.ubuntu.com
+sudo pacman-key --lsign-key 3056513887B78AEB
+sudo pacman -U 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-keyring.pkg.tar.zst' --noconfirm
+sudo pacman -U 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-mirrorlist.pkg.tar.zst' --noconfirm
+echo "[chaotic-aur]
+Include = /etc/pacman.d/chaotic-mirrorlist" | sudo tee -a /etc/pacman.conf
 #<-------Crear carpetas------->
 mkdir -p ~/.config/autostart
 mkdir -p ~/.config/fish
@@ -71,6 +78,7 @@ wget -O ~/gnomeconfig.sh ${scriptsv}/gnomeconfig.sh
 wget -O ~/hideapps.sh ${scriptsv}/hideapps.sh
 wget -O ~/removeapps.sh ${scriptsv}/removeapps.sh
 wget -O ~/appimages.sh ${scriptsv}/appimages.sh
+wget -O ~/aur.sh ${scriptsv}/aur.sh
 wget -O ~/postinstall.sh ${scriptsv}/postinstall.sh
 sudo wget -O /usr/local/bin/wallpaper ${scriptsv}/wallpaper.sh
 
@@ -89,9 +97,6 @@ sudo modprobe vboxdrv vboxnetadp vboxnetflt vboxpci
 git clone https://aur.archlinux.org/yay.git
 cd yay
 makepkg -si --noconfirm
-
-yay -S adw-gtk3-git clicker-git fsearch gnome-extensions-cli headsetcontrol insync obs-cmd resources webtorrent-mpv-hook --noconfirm
-
 #<-------Crear aliases e instalar extensiones en fish shell------->
 fish <<'EOF'
 set -Ux EDITOR micro
