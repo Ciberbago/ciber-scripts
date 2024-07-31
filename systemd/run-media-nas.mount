@@ -1,0 +1,13 @@
+[Unit]
+Description=Selfhosted samba share
+
+[Mount]
+What=//192.168.7.210/nas
+Where=/run/media/nas
+Type=cifs
+Options=credentials=/home/jaime/.credentials,iocharset=utf8,rw,file_mode=0755,dir_mode=0755
+x-systemd.idle-timeout=60
+
+[Install]
+WantedBy=multi-user.target
+

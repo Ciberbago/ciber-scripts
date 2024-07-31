@@ -1,0 +1,8 @@
+[Unit]
+Description=Selfhosted samba share automount
+
+[Automount]
+Where=/run/media/nas
+
+[Install]
+WantedBy=multi-user.target
