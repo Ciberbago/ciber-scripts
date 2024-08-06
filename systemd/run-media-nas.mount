@@ -1,12 +1,14 @@
 [Unit]
 Description=Selfhosted samba share
+Requires=NetworkManager.service dbus.service
+After=NetworkManager.service dbus.service
 
 [Mount]
 What=//192.168.7.210/nas
 Where=/run/media/nas
 Type=cifs
-Options=credentials=/home/jaime/.credentials,iocharset=utf8,rw,file_mode=0755,dir_mode=0755
-x-systemd.idle-timeout=60
+Options=credentials=/home/jaime/.credentials,iocharset=utf8,_netdev,rw,file_mode=0755,dir_mode=0755,uid=1000,gid=1000
+TimeoutSec=30
 
 [Install]
 WantedBy=multi-user.target

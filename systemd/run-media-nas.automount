@@ -3,6 +3,7 @@ Description=Selfhosted samba share automount
 
 [Automount]
 Where=/run/media/nas
+TimeoutIdleSec=10
 
 [Install]
 WantedBy=multi-user.target

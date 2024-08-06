@@ -18,11 +18,10 @@ gsettings set org.gnome.desktop.wm.preferences button-layout 'appmenu:minimize,m
 gsettings set org.gnome.desktop.interface gtk-theme 'adw-gtk3-dark'
 #Import dash to panel config
 dconf load /org/gnome/shell/extensions/dash-to-panel/ < ~/.config/dashtopanel.conf
-#Configuracion de blackbox
-#dconf load /com/raggesilver/BlackBox/ < ~/.config/blackbox.conf
-#Reproductor de video
-#dconf load /io/github/celluloid-player/celluloid/ < ~/.config/celluloid.conf
-#Configuracion de tilix minimalista
+#Configuracion de la terminal
 dconf load /com/gexperts/Tilix/ < ~/.config/tilix.conf
 #Configuracion barra de tareas comandos para audifonos
 dconf load /org/gnome/shell/extensions/executor/ < ~/.config/executor.conf
+#Configuracion de los botones de apagado
+dconf load /org/gnome/shell/extensions/bring-out-submenu-of-power-off-logout/ < ~/.config/poweroffmenu.conf
+

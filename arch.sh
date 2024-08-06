@@ -1,6 +1,7 @@
 #<-------Variables------->
 dotfiles='https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/dotfiles'
 scriptsv='https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts'
+sdconfig='https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/systemd'
 interfaz=$(ip r | grep default | cut -d ' ' -f 5 | head -n1)
 #<-------Ajustes de pacman------->
 sudo sed -i 's/#Color/Color/g' /etc/pacman.conf
@@ -43,9 +44,10 @@ mkdir -p gnome
 mkdir -p Screenshots/tmp
 sudo mkdir -p /usr/local/share/applications
 #<-------Dotfiles------->
-wget -O ~/.config/dashtopanel.conf ${dotfiles}/dashtopanel.conf
-wget -O ~/.config/tilix.conf ${dotfiles}/tilix.conf
-wget -O ~/.config/executor.conf ${dotfiles}/executor.conf
+wget -O ~/.config/dashtopanel.conf ${dotfiles}/extensions/dashtopanel.conf
+wget -O ~/.config/tilix.conf ${dotfiles}/extensions/tilix.conf
+wget -O ~/.config/executor.conf ${dotfiles}/extensions/executor.conf
+wget -O ~/.config/poweroffmenu.conf ${dotfiles}/extensions/poweroffmenu.conf
 wget -O ~/.config/autostart/wallpaper.desktop ${dotfiles}/wallpaper.desktop
 wget -O ~/.config/flameshot/flameshot.ini ${dotfiles}/flameshot.ini
 wget -O ~/.config/fish/config.fish ${dotfiles}/config.fish
@@ -62,7 +64,10 @@ wget -O ~/gnome/custom-values.dconf ${dotfiles}/custom-values.dconf
 wget -O ~/gnome/keybindings.dconf ${dotfiles}/keybindings.dconf
 sudo wget -O /etc/xdg/reflector/reflector.conf ${dotfiles}/reflector.con
 sudo wget -O /etc/modules-load.d/virtualbox.conf ${dotfiles}/virtualbox.conf
-sudo wget -O /etc/systemd/system/wol@.service ${dotfiles}/wol@.service
+sudo wget -O /etc/systemd/system/wol@.service ${sdcondfig}/wol@.service
+sudo wget -O /etc/systemd/system/run-media-nas.mount ${sdcondfig}/run-media-nas.mount
+sudo wget -O /etc/systemd/system/run-media-nas.automount ${sdcondfig}/run-media-nas.automount
+
 
 #<-------Scripts y programas------->
 wget -O ~/gnome.sh ${scriptsv}/gnome.sh
@@ -83,8 +88,7 @@ sudo gpasswd -a $USER vboxusers
 chsh -s /usr/bin/fish
 
 #<-------Servicios------->
-sudo systemctl enable gdm.service bluetooth.service reflector.service tailscaled wol@$interfaz.service
-sudo modprobe vboxdrv vboxnetadp vboxnetflt vboxpci
+sudo systemctl enable gdm.service bluetooth.service reflector.service tailscaled wol@$interfaz.service run-media-nas.automount
 
 #<-------instalar yay------->
 git clone https://aur.archlinux.org/yay.git
