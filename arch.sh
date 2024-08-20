@@ -114,6 +114,11 @@ alias espacio="gdu /" && funcsave espacio
 alias f34='firefox -P "Cyb_R34" -no-remote' && funcsave f34
 alias orphans='sudo pacman -Qdtq | sudo pacman -Runs  -' && funcsave orphans
 alias rebootuefi='sudo systemctl reboot --firmware-setup' && funcsave rebootuefi
+alias sss="sudo systemctl status" && funcsave sss
+alias ssa="sudo systemctl start" && funcsave ssa
+alias sso="sudo systemctl stop" && funcsave sso
+alias sse="sudo systemctl enable" && funcsave sse
+alias ssd="sudo systemctl daemon-reload" && funcsave ssd
 function buscar; /usr/bin/find . -type f -iname "*$argv*"; end; and funcsave buscar
 function cheat; curl cheat.sh/$argv; end; and funcsave cheat
 function convimg; magick mogrify -path $argv[2] -strip -interlace Plane -quality 80% -format jpg -verbose $argv[1]/*; end; and funcsave convimg
