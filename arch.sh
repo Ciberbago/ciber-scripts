@@ -4,12 +4,20 @@ scriptsv='https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts
 sdconfig='https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/systemd'
 interfaz=$(ip r | grep default | cut -d ' ' -f 5 | head -n1)
 #<-------Ajustes de pacman------->
-sudo sed -i 's/#Color/Color/g' /etc/pacman.conf
-sudo sed -i '/ParallelDownloads/s/^#//g' /etc/pacman.conf
-sudo sed -i '/\[multilib\]/,/Include/s/^#//' /etc/pacman.conf && sudo pacman -Syy
-sudo sed -i 's/^#MAKEFLAGS/MAKEFLAGS/' /etc/makepkg.conf && sudo sed -i 's/.*-j[0-9].*/MAKEFLAGS="-j$(nproc)"/' /etc/makepkg.conf
-sudo sed -i 's/^#BUILDDIR/BUILDDIR/' /etc/makepkg.conf
-sudo sed -i '/^OPTIONS=/s/debug/!debug/' /etc/makepkg.conf
+sudo sed -i "/etc/pacman.conf" \
+    -e "s|^#Color|&\nColor|" \
+    -e "s|^#VerbosePkgLists|&\nVerbosePkgLists|" \
+    -e "s|^#ParallelDownloads.*|&\nParallelDownloads = 20|" \
+    -e "/\[multilib\]/,/Include/s/^#//"
+#<-------Ajustes para compilacion-------->#
+sudo sed -i "/etc/makepkg.conf" \
+    -e "s|^#BUILDDIR=.*|&\nBUILDDIR=/tmp/makepkg|" \
+    -e "s|^PKGEXT.*|PKGEXT='.pkg.tar'|" \
+    -e "s|^OPTIONS=.*|#&\nOPTIONS=(docs \!strip \!libtool \!staticlibs emptydirs zipman purge \!debug lto)|" \
+    -e "s|-march=.* -mtune=generic|-march=native|" \
+    -e "s|^#RUSTFLAGS=.*|&\nRUSTFLAGS=\"-C opt-level=2 -C target-cpu=native\"|" \
+    -e "s|^#MAKEFLAGS=.*|&\nMAKEFLAGS=\"-j$(($(nproc --all)-1))\"|"
+sudo pacman -Syy
 #<-------Instalacion de paquetes con comprobacion de errores------->
 declare -a pkgs pkgs_200 pkgs_202 pkgs_404
 declare -A pkgs_301
@@ -31,7 +39,7 @@ done
 sudo pacman -S --needed --noconfirm "${pkgs_200[@]}" "${pkgs_301[@]}"
 #<-----Update repos for when a command is not found----->
 sudo pkgfile --update
-#<-----Installing appimage manager and apps----->
+#<-----Installing appimage manager----->
 wget https://raw.githubusercontent.com/ivan-hc/AM/main/INSTALL && chmod a+x ./INSTALL && sudo ./INSTALL
 #<-------Crear carpetas------->
 mkdir -p ~/.config/autostart
@@ -68,7 +76,6 @@ sudo wget -O /etc/systemd/system/wol@.service ${sdcondfig}/wol@.service
 sudo wget -O /etc/systemd/system/run-media-nas.mount ${sdcondfig}/run-media-nas.mount
 sudo wget -O /etc/systemd/system/run-media-nas.automount ${sdcondfig}/run-media-nas.automount
 
-
 #<-------Scripts y programas------->
 wget -O ~/gnome.sh ${scriptsv}/gnome.sh
 wget -O ~/ext.sh ${scriptsv}/ext.sh
@@ -88,7 +95,7 @@ sudo gpasswd -a $USER vboxusers
 chsh -s /usr/bin/fish
 
 #<-------Servicios------->
-sudo systemctl enable gdm.service bluetooth.service reflector.service tailscaled wol@$interfaz.service run-media-nas.automount
+sudo systemctl enable gdm.service bluetooth.service reflector.service tailscaled wol@$interfaz.service run-media-nas.automount paccache.timer
 
 #<-------instalar yay------->
 git clone https://aur.archlinux.org/yay.git
