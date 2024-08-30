@@ -1,3 +1,9 @@
+#!/bin/bash
+
+LOGFILE="$HOME/ciber.log"
+exec > >(tee -a "$LOGFILE") 2>&1
+echo "Inicio del script: $(date)"
+
 #<-------Variables------->
 dotfiles='https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/dotfiles'
 scriptsv='https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts'
@@ -131,4 +137,6 @@ printf "\n301 Moved Permanently:\n" >&2
 paste -d : <(printf "%s\n" "${!pkgs_301[@]}") <(printf "%s\n" "${pkgs_301[@]}") >&2
 printf "\n404 Not Found:\n" >&2
 printf "%s\n" "${pkgs_404[@]}" >&2
+
+echo "Fin del script: $(date)"
 
