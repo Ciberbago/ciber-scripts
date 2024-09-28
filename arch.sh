@@ -56,6 +56,7 @@ mkdir -p ~/.config/obs-studio/basic/profiles/Untitled/
 mkdir -p ~/.config/yay
 mkdir -p gnome
 mkdir -p Screenshots/tmp
+mkdir -p ~/.local/share/nautilus/scripts
 sudo mkdir -p /usr/local/share/applications
 #<-------Dotfiles------->
 wget -O ~/.config/dashtopanel.conf ${dotfiles}/extensions/dashtopanel.conf
@@ -91,11 +92,13 @@ wget -O ~/removeapps.sh ${scriptsv}/removeapps.sh
 wget -O ~/appimages.sh ${scriptsv}/appimages.sh
 wget -O ~/aur.sh ${scriptsv}/aur.sh
 wget -O ~/postinstall.sh ${scriptsv}/postinstall.sh
+wget -O ~/.local/share/nautilus/scripts/mediainfo.sh ${scriptsv}/mediainfo.sh
 sudo wget -O /usr/local/bin/wallpaper ${scriptsv}/wallpaper.sh
 
 #<-------Configuraciones------->
 echo "export QT_QPA_PLATFORMTHEME=qt5ct" | sudo tee /etc/environment
 chmod +x *.sh
+chmod +x ~/.local/share/nautilus/scripts/*.sh
 sudo chmod +x /usr/local/bin/*
 sudo gpasswd -a $USER vboxusers
 chsh -s /usr/bin/fish
