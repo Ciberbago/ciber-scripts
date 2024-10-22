@@ -30,9 +30,7 @@ $appsAmbos = @(
 	"7zip19.00-helper"
 	"adb"
 	"advanced-ip-scanner"
-	"autohotkey1.1"
-	"blender-mirror"
-	"caesium-image-compressor"
+	"autohotkey1.1"	
 	"clickpaste"
 	"cpu-z"
 	"crystaldiskinfo"
@@ -42,7 +40,6 @@ $appsAmbos = @(
 	"ddu"
 	"dotnet-sdk"
 	"dotnet6-sdk"
-	"eartrumpet"
 	"etcher"
 	"everything"
 	"ffmpeg"
@@ -50,17 +47,13 @@ $appsAmbos = @(
 	"hwinfo"
 	"innounp"
 	"iperf3"
-	"k-lite-codec-pack-full-np"
 	"ldplayer9-portable"
 	"lanspeedtest"
 	"lockhunter"
-	"losslesscut"
 	"macrorit-partition-expert"
-	"megasync"
 	"neatdownloadmanager"
 	"netbscanner"
 	"obs-studio"
-	"parsec-np"
 	"patchcleaner"
 	"picotorrent"
 	"powertoys"
@@ -71,7 +64,6 @@ $appsAmbos = @(
 	"speedtest-cli"
 	"sudo"
 	"tailscale"
-	"twinkle-tray"
 	"vcredist-aio"
 	"ventoy"
 	"virtualbox-with-extension-pack-np"
@@ -112,9 +104,7 @@ $appsTrabajo = @(
 	"azcopy"
 	"bitwarden"
 	"googlechrome"
-	"nvcleanstall"
 	"office-365-apps-np"
-	"pdfsam"
 	"rdp-plus"
 	"scrcpy"
 	"win-ps2exe"
@@ -246,17 +236,18 @@ function Crear-AccesoDirecto {
 }
 #Añado programas al startup
 Crear-AccesoDirecto "\Autohotkey.lnk" "$env:USERPROFILE\Documents\autohotkey.ahk" ""
-Crear-AccesoDirecto "\EarTrumpet.lnk" "$env:USERPROFILE\scoop\apps\eartrumpet\current\EarTrumpet.exe" ""
 Crear-AccesoDirecto "\ShareX.lnk" "$env:USERPROFILE\scoop\apps\sharex\current\ShareX.exe" " -silent"
 Crear-AccesoDirecto "\Tailscale.lnk" "$env:USERPROFILE\scoop\apps\tailscale\current\tailscale-ipn.exe" ""
 Crear-AccesoDirecto "\Windhawk.lnk" "$env:USERPROFILE\scoop\apps\windhawk\current\Windhawk\windhawk.exe" "-tray-only"
 #Añado carpetas al quick access
-$qa = new-object -com shell.application
-$qa.Namespace("E:\jaimedrive").Self.InvokeVerb("pintohome")
-$qa.Namespace("E:\cybr34").Self.InvokeVerb("pintohome")
-$qa.Namespace("$env:USERPROFILE\scoop\apps\sharex\current\ShareX\Screenshots").Self.InvokeVerb("pintohome")
+
+#$qa = new-object -com shell.application
+#$qa.Namespace("E:\jaimedrive").Self.InvokeVerb("pintohome")
+#$qa.Namespace("E:\cybr34").Self.InvokeVerb("pintohome")
+#$qa.Namespace("$env:USERPROFILE\scoop\apps\sharex\current\ShareX\Screenshots").Self.InvokeVerb("pintohome")
+
 #Descargo el tema de rectify, lo extraigo y lo pongo en la carpeta de los temas de windows
-7z x $env:TEMP\rectify11.zip -y -oC:\Windows\Resources\Themes
+#7z x $env:TEMP\rectify11.zip -y -oC:\Windows\Resources\Themes
 #Mejoro el perfil de PS5
 if (!(Test-Path -Path $PROFILE)) {
     New-Item -ItemType File -Path $PROFILE -Force
@@ -278,7 +269,7 @@ else {
 	Write-Host "No se hace nada de yuzu" -ForegroundColor Black -BackgroundColor White
 }
 #Recordatorios MANUAL
-Write-Host "Recuerda importar settings para Handbrake, ademas aplica el tema de rectify11" -ForegroundColor Black -BackgroundColor White
+#Write-Host "Recuerda importar settings para Handbrake, ademas aplica el tema de rectify11" -ForegroundColor Black -BackgroundColor White
 #Instalacion battlenet
 If ($respuesta -eq 1){
 Write-Host "Recuerda instalar localizar juegos en Battle net, Heroic y Steam" -ForegroundColor Black -BackgroundColor White
@@ -298,7 +289,12 @@ Write-Host "Desinstala las optional features" -ForegroundColor Black -Background
 
 Write-Host "Decarga drivers y ponlos en modo minimal" -ForegroundColor Black -BackgroundColor White
 #Drivers chipset, gpu y lan
+If ($respuesta -eq 1){
 Start-Process "https://www.amd.com/en/support/chipsets/amd-socket-am4/b450"
 Start-Process "https://www.amd.com/en/support/graphics/amd-radeon-5700-series/amd-radeon-rx-5700-series/amd-radeon-rx-5700-xt"
 Start-Process "https://download.gigabyte.com/FileList/Driver/mb_driver_654_w11_1168.007.0318.2022.zip?v=07466d7005ac1718a94c1669f6d329b3"
+}
+else {
+choco install lenovo-thinkvantage-system-update -y
+}
 Stop-Transcript
