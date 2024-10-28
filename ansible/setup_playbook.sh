@@ -5,6 +5,12 @@ PLAYBOOK_PATH="$HOME/playbook.yml"
 INVENTORY_NAME="$HOME/hosts"
 SUDOERS_FILE="/etc/sudoers.d/ansible"
 
+# Comprobar si el script se está ejecutando con Bash
+if [ -z "$BASH_VERSION" ]; then
+    echo "Error: Este script debe ejecutarse en Bash."
+    exit 1
+fi
+
 # Comprobar si el playbook existe
 if [[ ! -f $PLAYBOOK_PATH ]]; then
     echo "El archivo $PLAYBOOK_PATH no existe. Asegúrate de que el playbook esté descargado en tu directorio home."
@@ -18,6 +24,8 @@ if ! command -v ansible &> /dev/null; then
         echo "Error: Falló la instalación de Ansible."
         exit 1
     fi
+else
+    echo "Ansible ya está instalado."
 fi
 
 # Configurar sudo para que no pida contraseña para el usuario actual
@@ -29,6 +37,7 @@ if ! echo "$USER ALL=(ALL) NOPASSWD: ALL" | sudo tee $SUDOERS_FILE > /dev/null; 
 fi
 
 # Crear el archivo de inventario
+echo "Creando el archivo de inventario..."
 if ! echo -e "[local]\nlocalhost ansible_connection=local" > $INVENTORY_NAME; then
     echo "Error: No se pudo crear el archivo de inventario en $INVENTORY_NAME."
     exit 1
