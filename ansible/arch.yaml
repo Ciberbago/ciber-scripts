@@ -3,6 +3,7 @@
   hosts: localhost
   vars:
     # Variables
+    the_user: "{{ ansible_user_id }}"
     dotfiles: "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/dotfiles"
     scriptsv: "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts"
     sdconfig: "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/systemd"
@@ -305,9 +306,11 @@
         name: "{{ ansible_user }}"
         groups: vboxusers
         append: yes
-
-    - name: Cambiar shell por defecto a fish
-      ansible.builtin.command: chsh -s /usr/bin/fish
+    - name: change user shell to fish 
+      become: yes
+        user:
+          name: "{{ the_user }}"
+          shell: /usr/bin/fish
 
     # 10. Activar servicios
     - name: Activar servicios del sistema
@@ -339,6 +342,14 @@
       ansible.builtin.command: makepkg -si --noconfirm
       args:
         chdir: $HOME/yay
+  handlers:
+    - name: Actualizar multilib
+      ansible.builtin.lineinfile:
+        path: /etc/pacman.conf
+        regexp: "^#(\\[multilib\\]|Include)"
+        line: "\\1"
+        state: present
+        backrefs: yes
 # 12. Crear aliases y funciones en Fish Shell
     - name: Crear aliases y funciones en Fish Shell
       ansible.builtin.shell: |
