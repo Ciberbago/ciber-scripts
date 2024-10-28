@@ -261,12 +261,14 @@
 
     # 9. Configuraciones adicionales
     - name: Exportar QT_QPA_PLATFORMTHEME
+      become: yes
       ansible.builtin.lineinfile:
         path: /etc/environment
         line: "export QT_QPA_PLATFORMTHEME=qt5ct"
         create: yes
 
     - name: Ajustar permisos de scripts
+      become: yes
       ansible.builtin.file:
         path: "{{ item }}"
         mode: '0755'
@@ -276,6 +278,7 @@
         - /usr/local/bin/*
 
     - name: Añadir usuario a grupo vboxusers
+      become: yes
       ansible.builtin.user:
         name: "{{ ansible_user }}"
         groups: vboxusers
@@ -286,6 +289,7 @@
 
     # 10. Activar servicios
     - name: Activar servicios del sistema
+      become: yes
       ansible.builtin.systemd:
         name: "{{ item }}"
         enabled: true
@@ -298,6 +302,7 @@
         - paccache.timer
 
     - name: Activar servicio WOL para la interfaz
+      become: yes
       ansible.builtin.systemd:
         name: "wol@{{ interfaz }}.service"
         enabled: true
@@ -312,15 +317,6 @@
       ansible.builtin.command: makepkg -si --noconfirm
       args:
         chdir: $HOME/yay
-
-  handlers:
-    - name: Actualizar multilib
-      ansible.builtin.lineinfile:
-        path: /etc/pacman.conf
-        regexp: "^#(\\[multilib\\]|Include)"
-        line: "\\1"
-        state: present
-        backrefs: yes
 # 12. Crear aliases y funciones en Fish Shell
     - name: Crear aliases y funciones en Fish Shell
       ansible.builtin.shell: |
