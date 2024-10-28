@@ -306,11 +306,10 @@
         name: "{{ ansible_user }}"
         groups: vboxusers
         append: yes
-    - name: change user shell to fish 
-      become: yes
-        user:
-          name: "{{ the_user }}"
-          shell: /usr/bin/fish
+    - name: Ensure default shell is /bin/fish for "{{ ansible_user }}"
+      ansible.builtin.user:
+        name: "{{ ansible_user }}"
+        shell: /bin/fish
 
     # 10. Activar servicios
     - name: Activar servicios del sistema
