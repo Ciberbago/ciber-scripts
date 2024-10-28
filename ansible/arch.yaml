@@ -1,6 +1,6 @@
 ---
 - name: Configuración del sistema en Arch Linux
-  hosts: all
+  hosts: localhost
   become: yes
   vars:
     # Variables
