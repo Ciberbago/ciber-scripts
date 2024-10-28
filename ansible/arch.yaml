@@ -303,7 +303,7 @@
     - name: Añadir usuario a grupo vboxusers
       become: yes
       ansible.builtin.user:
-        name: "{{ ansible_user }}"
+        name: "{{ the_user }}"
         groups: vboxusers
         append: yes
     - name: Ensure default shell is /bin/fish for "{{ ansible_user }}"
