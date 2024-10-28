@@ -255,8 +255,8 @@
         url: https://raw.githubusercontent.com/ivan-hc/AM/main/INSTALL
         dest: /tmp/INSTALL
         mode: '0755'
-        name: Ejecutar instalador de AppImage Manager
-        ansible.builtin.command: /tmp/INSTALL
+    - name: Ejecutar instalador de AppImage Manager
+      ansible.builtin.command: /tmp/INSTALL
 
     # 9. Configuraciones adicionales
     - name: Exportar QT_QPA_PLATFORMTHEME
