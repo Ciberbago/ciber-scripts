@@ -154,6 +154,7 @@
 
     # 3. Instalación de paquetes
     - name: Instalar paquetes disponibles
+      become: yes
       community.general.pacman:
         name: "{{ pkgs }}"
         state: present
@@ -175,7 +176,6 @@
         - $HOME/gnome
         - $HOME/Screenshots/tmp
         - $HOME/.local/share/nautilus/scripts
-        - /usr/local/share/applications
 
     # 5. Descargar scripts
     - name: Descargar scripts for user
