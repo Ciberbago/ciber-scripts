@@ -192,7 +192,6 @@
         - { url: "{{ scriptsv }}/aur.sh", dest: "$HOME/aur.sh" }
         - { url: "{{ scriptsv }}/postinstall.sh", dest: "$HOME/postinstall.sh" }
         - { url: "{{ scriptsv }}/mediainfo.sh", dest: "$HOME/.local/share/nautilus/scripts/mediainfo.sh" }
-        - { url: "{{ scriptsv }}/wallpaper.sh", dest: "/usr/local/bin/wallpaper" }
     #5.1 Descargar scripts for root
     - name: Descargar scripts for root
       become: yes
