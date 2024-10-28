@@ -308,7 +308,7 @@
         append: yes
     - name: Ensure default shell is /bin/fish for "{{ ansible_user }}"
       ansible.builtin.user:
-        name: "{{ ansible_user }}"
+        name: "{{ the_user }}"
         shell: /bin/fish
 
     # 10. Activar servicios
