@@ -129,12 +129,12 @@
       command: pacman -Syu
     # 2. Configuración de makepkg.conf
     - name: Ajustar configuración de makepkg.conf
-          ansible.builtin.lineinfile:
-            path: /etc/makepkg.conf
-            regexp: "{{ item.regexp }}"
-            line: "{{ item.line }}"
-            state: present
-            backrefs: yes
+      ansible.builtin.lineinfile:
+        path: /etc/makepkg.conf
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+        state: present
+        backrefs: yes
           loop:
             - { regexp: "^#BUILDDIR=.*", line: "BUILDDIR=/tmp/makepkg" }
             - { regexp: "^PKGEXT.*", line: "PKGEXT='.pkg.tar'" }
