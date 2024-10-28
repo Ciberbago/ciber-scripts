@@ -160,15 +160,15 @@
         state: directory
         mode: '0755'
       loop:
-        - ~/.config/autostart
-        - ~/.config/fish
-        - ~/.config/mpv/fonts
-        - ~/.config/mpv/scripts
-        - ~/.config/obs-studio/basic/profiles/Untitled/
-        - ~/.config/yay
-        - ~/gnome
-        - ~/Screenshots/tmp
-        - ~/.local/share/nautilus/scripts
+        - $HOME/.config/autostart
+        - $HOME/.config/fish
+        - $HOME/.config/mpv/fonts
+        - $HOME/.config/mpv/scripts
+        - $HOME/.config/obs-studio/basic/profiles/Untitled/
+        - $HOME/.config/yay
+        - $HOME/gnome
+        - $HOME/Screenshots/tmp
+        - $HOME/.local/share/nautilus/scripts
         - /usr/local/share/applications
 
     # 5. Descargar scripts
@@ -179,15 +179,15 @@
         mode: "{{ item.mode | default('0755') }}"
         force: yes
       loop:
-        - { url: "{{ scriptsv }}/gnome.sh", dest: "~/gnome.sh" }
-        - { url: "{{ scriptsv }}/ext.sh", dest: "~/ext.sh" }
-        - { url: "{{ scriptsv }}/gnomeconfig.sh", dest: "~/gnomeconfig.sh" }
-        - { url: "{{ scriptsv }}/hideapps.sh", dest: "~/hideapps.sh" }
-        - { url: "{{ scriptsv }}/removeapps.sh", dest: "~/removeapps.sh" }
-        - { url: "{{ scriptsv }}/appimages.sh", dest: "~/appimages.sh" }
-        - { url: "{{ scriptsv }}/aur.sh", dest: "~/aur.sh" }
-        - { url: "{{ scriptsv }}/postinstall.sh", dest: "~/postinstall.sh" }
-        - { url: "{{ scriptsv }}/mediainfo.sh", dest: "~/.local/share/nautilus/scripts/mediainfo.sh" }
+        - { url: "{{ scriptsv }}/gnome.sh", dest: "$HOME/gnome.sh" }
+        - { url: "{{ scriptsv }}/ext.sh", dest: "$HOME/ext.sh" }
+        - { url: "{{ scriptsv }}/gnomeconfig.sh", dest: "$HOME/gnomeconfig.sh" }
+        - { url: "{{ scriptsv }}/hideapps.sh", dest: "$HOME/hideapps.sh" }
+        - { url: "{{ scriptsv }}/removeapps.sh", dest: "$HOME/removeapps.sh" }
+        - { url: "{{ scriptsv }}/appimages.sh", dest: "$HOME/appimages.sh" }
+        - { url: "{{ scriptsv }}/aur.sh", dest: "$HOME/aur.sh" }
+        - { url: "{{ scriptsv }}/postinstall.sh", dest: "$HOME/postinstall.sh" }
+        - { url: "{{ scriptsv }}/mediainfo.sh", dest: "$HOME/.local/share/nautilus/scripts/mediainfo.sh" }
         - { url: "{{ scriptsv }}/wallpaper.sh", dest: "/usr/local/bin/wallpaper" }
 
     # 6. Descargar dotfiles
@@ -198,24 +198,24 @@
         mode: "{{ item.mode | default('0644') }}"
         force: yes
       loop:
-      - { url: "{{ dotfiles }}/extensions/dashtopanel.conf", dest: "~/.config/dashtopanel.conf" }
-      - { url: "{{ dotfiles }}/extensions/tilix.conf", dest: "~/.config/tilix.conf" }
-      - { url: "{{ dotfiles }}/extensions/executor.conf", dest: "~/.config/executor.conf" }
-      - { url: "{{ dotfiles }}/extensions/poweroffmenu.conf", dest: "~/.config/poweroffmenu.conf" }
-      - { url: "{{ dotfiles }}/wallpaper.desktop", dest: "~/.config/autostart/wallpaper.desktop" }
-      - { url: "{{ dotfiles }}/flameshot.ini", dest: "~/.config/flameshot/flameshot.ini" }
-      - { url: "{{ dotfiles }}/config.fish", dest: "~/.config/fish/config.fish" }
-      - { url: "{{ dotfiles }}/mpv.conf", dest: "~/.config/mpv/mpv.conf" }
-      - { url: "{{ dotfiles }}/modern.lua", dest: "~/.config/mpv/scripts/modern.lua" }
-      - { url: "{{ dotfiles }}/thumbfast.lua", dest: "~/.config/mpv/scripts/thumbfast.lua" }
-      - { url: "{{ dotfiles }}/Material-Design-Iconic-Font.ttf", dest: "~/.config/mpv/fonts/Material-Design-Iconic-Font.ttf" }
-      - { url: "{{ dotfiles }}/obsprofile.ini", dest: "~/.config/obs-studio/basic/profiles/Untitled/basic.ini" }
-      - { url: "{{ dotfiles }}/obsrecorder.json", dest: "~/.config/obs-studio/basic/profiles/Untitled/recordEncoder.json" }
-      - { url: "{{ dotfiles }}/obsglobal.ini", dest: "~/.config/obs-studio/global.ini" }
-      - { url: "{{ dotfiles }}/yayconfig.json", dest: "~/.config/yay/config.json" }
-      - { url: "{{ dotfiles }}/custom-keys.dconf", dest: "~/gnome/custom-keys.dconf" }
-      - { url: "{{ dotfiles }}/custom-values.dconf", dest: "~/gnome/custom-values.dconf" }
-      - { url: "{{ dotfiles }}/keybindings.dconf", dest: "~/gnome/keybindings.dconf" }
+      - { url: "{{ dotfiles }}/extensions/dashtopanel.conf", dest: "$HOME/.config/dashtopanel.conf" }
+      - { url: "{{ dotfiles }}/extensions/tilix.conf", dest: "$HOME/.config/tilix.conf" }
+      - { url: "{{ dotfiles }}/extensions/executor.conf", dest: "$HOME/.config/executor.conf" }
+      - { url: "{{ dotfiles }}/extensions/poweroffmenu.conf", dest: "$HOME/.config/poweroffmenu.conf" }
+      - { url: "{{ dotfiles }}/wallpaper.desktop", dest: "$HOME/.config/autostart/wallpaper.desktop" }
+      - { url: "{{ dotfiles }}/flameshot.ini", dest: "$HOME/.config/flameshot/flameshot.ini" }
+      - { url: "{{ dotfiles }}/config.fish", dest: "$HOME/.config/fish/config.fish" }
+      - { url: "{{ dotfiles }}/mpv.conf", dest: "$HOME/.config/mpv/mpv.conf" }
+      - { url: "{{ dotfiles }}/modern.lua", dest: "$HOME/.config/mpv/scripts/modern.lua" }
+      - { url: "{{ dotfiles }}/thumbfast.lua", dest: "$HOME/.config/mpv/scripts/thumbfast.lua" }
+      - { url: "{{ dotfiles }}/Material-Design-Iconic-Font.ttf", dest: "$HOME/.config/mpv/fonts/Material-Design-Iconic-Font.ttf" }
+      - { url: "{{ dotfiles }}/obsprofile.ini", dest: "$HOME/.config/obs-studio/basic/profiles/Untitled/basic.ini" }
+      - { url: "{{ dotfiles }}/obsrecorder.json", dest: "$HOME/.config/obs-studio/basic/profiles/Untitled/recordEncoder.json" }
+      - { url: "{{ dotfiles }}/obsglobal.ini", dest: "$HOME/.config/obs-studio/global.ini" }
+      - { url: "{{ dotfiles }}/yayconfig.json", dest: "$HOME/.config/yay/config.json" }
+      - { url: "{{ dotfiles }}/custom-keys.dconf", dest: "$HOME/gnome/custom-keys.dconf" }
+      - { url: "{{ dotfiles }}/custom-values.dconf", dest: "$HOME/gnome/custom-values.dconf" }
+      - { url: "{{ dotfiles }}/keybindings.dconf", dest: "$HOME/gnome/keybindings.dconf" }
       - { url: "{{ dotfiles }}/reflector.conf", dest: "/etc/xdg/reflector/reflector.conf", mode: "0644" }
       - { url: "{{ dotfiles }}/virtualbox.conf", dest: "/etc/modules-load.d/virtualbox.conf", mode: "0644" }
       - { url: "{{ sdconfig }}/wol@.service", dest: "/etc/systemd/system/wol@.service", mode: "0644" }
@@ -251,7 +251,7 @@
         mode: '0755'
       loop:
         - "*.sh"
-        - ~/.local/share/nautilus/scripts/*.sh
+        - $HOME/.local/share/nautilus/scripts/*.sh
         - /usr/local/bin/*
 
     - name: Añadir usuario a grupo vboxusers
@@ -285,12 +285,12 @@
     - name: Clonar repositorio de yay
       ansible.builtin.git:
         repo: https://aur.archlinux.org/yay.git
-        dest: ~/yay
+        dest: $HOME/yay
 
     - name: Construir e instalar yay
       ansible.builtin.command: makepkg -si --noconfirm
       args:
-        chdir: ~/yay
+        chdir: $HOME/yay
 
   handlers:
     - name: Actualizar multilib
