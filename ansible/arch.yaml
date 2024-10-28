@@ -112,7 +112,21 @@
         - VerbosePkgLists
         - "ParallelDownloads = 20"
       notify: Actualizar multilib
-
+    - name: Habilitar el repositorio multilib
+      lineinfile:
+        path: /etc/pacman.conf
+        regexp: '^#?\[multilib\]'
+        line: '[multilib]'
+        state: present
+        validate: 'pacman -Qk %s'
+    - name: Descomentar Include en multilib
+      lineinfile:
+        path: /etc/pacman.conf
+        regexp: '^#Include = /etc/pacman.d/mirrorlist'
+        line: 'Include = /etc/pacman.d/mirrorlist'
+        state: present
+    - name: Actualizar los repositorios
+      command: pacman -Syu
     # 2. Configuración de makepkg.conf
     - name: Ajustar makepkg.conf
       ansible.builtin.lineinfile:
