@@ -170,6 +170,7 @@
         - $HOME/.config/mpv/scripts
         - $HOME/.config/obs-studio/basic/profiles/Untitled/
         - $HOME/.config/yay
+        - $HOME/.config/flameshot
         - $HOME/gnome
         - $HOME/Screenshots/tmp
         - $HOME/.local/share/nautilus/scripts
