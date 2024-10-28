@@ -256,6 +256,7 @@
         dest: /tmp/INSTALL
         mode: '0755'
     - name: Ejecutar instalador de AppImage Manager
+      become: yes
       ansible.builtin.command: /tmp/INSTALL
 
     # 9. Configuraciones adicionales
