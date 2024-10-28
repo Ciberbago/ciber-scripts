@@ -1,0 +1,329 @@
+---
+- name: Configuración del sistema en Arch Linux
+  hosts: localhost
+  become: yes
+  vars:
+    # Variables
+    dotfiles: "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/dotfiles"
+    scriptsv: "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts"
+    sdconfig: "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/systemd"
+    interfaz: "{{ lookup('pipe', 'ip r | grep default | cut -d ' ' -f 5 | head -n1') }}"
+    pkgs:
+      - adw-gtk-theme
+      - android-tools
+      - baobab
+      - base-devel
+      - bat
+      - bluez
+      - bluez-utils
+      - btop
+      - dkms
+      - ethtool
+      - eza
+      - fastfetch
+      - ffmpegthumbnailer
+      - file-roller
+      - firefox
+      - fish
+      - fisher
+      - flameshot
+      - fragments
+      - freerdp
+      - fzf
+      - gdm
+      - gdu
+      - git
+      - gnome-bluetooth-3.0
+      - gnome-calculator
+      - gnome-characters
+      - gnome-control-center
+      - gnome-disk-utility
+      - gnome-font-viewer
+      - gnome-keyring
+      - gnome-remote-desktop
+      - gnome-shell
+      - gnome-tweaks
+      - gnome-text-editor
+      - gvfs
+      - gvfs-smb
+      - handbrake
+      - imagemagick
+      - jre8-openjdk
+      - jre17-openjdk
+      - jre21-openjdk
+      - jq
+      - iperf3
+      - less
+      - libmad
+      - libva-mesa-driver
+      - linux-headers
+      - linux-lts
+      - mangohud
+      - micro
+      - mpv-mpris
+      - nautilus
+      - net-tools
+      - nnn
+      - noto-fonts-cjk
+      - ntfs-3g
+      - pacman-contrib
+      - p7zip
+      - pkgfile
+      - python-tqdm
+      - qt5ct
+      - qt6-base
+      - radeontop
+      - reflector
+      - remmina
+      - resources
+      - rocm-smi-lib
+      - rust
+      - scrcpy
+      - shotwell
+      - smbclient
+      - steam
+      - tailscale
+      - tilix
+      - traceroute
+      - ttf-firacode-nerd
+      - tumbler
+      - uget
+      - unrar
+      - usbutils
+      - virtualbox
+      - virtualbox-guest-iso
+      - vulkan-radeon
+      - wget
+      - wl-clipboard
+      - xdg-desktop-portal-gnome
+      - yt-dlp
+
+  tasks:
+    # 1. Configuración de pacman.conf
+    - name: Activar opciones en pacman.conf
+      ansible.builtin.lineinfile:
+        path: /etc/pacman.conf
+        regexp: "^#{{ item }}"
+        line: "{{ item }}"
+        state: present
+        backrefs: yes
+      loop:
+        - Color
+        - VerbosePkgLists
+        - "ParallelDownloads = 20"
+      notify: Actualizar multilib
+    - name: "add multilib"
+      lineinfile:
+        dest: "/etc/pacman.conf"
+        state: "present"
+        line: "[multilib]"
+        regexp: "^\\[multilib\\]"
+        insertafter: "^#\\[multilib\\]"
+    - name: "add multilib (cont)"
+      lineinfile:
+        dest: "/etc/pacman.conf"
+        state: "present"
+        line: "Include = /etc/pacman.d/mirrorlist"
+        insertafter: "^\\[multilib\\]"
+        regexp: "Include = /etc/pacman.d/mirrorlist"
+    - name: Actualizar los repositorios
+      community.general.pacman:
+        update_cache: true
+        upgrade: true
+    # 2. Configuración de makepkg.conf
+    - name: Ajustar configuración de makepkg.conf
+      ansible.builtin.lineinfile:
+        path: /etc/makepkg.conf
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+        state: present
+        backrefs: yes
+      loop:
+        - { regexp: "^#BUILDDIR=.*", line: "BUILDDIR=/tmp/makepkg" }
+        - { regexp: "^PKGEXT.*", line: "PKGEXT='.pkg.tar'" }
+        - { regexp: "^OPTIONS=.*", line: "OPTIONS=(docs !strip !libtool !staticlibs emptydirs zipman purge !debug lto)" }
+        - { regexp: "-march=.* -mtune=generic", line: "-march=native" }
+        - { regexp: "^#RUSTFLAGS=.*", line: 'RUSTFLAGS="-C opt-level=2 -C target-cpu=native"' }
+        - { regexp: "^#MAKEFLAGS=.*", line: 'MAKEFLAGS="-j{{ ansible_processor_vcpus | int - 1 }}"' }
+
+
+    # 3. Instalación de paquetes
+    - name: Instalar paquetes disponibles
+      community.general.pacman:
+        name: "{{ pkgs }}"
+        state: present
+
+    # 4. Crear directorios necesarios
+    - name: Crear directorios necesarios
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0755'
+      loop:
+        - ~/.config/autostart
+        - ~/.config/fish
+        - ~/.config/mpv/fonts
+        - ~/.config/mpv/scripts
+        - ~/.config/obs-studio/basic/profiles/Untitled/
+        - ~/.config/yay
+        - ~/gnome
+        - ~/Screenshots/tmp
+        - ~/.local/share/nautilus/scripts
+        - /usr/local/share/applications
+
+    # 5. Descargar scripts
+    - name: Descargar scripts
+      ansible.builtin.get_url:
+        url: "{{ item.url }}"
+        dest: "{{ item.dest }}"
+        mode: "{{ item.mode | default('0755') }}"
+        force: yes
+      loop:
+        - { url: "{{ scriptsv }}/gnome.sh", dest: "~/gnome.sh" }
+        - { url: "{{ scriptsv }}/ext.sh", dest: "~/ext.sh" }
+        - { url: "{{ scriptsv }}/gnomeconfig.sh", dest: "~/gnomeconfig.sh" }
+        - { url: "{{ scriptsv }}/hideapps.sh", dest: "~/hideapps.sh" }
+        - { url: "{{ scriptsv }}/removeapps.sh", dest: "~/removeapps.sh" }
+        - { url: "{{ scriptsv }}/appimages.sh", dest: "~/appimages.sh" }
+        - { url: "{{ scriptsv }}/aur.sh", dest: "~/aur.sh" }
+        - { url: "{{ scriptsv }}/postinstall.sh", dest: "~/postinstall.sh" }
+        - { url: "{{ scriptsv }}/mediainfo.sh", dest: "~/.local/share/nautilus/scripts/mediainfo.sh" }
+        - { url: "{{ scriptsv }}/wallpaper.sh", dest: "/usr/local/bin/wallpaper" }
+
+    # 6. Descargar dotfiles
+    - name: Descargar dotfiles
+      ansible.builtin.get_url:
+        url: "{{ item.url }}"
+        dest: "{{ item.dest }}"
+        mode: "{{ item.mode | default('0644') }}"
+        force: yes
+      loop:
+      - { url: "{{ dotfiles }}/extensions/dashtopanel.conf", dest: "~/.config/dashtopanel.conf" }
+      - { url: "{{ dotfiles }}/extensions/tilix.conf", dest: "~/.config/tilix.conf" }
+      - { url: "{{ dotfiles }}/extensions/executor.conf", dest: "~/.config/executor.conf" }
+      - { url: "{{ dotfiles }}/extensions/poweroffmenu.conf", dest: "~/.config/poweroffmenu.conf" }
+      - { url: "{{ dotfiles }}/wallpaper.desktop", dest: "~/.config/autostart/wallpaper.desktop" }
+      - { url: "{{ dotfiles }}/flameshot.ini", dest: "~/.config/flameshot/flameshot.ini" }
+      - { url: "{{ dotfiles }}/config.fish", dest: "~/.config/fish/config.fish" }
+      - { url: "{{ dotfiles }}/mpv.conf", dest: "~/.config/mpv/mpv.conf" }
+      - { url: "{{ dotfiles }}/modern.lua", dest: "~/.config/mpv/scripts/modern.lua" }
+      - { url: "{{ dotfiles }}/thumbfast.lua", dest: "~/.config/mpv/scripts/thumbfast.lua" }
+      - { url: "{{ dotfiles }}/Material-Design-Iconic-Font.ttf", dest: "~/.config/mpv/fonts/Material-Design-Iconic-Font.ttf" }
+      - { url: "{{ dotfiles }}/obsprofile.ini", dest: "~/.config/obs-studio/basic/profiles/Untitled/basic.ini" }
+      - { url: "{{ dotfiles }}/obsrecorder.json", dest: "~/.config/obs-studio/basic/profiles/Untitled/recordEncoder.json" }
+      - { url: "{{ dotfiles }}/obsglobal.ini", dest: "~/.config/obs-studio/global.ini" }
+      - { url: "{{ dotfiles }}/yayconfig.json", dest: "~/.config/yay/config.json" }
+      - { url: "{{ dotfiles }}/custom-keys.dconf", dest: "~/gnome/custom-keys.dconf" }
+      - { url: "{{ dotfiles }}/custom-values.dconf", dest: "~/gnome/custom-values.dconf" }
+      - { url: "{{ dotfiles }}/keybindings.dconf", dest: "~/gnome/keybindings.dconf" }
+      - { url: "{{ dotfiles }}/reflector.conf", dest: "/etc/xdg/reflector/reflector.conf", mode: "0644" }
+      - { url: "{{ dotfiles }}/virtualbox.conf", dest: "/etc/modules-load.d/virtualbox.conf", mode: "0644" }
+      - { url: "{{ sdconfig }}/wol@.service", dest: "/etc/systemd/system/wol@.service", mode: "0644" }
+      - { url: "{{ sdconfig }}/run-media-nas.mount", dest: "/etc/systemd/system/run-media-nas.mount", mode: "0644" }
+      - { url: "{{ sdconfig }}/run-media-nas.automount", dest: "/etc/systemd/system/run-media-nas.automount", mode: "0644" }
+
+
+    # 7. Actualizar la base de datos de pkgfile
+    - name: Actualizar base de datos de pkgfile
+      ansible.builtin.command: pkgfile --update
+      args:
+        warn: false
+
+    # 8. Instalar AppImage Manager
+    - name: Instalar AppImage Manager
+      ansible.builtin.get_url:
+        url: https://raw.githubusercontent.com/ivan-hc/AM/main/INSTALL
+        dest: /tmp/INSTALL
+        mode: '0755'
+        name: Ejecutar instalador de AppImage Manager
+        ansible.builtin.command: /tmp/INSTALL
+
+    # 9. Configuraciones adicionales
+    - name: Exportar QT_QPA_PLATFORMTHEME
+      ansible.builtin.lineinfile:
+        path: /etc/environment
+        line: "export QT_QPA_PLATFORMTHEME=qt5ct"
+        create: yes
+
+    - name: Ajustar permisos de scripts
+      ansible.builtin.file:
+        path: "{{ item }}"
+        mode: '0755'
+      loop:
+        - "*.sh"
+        - ~/.local/share/nautilus/scripts/*.sh
+        - /usr/local/bin/*
+
+    - name: Añadir usuario a grupo vboxusers
+      ansible.builtin.user:
+        name: "{{ ansible_user }}"
+        groups: vboxusers
+        append: yes
+
+    - name: Cambiar shell por defecto a fish
+      ansible.builtin.command: chsh -s /usr/bin/fish
+
+    # 10. Activar servicios
+    - name: Activar servicios del sistema
+      ansible.builtin.systemd:
+        name: "{{ item }}"
+        enabled: true
+      loop:
+        - gdm.service
+        - bluetooth.service
+        - reflector.service
+        - tailscaled
+        - run-media-nas.automount
+        - paccache.timer
+
+    - name: Activar servicio WOL para la interfaz
+      ansible.builtin.systemd:
+        name: "wol@{{ interfaz }}.service"
+        enabled: true
+
+    # 11. Instalar yay desde AUR
+    - name: Clonar repositorio de yay
+      ansible.builtin.git:
+        repo: https://aur.archlinux.org/yay.git
+        dest: ~/yay
+
+    - name: Construir e instalar yay
+      ansible.builtin.command: makepkg -si --noconfirm
+      args:
+        chdir: ~/yay
+
+  handlers:
+    - name: Actualizar multilib
+      ansible.builtin.lineinfile:
+        path: /etc/pacman.conf
+        regexp: "^#(\\[multilib\\]|Include)"
+        line: "\\1"
+        state: present
+        backrefs: yes
+# 12. Crear aliases y funciones en Fish Shell
+    - name: Crear aliases y funciones en Fish Shell
+      ansible.builtin.shell: |
+        fish <<'EOF'
+        set -Ux EDITOR micro
+        alias limpiar="paccache -rk1 && paccache -ruk0 && yay -Sc && sudo pacman -Qdtq | sudo pacman -Runs -" && funcsave limpiar
+        alias historial="history | fzf" && funcsave historial
+        alias cat="bat" && funcsave cat
+        alias cc="cd && clear" && funcsave cc
+        alias ls="exa -lha --icons" && funcsave ls
+        alias mkdir="mkdir -pv" && funcsave mkdir
+        alias espacio="gdu /" && funcsave espacio
+        alias f34='firefox -P "Cyb_R34" -no-remote' && funcsave f34
+        alias orphans='sudo pacman -Qdtq | sudo pacman -Runs -' && funcsave orphans
+        alias rebootuefi='sudo systemctl reboot --firmware-setup' && funcsave rebootuefi
+        alias sss="sudo systemctl status" && funcsave sss
+        alias ssa="sudo systemctl start" && funcsave ssa
+        alias sso="sudo systemctl stop" && funcsave sso
+        alias sse="sudo systemctl enable" && funcsave sse
+        alias ssd="sudo systemctl daemon-reload" && funcsave ssd
+        function buscar; /usr/bin/find . -type f -iname "*$argv*"; end; and funcsave buscar
+        function cheat; curl cheat.sh/$argv; end; and funcsave cheat
+        function convimg; magick mogrify -path $argv[2] -strip -interlace Plane -quality 80% -format jpg -verbose $argv[1]/*; end; and funcsave convimg
+        function img2mp4; for file in *.gif; ffmpeg -i $file "$file.mp4"; end; end; and funcsave img2mp4
+        fisher install IlanCosman/tide@v6
+        fisher install oh-my-fish/plugin-bang-bang
+        EOF
