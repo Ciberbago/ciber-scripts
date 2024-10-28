@@ -128,16 +128,21 @@
     - name: Actualizar los repositorios
       command: pacman -Syu
     # 2. Configuración de makepkg.conf
-    - name: Ajustar makepkg.conf
-      ansible.builtin.lineinfile:
-        path: /etc/makepkg.conf
-        regexp: "{{ item.regexp }}"
-        line: "{{ item.line }}"
-        state: present
-        backrefs: yes
-      loop:
-        - { regexp: "^#BUILDDIR=.*", line: "BUILDDIR=/tmp/makepkg" }
-        # ... (resto de las configuraciones)
+    - name: Ajustar configuración de makepkg.conf
+          ansible.builtin.lineinfile:
+            path: /etc/makepkg.conf
+            regexp: "{{ item.regexp }}"
+            line: "{{ item.line }}"
+            state: present
+            backrefs: yes
+          loop:
+            - { regexp: "^#BUILDDIR=.*", line: "BUILDDIR=/tmp/makepkg" }
+            - { regexp: "^PKGEXT.*", line: "PKGEXT='.pkg.tar'" }
+            - { regexp: "^OPTIONS=.*", line: "OPTIONS=(docs !strip !libtool !staticlibs emptydirs zipman purge !debug lto)" }
+            - { regexp: "-march=.* -mtune=generic", line: "-march=native" }
+            - { regexp: "^#RUSTFLAGS=.*", line: 'RUSTFLAGS="-C opt-level=2 -C target-cpu=native"' }
+            - { regexp: "^#MAKEFLAGS=.*", line: 'MAKEFLAGS="-j{{ ansible_processor_vcpus | int - 1 }}"' }
+
 
     # 3. Instalación de paquetes
     - name: Instalar paquetes disponibles
