@@ -267,16 +267,20 @@
         line: "export QT_QPA_PLATFORMTHEME=qt5ct"
         create: yes
 
-    - name: Ajustar permisos de scripts
+    - name: Ajustar permisos de scripts root
       become: yes
       ansible.builtin.file:
         path: "{{ item }}"
         mode: '0755'
       loop:
-        - "*.sh"
-        - $HOME/.local/share/nautilus/scripts/*.sh
         - /usr/local/bin/*
-
+    - name: Ajustar permisos de scripts user
+      ansible.builtin.file:
+        path: "{{ item }}"
+        mode: '0755'
+      loop:
+        - $HOME/.local/share/nautilus/scripts/*.sh
+        - $HOME/*.sh
     - name: Añadir usuario a grupo vboxusers
       become: yes
       ansible.builtin.user:
