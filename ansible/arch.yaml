@@ -112,19 +112,20 @@
         - VerbosePkgLists
         - "ParallelDownloads = 20"
       notify: Actualizar multilib
-    - name: Habilitar el repositorio multilib
+    - name: "add multilib"
       lineinfile:
-        path: /etc/pacman.conf
-        regexp: '^#?\[multilib\]'
-        line: '[multilib]'
-        state: present
-        validate: 'pacman -Qk %s'
-    - name: Descomentar Include en multilib
+        dest: "/etc/pacman.conf"
+        state: "present"
+        line: "[multilib]"
+        regexp: "^\\[multilib\\]"
+        insertafter: "^#\\[multilib\\]"
+    - name: "add multilib (cont)"
       lineinfile:
-        path: /etc/pacman.conf
-        regexp: '^#Include = /etc/pacman.d/mirrorlist'
-        line: 'Include = /etc/pacman.d/mirrorlist'
-        state: present
+        dest: "/etc/pacman.conf"
+        state: "present"
+        line: "Include = /etc/pacman.d/mirrorlist"
+        insertafter: "^\\[multilib\\]"
+        regexp: "Include = /etc/pacman.d/mirrorlist"
     - name: Actualizar los repositorios
       command: pacman -Syu
     # 2. Configuración de makepkg.conf
