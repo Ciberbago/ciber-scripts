@@ -247,8 +247,6 @@
     # 7. Actualizar la base de datos de pkgfile
     - name: Actualizar base de datos de pkgfile
       ansible.builtin.command: pkgfile --update
-      args:
-        warn: false
 
     # 8. Instalar AppImage Manager
     - name: Instalar AppImage Manager
