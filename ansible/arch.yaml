@@ -267,20 +267,38 @@
         line: "export QT_QPA_PLATFORMTHEME=qt5ct"
         create: yes
 
+    - name: Buscar archivos en /usr/local/bin
+      ansible.builtin.find:
+        paths: /usr/local/bin
+        file_type: file
+      register: scripts_encontrados
     - name: Ajustar permisos de scripts root
       become: yes
       ansible.builtin.file:
-        path: "{{ item }}"
+        path: "{{ item.path }}"
         mode: '0755'
-      loop:
-        - /usr/local/bin/*
+      loop: "{{ scripts_encontrados.files }}"
+    - name: Buscar scripts en $HOME/.local/share/nautilus/scripts
+      ansible.builtin.find:
+        paths: "{{ lookup('env', 'HOME') }}/.local/share/nautilus/scripts"
+        patterns: "*.sh"
+        file_type: file
+      register: nautilus_scripts
+    
+    - name: Buscar scripts en $HOME
+      ansible.builtin.find:
+        paths: "{{ lookup('env', 'HOME') }}"
+        patterns: "*.sh"
+        file_type: file
+      register: home_scripts
+    
     - name: Ajustar permisos de scripts user
+      become: no
       ansible.builtin.file:
-        path: "{{ item }}"
+        path: "{{ item.path }}"
         mode: '0755'
-      loop:
-        - $HOME/.local/share/nautilus/scripts/*.sh
-        - $HOME/*.sh
+      loop: "{{ nautilus_scripts.files + home_scripts.files }}"
+
     - name: Añadir usuario a grupo vboxusers
       become: yes
       ansible.builtin.user:
