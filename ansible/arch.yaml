@@ -176,7 +176,7 @@
         - /usr/local/share/applications
 
     # 5. Descargar scripts
-    - name: Descargar scripts
+    - name: Descargar scripts for user
       ansible.builtin.get_url:
         url: "{{ item.url }}"
         dest: "{{ item.dest }}"
@@ -193,9 +193,18 @@
         - { url: "{{ scriptsv }}/postinstall.sh", dest: "$HOME/postinstall.sh" }
         - { url: "{{ scriptsv }}/mediainfo.sh", dest: "$HOME/.local/share/nautilus/scripts/mediainfo.sh" }
         - { url: "{{ scriptsv }}/wallpaper.sh", dest: "/usr/local/bin/wallpaper" }
-
+    #5.1 Descargar scripts for root
+    - name: Descargar scripts for root
+      become: yes
+      ansible.builtin.get_url:
+        url: "{{ item.url }}"
+        dest: "{{ item.dest }}"
+        mode: "{{ item.mode | default('0755') }}"
+        force: yes
+      loop:
+        - { url: "{{ scriptsv }}/wallpaper.sh", dest: "/usr/local/bin/wallpaper" }
     # 6. Descargar dotfiles
-    - name: Descargar dotfiles
+    - name: Descargar dotfiles for user
       ansible.builtin.get_url:
         url: "{{ item.url }}"
         dest: "{{ item.dest }}"
@@ -220,12 +229,20 @@
       - { url: "{{ dotfiles }}/custom-keys.dconf", dest: "$HOME/gnome/custom-keys.dconf" }
       - { url: "{{ dotfiles }}/custom-values.dconf", dest: "$HOME/gnome/custom-values.dconf" }
       - { url: "{{ dotfiles }}/keybindings.dconf", dest: "$HOME/gnome/keybindings.dconf" }
+    #6.1 Dotfiles root
+    - name: Descargar dotfiles for root
+      become: yes
+      ansible.builtin.get_url:
+        url: "{{ item.url }}"
+        dest: "{{ item.dest }}"
+        mode: "{{ item.mode | default('0644') }}"
+        force: yes
+      loop:      
       - { url: "{{ dotfiles }}/reflector.conf", dest: "/etc/xdg/reflector/reflector.conf", mode: "0644" }
       - { url: "{{ dotfiles }}/virtualbox.conf", dest: "/etc/modules-load.d/virtualbox.conf", mode: "0644" }
       - { url: "{{ sdconfig }}/wol@.service", dest: "/etc/systemd/system/wol@.service", mode: "0644" }
       - { url: "{{ sdconfig }}/run-media-nas.mount", dest: "/etc/systemd/system/run-media-nas.mount", mode: "0644" }
       - { url: "{{ sdconfig }}/run-media-nas.automount", dest: "/etc/systemd/system/run-media-nas.automount", mode: "0644" }
-
 
     # 7. Actualizar la base de datos de pkgfile
     - name: Actualizar base de datos de pkgfile
