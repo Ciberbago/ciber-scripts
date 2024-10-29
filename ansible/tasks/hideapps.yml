@@ -26,23 +26,33 @@
         state: directory
         mode: '0755'
 
-    - name: Copiar archivos .desktop si existen
+    - name: Comprobar si los archivos .desktop ya están copiados
+      stat:
+        path: "/usr/local/share/applications/{{ item }}"
+      loop: "{{ desktop_files }}"
+      register: stat_results
+
+    - name: Filtrar archivos que necesitan ser copiados
+      set_fact:
+        files_to_copy: "{{ stat_results.results | selectattr('stat.exists', 'equalto', false) | map(attribute='item') | list }}"
+
+    - name: Copiar archivos .desktop si es necesario
       copy:
         src: "/usr/share/applications/{{ item }}"
         dest: "/usr/local/share/applications/"
         mode: '0644'
-      loop: "{{ desktop_files }}"
-      register: copy_results  # Registrar los resultados
-      ignore_errors: true  # Ignorar errores si un archivo no existe
+      loop: "{{ files_to_copy }}"
+      register: copy_results
+      when: files_to_copy | length > 0
 
-    - name: Filtrar archivos copiados con éxito
+    - name: Filtrar archivos copiados o ya existentes
       set_fact:
-        copied_files: "{{ copy_results.results | selectattr('failed', 'equalto', false) | map(attribute='item') | list }}"
+        copied_or_existing_files: "{{ (stat_results.results | selectattr('stat.exists', 'equalto', true) | map(attribute='item') | list) + (copy_results.results | selectattr('failed', 'equalto', false) | map(attribute='item') | list) | unique }}"
 
-    - name: Añadir 'Hidden=true' al final de los archivos copiados
+    - name: Añadir 'Hidden=true' solo a los archivos correspondientes
       lineinfile:
         path: "/usr/local/share/applications/{{ item }}"
         line: "Hidden=true"
         state: present
-      loop: "{{ copied_files }}"
-      when: copied_files | length > 0  # Solo si hay archivos copiados
+      loop: "{{ copied_or_existing_files }}"
+      when: copied_or_existing_files | length > 0
