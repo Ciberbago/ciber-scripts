@@ -2,6 +2,23 @@
 - name: Configuración de archivos .desktop
   hosts: localhost
   become: true  # Ejecutar como root
+  vars:
+    desktop_files:
+      - nnn.desktop
+      - btop.desktop
+      - avahi-discover.desktop
+      - assistant.desktop
+      - designer.desktop
+      - linguist.desktop
+      - qdbusviewer.desktop
+      - qv4l2.desktop
+      - qvidcap.desktop
+      - bvnc.desktop
+      - bssh.desktop
+      - fish.desktop
+      - scrcpy-console.desktop
+      - scrcpy.desktop
+
   tasks:
     - name: Crear directorio /usr/local/share/applications
       file:
@@ -9,36 +26,23 @@
         state: directory
         mode: '0755'
 
-    - name: Copiar archivos .desktop a /usr/local/share/applications
+    - name: Copiar archivos .desktop si existen
       copy:
         src: "/usr/share/applications/{{ item }}"
         dest: "/usr/local/share/applications/"
         mode: '0644'
-      loop:
-        - nnn.desktop
-        - btop.desktop
-        - avahi-discover.desktop
-        - qv4l2.desktop
-        - qvidcap.desktop
-        - bvnc.desktop
-        - bssh.desktop
-        - fish.desktop
-        - scrcpy-console.desktop
-        - scrcpy.desktop
+      loop: "{{ desktop_files }}"
+      register: copy_results  # Registrar los resultados
+      ignore_errors: true  # Ignorar errores si un archivo no existe
 
-    - name: Añadir 'Hidden=true' al final de los archivos .desktop
+    - name: Filtrar archivos copiados con éxito
+      set_fact:
+        copied_files: "{{ copy_results.results | selectattr('failed', 'equalto', false) | map(attribute='item') | list }}"
+
+    - name: Añadir 'Hidden=true' al final de los archivos copiados
       lineinfile:
         path: "/usr/local/share/applications/{{ item }}"
         line: "Hidden=true"
         state: present
-      loop:
-        - nnn.desktop
-        - btop.desktop
-        - avahi-discover.desktop
-        - qv4l2.desktop
-        - qvidcap.desktop
-        - bvnc.desktop
-        - bssh.desktop
-        - fish.desktop
-        - scrcpy-console.desktop
-        - scrcpy.desktop
+      loop: "{{ copied_files }}"
+      when: copied_files | length > 0  # Solo si hay archivos copiados
