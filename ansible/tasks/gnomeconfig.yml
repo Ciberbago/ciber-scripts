@@ -49,20 +49,20 @@
 
     - name: Importar configuración de dash-to-panel
       ansible.builtin.command:
-        cmd: dconf load /org/gnome/shell/extensions/dash-to-panel/ < $HOME/.config/dashtopanel.conf
+        cmd: dconf load /org/gnome/shell/extensions/dash-to-panel/ < ~/.config/dashtopanel.conf
       ignore_errors: true  # Ignorar si el archivo no existe
 
     - name: Importar configuración de Tilix
       ansible.builtin.command:
-        cmd: dconf load /com/gexperts/Tilix/ < $HOME/.config/tilix.conf
+        cmd: dconf load /com/gexperts/Tilix/ < ~/.config/tilix.conf
       ignore_errors: true  # Ignorar si el archivo no existe
 
     - name: Importar configuración de executor
       ansible.builtin.command:
-        cmd: dconf load /org/gnome/shell/extensions/executor/ < $HOME/.config/executor.conf
+        cmd: dconf load /org/gnome/shell/extensions/executor/ < ~/.config/executor.conf
       ignore_errors: true  # Ignorar si el archivo no existe
 
     - name: Importar configuración de poweroffmenu
       ansible.builtin.command:
-        cmd: dconf load /org/gnome/shell/extensions/bring-out-submenu-of-power-off-logout/ < $HOME/.config/poweroffmenu.conf
+        cmd: dconf load /org/gnome/shell/extensions/bring-out-submenu-of-power-off-logout/ < ~/.config/poweroffmenu.conf
       ignore_errors: true  # Ignorar si el archivo no existe
