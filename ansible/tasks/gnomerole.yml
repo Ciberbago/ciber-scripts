@@ -2,7 +2,7 @@
 - name: Extensiones de GNOME
 - hosts: localhost
   roles:
-    - role: petermosmans.customize-gnome
+    - role: PeterMosmans.customize-gnome
   vars:
     gnome_extensions:
       - id: 4269
