@@ -144,11 +144,6 @@
         id: EF925EA60F33D0CB85C44AD13056513887B78AEB  # Cambié 'key' a 'id'
         keyserver: keyserver.ubuntu.com
         state: present
-    - name: Firmar la clave de Chaotic AUR
-      become: true
-      shell: |
-        pacman-key --lsign-key 3056513887B78AEB
-    
     - name: Instalar el paquete chaotic-keyring
       become: true
       community.general.pacman:
@@ -163,16 +158,12 @@
     
     - name: Agregar el repositorio Chaotic AUR a pacman.conf
       become: true
-      lineinfile:
+      blockinfile:
         path: /etc/pacman.conf
-        line: |
+        block: |
           [chaotic-aur]
           Include = /etc/pacman.d/chaotic-mirrorlist
-        state: present
-        insertafter: EOF
-        create: yes
-        regexp: '^\[chaotic-aur\]|\[chaotic-aur\]\nInclude = /etc/pacman.d/chaotic-mirrorlist'  # Verifica que no exista ninguna de las líneas
-
+        marker: ""  # Sin marcadores de inicio y fin
     - name: Actualizar los repositorios
       become: yes
       community.general.pacman:
