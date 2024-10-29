@@ -167,8 +167,8 @@
         path: /etc/pacman.conf
         line: "[chaotic-aur]\nInclude = /etc/pacman.d/chaotic-mirrorlist"
         state: present
-        insertafter: EOF  # Asegura que la línea se inserte al final del archivo
-        
+        insertafter: EOF
+        regexp: '^\[chaotic-aur\]'  # Busca si ya existe la sección [chaotic-aur]
     - name: Actualizar los repositorios
       become: yes
       community.general.pacman:
