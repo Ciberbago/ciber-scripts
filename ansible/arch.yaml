@@ -340,6 +340,7 @@
         update: true
     
     - name: Build and install yay
+      become: yes
       command:
         chdir: "/tmp/yay"
         cmd: "makepkg -sfi --noconfirm"
@@ -355,28 +356,29 @@
         backrefs: yes
 # 12. Crear aliases y funciones en Fish Shell
     - name: Crear aliases y funciones en Fish Shell
+      become: no
       ansible.builtin.shell: |
-        fish <<'EOF'
+        /bin/fish -c "
         set -Ux EDITOR micro
-        alias limpiar="paccache -rk1 && paccache -ruk0 && yay -Sc && sudo pacman -Qdtq | sudo pacman -Runs -" && funcsave limpiar
-        alias historial="history | fzf" && funcsave historial
-        alias cat="bat" && funcsave cat
-        alias cc="cd && clear" && funcsave cc
-        alias ls="exa -lha --icons" && funcsave ls
-        alias mkdir="mkdir -pv" && funcsave mkdir
-        alias espacio="gdu /" && funcsave espacio
-        alias f34='firefox -P "Cyb_R34" -no-remote' && funcsave f34
-        alias orphans='sudo pacman -Qdtq | sudo pacman -Runs -' && funcsave orphans
-        alias rebootuefi='sudo systemctl reboot --firmware-setup' && funcsave rebootuefi
-        alias sss="sudo systemctl status" && funcsave sss
-        alias ssa="sudo systemctl start" && funcsave ssa
-        alias sso="sudo systemctl stop" && funcsave sso
-        alias sse="sudo systemctl enable" && funcsave sse
-        alias ssd="sudo systemctl daemon-reload" && funcsave ssd
-        function buscar; /usr/bin/find . -type f -iname "*$argv*"; end; and funcsave buscar
-        function cheat; curl cheat.sh/$argv; end; and funcsave cheat
-        function convimg; magick mogrify -path $argv[2] -strip -interlace Plane -quality 80% -format jpg -verbose $argv[1]/*; end; and funcsave convimg
-        function img2mp4; for file in *.gif; ffmpeg -i $file "$file.mp4"; end; end; and funcsave img2mp4
+        alias limpiar='paccache -rk1 && paccache -ruk0 && yay -Sc && sudo pacman -Qdtq | sudo pacman -Runs -'
+        alias historial='history | fzf'
+        alias cat='bat'
+        alias cc='cd && clear'
+        alias ls='exa -lha --icons'
+        alias mkdir='mkdir -pv'
+        alias espacio='gdu /'
+        alias f34='firefox -P \"Cyb_R34\" -no-remote'
+        alias orphans='sudo pacman -Qdtq | sudo pacman -Runs -'
+        alias rebootuefi='sudo systemctl reboot --firmware-setup'
+        alias sss='sudo systemctl status'
+        alias ssa='sudo systemctl start'
+        alias sso='sudo systemctl stop'
+        alias sse='sudo systemctl enable'
+        alias ssd='sudo systemctl daemon-reload'
+        function buscar; /usr/bin/find . -type f -iname \"*$argv*\"; end
+        function cheat; curl cheat.sh/$argv; end
+        function convimg; magick mogrify -path $argv[2] -strip -interlace Plane -quality 80% -format jpg -verbose $argv[1]/*; end
+        function img2mp4; for file in *.gif; ffmpeg -i $file \"$file.mp4\"; end
         fisher install IlanCosman/tide@v6
         fisher install oh-my-fish/plugin-bang-bang
-        EOF
+        "
