@@ -156,6 +156,20 @@
         name: https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-mirrorlist.pkg.tar.zst
         state: present
     
+    - name: Verificar si la sección [chaotic-aur] existe
+      become: true
+      command: grep -E '^\[chaotic-aur\]' /etc/pacman.conf
+      register: chaotic_aur_section
+      changed_when: false
+      ignore_errors: true  # Ignora errores si la sección no existe
+    
+    - name: Verificar si la línea Include existe
+      become: true
+      command: grep -E 'Include = /etc/pacman.d/chaotic-mirrorlist' /etc/pacman.conf
+      register: chaotic_aur_include
+      changed_when: false
+      ignore_errors: true  # Ignora errores si la línea no existe
+    
     - name: Agregar el repositorio Chaotic AUR a pacman.conf
       become: true
       blockinfile:
@@ -163,7 +177,9 @@
         block: |
           [chaotic-aur]
           Include = /etc/pacman.d/chaotic-mirrorlist
-        marker: ""  # Sin marcadores de inicio y fin
+        marker: ""
+      when: chaotic_aur_section.rc != 0 and chaotic_aur_include.rc != 0  # Solo agrega si ambas líneas faltan
+
     - name: Actualizar los repositorios
       become: yes
       community.general.pacman:
