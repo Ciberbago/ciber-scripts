@@ -65,7 +65,7 @@
       - extra/micro
       - extra/mpv-mpris
       - extra/nautilus
-      - extra/net-tools
+      - core/net-tools
       - extra/nnn
       - extra/noto-fonts-cjk
       - extra/ntfs-3g
