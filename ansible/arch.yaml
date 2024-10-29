@@ -141,10 +141,9 @@
     - name: Importar la clave de Chaotic AUR
       become: true
       community.general.pacman_key:
-        key: 3056513887B78AEB
+        id: 3056513887B78AEB  # Cambié 'key' a 'id'
         keyserver: keyserver.ubuntu.com
         state: present
-  
     - name: Firmar la clave de Chaotic AUR
       become: true
       shell: |
