@@ -135,7 +135,7 @@
         upgrade: true
     # 2. Configuración de makepkg.conf
     - name: Ajustar configuración de makepkg.conf
-      bacome: yes
+      become: yes
       ansible.builtin.blockinfile:
         path: /etc/makepkg.conf
         marker: "# ANSIBLE-MANAGED BLOCK"
