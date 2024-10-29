@@ -113,13 +113,20 @@
       become: yes
       ansible.builtin.lineinfile:
         path: /etc/pacman.conf
-        regexp: "^#?ParallelDownloads =.*"
-        line: "ParallelDownloads = 15"
+        regexp: "^#?{{ item }}$"
+        line: "{{ item }}"
         state: present
-        backrefs: yes
       loop:
         - Color
         - VerbosePkgLists
+    
+    - name: Configurar ParallelDownloads en pacman.conf
+      become: yes
+      ansible.builtin.lineinfile:
+        path: /etc/pacman.conf
+        regexp: "^#?ParallelDownloads =.*"
+        line: "ParallelDownloads = 15"
+        state: present
 
       notify: Actualizar multilib
     - name: "add multilib"
