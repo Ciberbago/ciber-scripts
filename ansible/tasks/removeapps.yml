@@ -1,0 +1,25 @@
+---
+- name: Remover apps innecesarias
+  hosts: localhost
+  become: true  # Ejecutar con sudo
+  tasks:
+    - name: Remover paquetes específicos
+      ansible.builtin.pacman:
+        name:
+          - vlc
+          - python-pip
+          - python-poetry
+        state: absent
+        recurse: true  # Elimina también las dependencias no utilizadas
+
+    - name: Obtener lista de paquetes huérfanos
+      command: pacman -Qdtq
+      register: orphaned_packages
+      changed_when: orphaned_packages.stdout != ""  # Solo si hay huérfanos
+
+    - name: Remover paquetes huérfanos
+      ansible.builtin.pacman:
+        name: "{{ orphaned_packages.stdout_lines }}"
+        state: absent
+        recurse: true  # Elimina también sus dependencias
+      when: orphaned_packages.stdout_lines | length > 0  # Solo si hay paquetes huérfanos
