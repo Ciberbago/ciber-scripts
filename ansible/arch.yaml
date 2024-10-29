@@ -92,7 +92,7 @@
       - extra/tumbler
       - extra/uget
       - extra/unrar
-      - extra/usbutils
+      - core/usbutils
       - extra/virtualbox
       - extra/virtualbox-guest-iso
       - extra/vulkan-radeon
