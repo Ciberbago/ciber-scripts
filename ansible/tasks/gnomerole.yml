@@ -1,6 +1,6 @@
 ---
 - name: Extensiones de GNOME
-- hosts: localhost
+  hosts: localhost
   roles:
     - role: PeterMosmans.customize-gnome
   vars:
