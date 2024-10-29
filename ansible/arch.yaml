@@ -7,6 +7,7 @@
     dotfiles: "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/dotfiles"
     scriptsv: "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts"
     sdconfig: "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/systemd"
+    aur_helper: yay
     aur_pkgs:
       - clicker-git
       - gnome-extensions-cli
@@ -429,26 +430,15 @@
         masked: false
         
     # 11. Instalar yay desde AUR
-    - name: Clone yay
-      git:
-        repo: https://aur.archlinux.org/yay-bin.git
-        dest: "/tmp/yay"
-        update: true
+    - name: Installing AUR helper
+      kewlfft.aur.aur:
+        name: "{{ aur_helper }}"
     
-    - name: Build and install yay
-      become: yes
-      command:
-        chdir: "/tmp/yay"
-        cmd: "makepkg -sfi --noconfirm"
-        creates: /usr/bin/yay
-        
-    - name: Instalar paquetes AUR
-      become: yes
-      command: /usr/bin/yay -S --noconfirm {{ aur_pkgs | join(' ') }}
-      args:
-        executable: /bin/bash
-      register: result
-      changed_when: "'installed' in result.stdout or 'upgraded' in result.stdout"
+    - name: Install AUR packages
+      kewlfft.aur.aur:
+        name: "{{ aur_pkgs }}"
+        state: present
+        use: "{{ aur_helper }}"
 
     
     - name: Mostrar el resultado de la instalación
