@@ -8,6 +8,7 @@
     scriptsv: "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts"
     sdconfig: "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/systemd"
     aur_pkgs:
+      - clicker-git
       - gnome-extensions-cli
       - obs-cmd
       - webtorrent-mpv-hook
@@ -101,7 +102,6 @@
       - extra/xdg-desktop-portal-gnome
       - extra/yt-dlp
       - chaotic-aur/ani-cli
-      - chaotic-aur/clicker-git
       - chaotic-aur/deadbeef-git
       - chaotic-aur/fsearch
       - chaotic-aur/headsetcontrol-git
