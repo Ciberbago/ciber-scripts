@@ -195,16 +195,52 @@
     # 2. Configuración de makepkg.conf
     - name: Ajustar configuración de makepkg.conf
       become: yes
-      ansible.builtin.blockinfile:
+      ansible.builtin.lineinfile:
         path: /etc/makepkg.conf
-        marker: "# ANSIBLE-MANAGED BLOCK"
-        block: |
-          BUILDDIR=/tmp/makepkg
-          PKGEXT='.pkg.tar'
-          OPTIONS=(docs !strip !libtool !staticlibs emptydirs zipman purge !debug lto)
-          CFLAGS="-march=native"
-          RUSTFLAGS="-C opt-level=2 -C target-cpu=native"
-          MAKEFLAGS="-j{{ ansible_processor_vcpus | int - 1 }}"
+        regexp: '^BUILDDIR=.*'
+        line: 'BUILDDIR=/tmp/makepkg'
+        state: present
+    
+    - name: Asegurar que PKGEXT esté configurado
+      become: yes
+      ansible.builtin.lineinfile:
+        path: /etc/makepkg.conf
+        regexp: '^PKGEXT=.*'
+        line: "PKGEXT='.pkg.tar'"
+        state: present
+    
+    - name: Asegurar que OPTIONS esté configurado
+      become: yes
+      ansible.builtin.lineinfile:
+        path: /etc/makepkg.conf
+        regexp: '^OPTIONS=.*'
+        line: 'OPTIONS=(docs !strip !libtool !staticlibs emptydirs zipman purge !debug lto)'
+        state: present
+    
+    - name: Ajustar CFLAGS en makepkg.conf
+      become: yes
+      ansible.builtin.lineinfile:
+        path: /etc/makepkg.conf
+        regexp: '^CFLAGS=.*'
+        line: 'CFLAGS="-march=native"'
+        state: present
+    
+    - name: Asegurar que RUSTFLAGS esté configurado
+      become: yes
+      ansible.builtin.lineinfile:
+        path: /etc/makepkg.conf
+        regexp: '^RUSTFLAGS=.*'
+        line: 'RUSTFLAGS="-C opt-level=2 -C target-cpu=native"'
+        state: present
+    
+    - name: Asegurar que MAKEFLAGS esté configurado
+      become: yes
+      ansible.builtin.lineinfile:
+        path: /etc/makepkg.conf
+        regexp: '^MAKEFLAGS=.*'
+        line: "MAKEFLAGS=\"-j{{ ansible_processor_vcpus | int - 1 }}\""
+        state: present
+
     # 3. Instalación de paquetes
     - name: Instalar paquetes disponibles
       become: yes
