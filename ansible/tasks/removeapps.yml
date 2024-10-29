@@ -18,9 +18,13 @@
       register: orphaned_packages
       changed_when: orphaned_packages.stdout != ""  # Detectar cambios solo si hay huérfanos
 
+    - name: Comprobar si hay paquetes huérfanos
+      set_fact:
+        has_orphaned_packages: "{{ orphaned_packages.stdout_lines | length > 0 }}"
+
     - name: Remover paquetes huérfanos
       community.general.pacman:
         name: "{{ orphaned_packages.stdout_lines }}"
         state: absent
-        extra_args: --recursive  # Elimina cualquier dependencia restante
-      when: orphaned_packages.stdout_lines | length > 0  # Solo si hay huérfanos
+        extra_args: ['--recursive']  # Elimina cualquier dependencia restante
+      when: has_orphaned_packages  # Ejecutar solo si hay huérfanos
