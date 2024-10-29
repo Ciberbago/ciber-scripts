@@ -18,9 +18,6 @@
         - nnn.desktop
         - btop.desktop
         - avahi-discover.desktop
-        - assistant.desktop
-        - designer.desktop
-        - linguist.desktop
         - qdbusviewer.desktop
         - qv4l2.desktop
         - qvidcap.desktop
@@ -39,9 +36,6 @@
         - nnn.desktop
         - btop.desktop
         - avahi-discover.desktop
-        - assistant.desktop
-        - designer.desktop
-        - linguist.desktop
         - qdbusviewer.desktop
         - qv4l2.desktop
         - qvidcap.desktop
