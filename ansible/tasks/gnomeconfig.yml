@@ -6,46 +6,57 @@
     - name: Configurar tema oscuro
       ansible.builtin.command:
         cmd: gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
+      when: "'prefer-dark' not in (lookup('command', 'gsettings get org.gnome.desktop.interface color-scheme'))"
 
     - name: Desactivar confirmación al apagar
       ansible.builtin.command:
         cmd: gsettings set org.gnome.SessionManager logout-prompt false
+      when: "'false' not in (lookup('command', 'gsettings get org.gnome.SessionManager logout-prompt'))"
 
     - name: Quitar el suspender pantalla
       ansible.builtin.command:
         cmd: gsettings set org.gnome.desktop.session idle-delay 0
+      when: "0 not in (lookup('command', 'gsettings get org.gnome.desktop.session idle-delay'))"
 
     - name: Desactivar workspaces dinámicos
       ansible.builtin.command:
         cmd: gsettings set org.gnome.mutter dynamic-workspaces false
+      when: "'false' not in (lookup('command', 'gsettings get org.gnome.mutter dynamic-workspaces'))"
 
     - name: Configurar número de workspaces
       ansible.builtin.command:
         cmd: gsettings set org.gnome.desktop.wm.preferences num-workspaces 1
+      when: "1 not in (lookup('command', 'gsettings get org.gnome.desktop.wm.preferences num-workspaces'))"
 
     - name: Activar localización del puntero
       ansible.builtin.command:
         cmd: gsettings set org.gnome.desktop.interface locate-pointer true
+      when: "'true' not in (lookup('command', 'gsettings get org.gnome.desktop.interface locate-pointer'))"
 
     - name: Ajustar reloj
       ansible.builtin.command:
         cmd: gsettings set org.gnome.desktop.interface clock-format '12h'
+      when: "'12h' not in (lookup('command', 'gsettings get org.gnome.desktop.interface clock-format'))"
 
     - name: Mostrar segundos en el reloj
       ansible.builtin.command:
         cmd: gsettings set org.gnome.desktop.interface clock-show-seconds true
+      when: "'true' not in (lookup('command', 'gsettings get org.gnome.desktop.interface clock-show-seconds'))"
 
     - name: Mostrar día de la semana en el reloj
       ansible.builtin.command:
         cmd: gsettings set org.gnome.desktop.interface clock-show-weekday true
+      when: "'true' not in (lookup('command', 'gsettings get org.gnome.desktop.interface clock-show-weekday'))"
 
     - name: Configurar diseño de botones de la ventana
       ansible.builtin.command:
         cmd: gsettings set org.gnome.desktop.wm.preferences button-layout 'appmenu:minimize,maximize,close'
+      when: "'appmenu:minimize,maximize,close' not in (lookup('command', 'gsettings get org.gnome.desktop.wm.preferences button-layout'))"
 
     - name: Configurar tema GTK
       ansible.builtin.command:
         cmd: gsettings set org.gnome.desktop.interface gtk-theme 'adw-gtk3-dark'
+      when: "'adw-gtk3-dark' not in (lookup('command', 'gsettings get org.gnome.desktop.interface gtk-theme'))"
 
     - name: Importar configuración de dash-to-panel
       command: dconf load /org/gnome/shell/extensions/dash-to-panel/
