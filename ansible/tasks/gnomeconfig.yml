@@ -1,7 +1,7 @@
 ---
 - name: Aplicar configuraciones de GNOME
   hosts: localhost
-  
+
   tasks:
     - name: Configurar tema oscuro
       ansible.builtin.command:
@@ -48,21 +48,25 @@
         cmd: gsettings set org.gnome.desktop.interface gtk-theme 'adw-gtk3-dark'
 
     - name: Importar configuración de dash-to-panel
-      ansible.builtin.command:
-        cmd: dconf load /org/gnome/shell/extensions/dash-to-panel/ < ~/.config/dashtopanel.conf
+      command: dconf load /org/gnome/shell/extensions/dash-to-panel/
+      args:
+        stdin: "{{ lookup('file', '~/.config/dashtopanel.conf') }}"
       ignore_errors: true  # Ignorar si el archivo no existe
 
     - name: Importar configuración de Tilix
-      ansible.builtin.command:
-        cmd: dconf load /com/gexperts/Tilix/ < ~/.config/tilix.conf
+      command: dconf load /com/gexperts/Tilix/
+      args:
+        stdin: "{{ lookup('file', '~/.config/tilix.conf') }}"
       ignore_errors: true  # Ignorar si el archivo no existe
 
     - name: Importar configuración de executor
-      ansible.builtin.command:
-        cmd: dconf load /org/gnome/shell/extensions/executor/ < ~/.config/executor.conf
+      command: dconf load /org/gnome/shell/extensions/executor/
+      args:
+        stdin: "{{ lookup('file', '~/.config/executor.conf') }}"
       ignore_errors: true  # Ignorar si el archivo no existe
 
     - name: Importar configuración de poweroffmenu
-      ansible.builtin.command:
-        cmd: dconf load /org/gnome/shell/extensions/bring-out-submenu-of-power-off-logout/ < ~/.config/poweroffmenu.conf
+      command: dconf load /org/gnome/shell/extensions/bring-out-submenu-of-power-off-logout/
+      args:
+        stdin: "{{ lookup('file', '~/.config/poweroffmenu.conf') }}"
       ignore_errors: true  # Ignorar si el archivo no existe
