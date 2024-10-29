@@ -115,7 +115,6 @@
         name: aur_builder
         create_home: yes
         group: wheel
-  
     - name: Allow the `aur_builder` user to run `sudo pacman` without a password
       become: yes
       ansible.builtin.lineinfile:
@@ -124,6 +123,12 @@
         create: yes
         mode: 0644
         validate: 'visudo -cf %s'
+    - name: Asegurarse de que la carpeta /tmp/makepkg existe
+      become: yes
+      ansible.builtin.file:
+        path: /tmp/makepkg
+        state: directory
+        mode: '0775'
     # 1. Configuración de pacman.conf
     - name: Activar opciones en pacman.conf
       become: yes
