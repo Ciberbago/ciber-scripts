@@ -444,9 +444,21 @@
         
     - name: Install AUR packages
       become: yes
-      shell: /usr/bin/yay -S --noconfirm {{ aur_pkgs }}
+      command: /usr/bin/yay -S --noconfirm {{ aur_pkgs }}
       args:
         executable: /bin/bash
+      register: result
+      changed_when: "'installed' in result.stdout or 'upgraded' in result.stdout"  # Marca como cambiado si hay instalaciones o actualizaciones
+    
+    - name: Mostrar el resultado de la instalación
+      debug:
+        var: result.stdout_lines
+    
+    - name: Mostrar error si ocurre
+      debug:
+        var: result.stderr_lines
+      when: result.rc != 0  # Solo muestra si hubo un error
+
       
     - name: Asegurar que Fish Shell esté instalado
       ansible.builtin.package:
