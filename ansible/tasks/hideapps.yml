@@ -26,15 +26,25 @@
         state: directory
         mode: '0755'
 
-    - name: Comprobar si los archivos .desktop ya están copiados
+    - name: Verificar si los archivos .desktop existen en origen
+      stat:
+        path: "/usr/share/applications/{{ item }}"
+      loop: "{{ desktop_files }}"
+      register: origin_stats
+
+    - name: Filtrar archivos disponibles en origen
+      set_fact:
+        available_files: "{{ origin_stats.results | selectattr('stat.exists', 'equalto', true) | map(attribute='item') | list }}"
+
+    - name: Verificar si los archivos disponibles ya están en destino
       stat:
         path: "/usr/local/share/applications/{{ item }}"
-      loop: "{{ desktop_files }}"
-      register: stat_results
+      loop: "{{ available_files }}"
+      register: destination_stats
 
     - name: Filtrar archivos que necesitan ser copiados
       set_fact:
-        files_to_copy: "{{ stat_results.results | selectattr('stat.exists', 'equalto', false) | map(attribute='item') | list }}"
+        files_to_copy: "{{ destination_stats.results | selectattr('stat.exists', 'equalto', false) | map(attribute='item') | list }}"
 
     - name: Copiar archivos .desktop si es necesario
       copy:
@@ -44,12 +54,13 @@
       loop: "{{ files_to_copy }}"
       register: copy_results
       when: files_to_copy | length > 0
+      ignore_errors: true  # Evitar fallos por archivos faltantes
 
-    - name: Filtrar archivos copiados o ya existentes
+    - name: Obtener lista combinada de archivos ya presentes o copiados
       set_fact:
-        copied_or_existing_files: "{{ (stat_results.results | selectattr('stat.exists', 'equalto', true) | map(attribute='item') | list) + (copy_results.results | selectattr('failed', 'equalto', false) | map(attribute='item') | list) | unique }}"
+        copied_or_existing_files: "{{ (destination_stats.results | selectattr('stat.exists', 'equalto', true) | map(attribute='item') | list) + (copy_results.results | selectattr('failed', 'equalto', false) | map(attribute='item') | list) | unique }}"
 
-    - name: Añadir 'Hidden=true' solo a los archivos correspondientes
+    - name: Añadir 'Hidden=true' a los archivos correspondientes
       lineinfile:
         path: "/usr/local/share/applications/{{ item }}"
         line: "Hidden=true"
