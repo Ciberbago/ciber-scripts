@@ -26,5 +26,5 @@
       community.general.pacman:
         name: "{{ orphaned_packages.stdout_lines }}"
         state: absent
-        extra_args: ['--recursive']  # Elimina cualquier dependencia restante
+        extra_args: --recursive  # Elimina cualquier dependencia restante
       when: has_orphaned_packages  # Ejecutar solo si hay huérfanos
