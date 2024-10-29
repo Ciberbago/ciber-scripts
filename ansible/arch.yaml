@@ -7,6 +7,10 @@
     dotfiles: "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/dotfiles"
     scriptsv: "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts"
     sdconfig: "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/systemd"
+    aur_pkgs:
+      - gnome-extensions-cli
+      - obs-cmd
+      - webtorrent-mpv-hook
     pkgs:
       - extra/adw-gtk-theme
       - extra/android-tools
@@ -96,6 +100,13 @@
       - extra/wl-clipboard
       - extra/xdg-desktop-portal-gnome
       - extra/yt-dlp
+      - chaotic-aur/ani-cli
+      - chaotic-aur/clicker-git
+      - chaotic-aur/deadbeef-git
+      - chaotic-aur/fsearch
+      - chaotic-aur/headsetcontrol-git
+      - chaotic-aur/insync
+      - chaotic-aur/obs-studio-git
   tasks:
     # 1. Configuración de pacman.conf
     - name: Activar opciones en pacman.conf
@@ -127,6 +138,38 @@
         line: "Include = /etc/pacman.d/mirrorlist"
         insertafter: "^\\[multilib\\]"
         regexp: "Include = /etc/pacman.d/mirrorlist"
+    - name: Importar la clave de Chaotic AUR
+      become: true
+      pacman_key:
+        key: 3056513887B78AEB
+        keyserver: keyserver.ubuntu.com
+        state: present
+  
+    - name: Firmar la clave de Chaotic AUR
+      become: true
+      shell: |
+        pacman-key --lsign-key 3056513887B78AEB
+    
+    - name: Instalar el paquete chaotic-keyring
+      become: true
+      pacman:
+        name: https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-keyring.pkg.tar.zst
+        state: present
+    
+    - name: Instalar el paquete chaotic-mirrorlist
+      become: true
+      pacman:
+        name: https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-mirrorlist.pkg.tar.zst
+        state: present
+    
+    - name: Agregar el repositorio Chaotic AUR a pacman.conf
+      become: true
+      lineinfile:
+        path: /etc/pacman.conf
+        line: "[chaotic-aur]\nInclude = /etc/pacman.d/chaotic-mirrorlist"
+        state: present
+        insertafter: EOF  # Asegura que la línea se inserte al final del archivo
+        
     - name: Actualizar los repositorios
       become: yes
       community.general.pacman:
@@ -344,6 +387,13 @@
         chdir: "/tmp/yay"
         cmd: "makepkg -sfi --noconfirm"
         creates: /usr/bin/yay
+        
+    - name: Install AUR packages
+      become: yes
+      shell: /usr/bin/yay -S --noconfirm {{ aur_pkgs }}
+      args:
+        executable: /bin/bash
+      
     - name: Asegurar que Fish Shell esté instalado
       ansible.builtin.package:
         name: fish
