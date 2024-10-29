@@ -140,7 +140,7 @@
         regexp: "Include = /etc/pacman.d/mirrorlist"
     - name: Importar la clave de Chaotic AUR
       become: true
-      pacman_key:
+      community.general.pacman_key:
         key: 3056513887B78AEB
         keyserver: keyserver.ubuntu.com
         state: present
@@ -152,13 +152,13 @@
     
     - name: Instalar el paquete chaotic-keyring
       become: true
-      pacman:
+      community.general.pacman:
         name: https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-keyring.pkg.tar.zst
         state: present
     
     - name: Instalar el paquete chaotic-mirrorlist
       become: true
-      pacman:
+      community.general.pacman:
         name: https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-mirrorlist.pkg.tar.zst
         state: present
     
