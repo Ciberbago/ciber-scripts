@@ -56,7 +56,7 @@
       - extra/jre21-openjdk
       - extra/jq
       - extra/iperf3
-      - extra/less
+      - core/less
       - extra/libmad
       - extra/libva-mesa-driver
       - core/linux-headers
