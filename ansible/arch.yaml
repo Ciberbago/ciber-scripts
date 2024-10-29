@@ -7,7 +7,6 @@
     dotfiles: "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/dotfiles"
     scriptsv: "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts"
     sdconfig: "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/systemd"
-    interfaz: "{{ lookup('pipe', 'ip r | grep default | cut -d ' ' -f 5 | head -n1') }}"
     pkgs:
       - adw-gtk-theme
       - android-tools
@@ -326,11 +325,20 @@
         - run-media-nas.automount
         - paccache.timer
 
+    - name: Obtener la interfaz predeterminada
+      set_fact:
+        interfaz: "{{ lookup('pipe', 'ip r | grep default | awk \'{print $5}\' | head -n1') }}"
+
+    - name: Verificar interfaz obtenida
+      debug:
+        msg: "La interfaz predeterminada es {{ interfaz }}"
+
     - name: Activar servicio WOL para la interfaz
       become: yes
       ansible.builtin.systemd:
         name: "wol@{{ interfaz }}.service"
         enabled: true
+        state: started
 
     # 11. Instalar yay desde AUR
     - name: Clonar repositorio de yay
