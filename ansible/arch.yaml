@@ -123,12 +123,12 @@
         create: yes
         mode: 0644
         validate: 'visudo -cf %s'
-    - name: Asegurarse de que la carpeta /tmp/makepkg existe
+    - name: Agregar aur_builder al grupo root
       become: yes
-      ansible.builtin.file:
-        path: /tmp/makepkg
-        state: directory
-        mode: '0775'
+      ansible.builtin.user:
+        name: aur_builder
+        groups: root
+        append: yes
     # 1. Configuración de pacman.conf
     - name: Activar opciones en pacman.conf
       become: yes
