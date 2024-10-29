@@ -18,7 +18,6 @@
         - nnn.desktop
         - btop.desktop
         - avahi-discover.desktop
-        - qdbusviewer.desktop
         - qv4l2.desktop
         - qvidcap.desktop
         - bvnc.desktop
@@ -36,7 +35,6 @@
         - nnn.desktop
         - btop.desktop
         - avahi-discover.desktop
-        - qdbusviewer.desktop
         - qv4l2.desktop
         - qvidcap.desktop
         - bvnc.desktop
