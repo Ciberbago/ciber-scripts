@@ -461,18 +461,6 @@
         name: "{{ aur_pkgs }}"
         state: present
         use: "{{ aur_helper }}"
-
-    
-    - name: Mostrar el resultado de la instalación
-      debug:
-        var: result.stdout_lines
-    
-    - name: Mostrar error si ocurre
-      debug:
-        var: result.stderr_lines
-      when: result.rc != 0  # Solo muestra si hubo un error
-
-      
     - name: Asegurar que Fish Shell esté instalado
       ansible.builtin.package:
         name: fish
