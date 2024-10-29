@@ -217,14 +217,6 @@
         line: 'OPTIONS=(docs !strip !libtool !staticlibs emptydirs zipman purge !debug lto)'
         state: present
     
-    - name: Ajustar CFLAGS en makepkg.conf
-      become: yes
-      ansible.builtin.lineinfile:
-        path: /etc/makepkg.conf
-        regexp: '^CFLAGS=.*'
-        line: 'CFLAGS="-march=native"'
-        state: present
-    
     - name: Asegurar que RUSTFLAGS esté configurado
       become: yes
       ansible.builtin.lineinfile:
