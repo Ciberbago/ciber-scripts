@@ -331,15 +331,24 @@
       become: yes
       ansible.builtin.command: pkgfile --update
 
-    # 8. Instalar AppImage Manager
+# 8. Instalar AppImage Manager
+    - name: Comprobar si AppImage Manager está instalado
+      command: which am
+      register: am_installed
+      ignore_errors: true  # Ignora el error si el comando no se encuentra
+    
     - name: Instalar AppImage Manager
       ansible.builtin.get_url:
         url: https://raw.githubusercontent.com/ivan-hc/AM/main/INSTALL
         dest: /tmp/INSTALL
         mode: '0755'
+      when: am_installed.rc != 0  # Solo ejecuta si am no está instalado
+    
     - name: Ejecutar instalador de AppImage Manager
       become: yes
       ansible.builtin.command: /tmp/INSTALL
+      when: am_installed.rc != 0  # Solo ejecuta si am no está instalado
+
 
     # 9. Configuraciones adicionales
     - name: Exportar QT_QPA_PLATFORMTHEME
