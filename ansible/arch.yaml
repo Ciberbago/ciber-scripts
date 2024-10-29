@@ -165,10 +165,14 @@
       become: true
       lineinfile:
         path: /etc/pacman.conf
-        line: "[chaotic-aur]\nInclude = /etc/pacman.d/chaotic-mirrorlist"
+        line: |
+          [chaotic-aur]
+          Include = /etc/pacman.d/chaotic-mirrorlist
         state: present
         insertafter: EOF
-        regexp: '^\[chaotic-aur\]'  # Busca si ya existe la sección [chaotic-aur]
+        create: yes
+        regexp: '^\[chaotic-aur\]|\[chaotic-aur\]\nInclude = /etc/pacman.d/chaotic-mirrorlist'  # Verifica que no exista ninguna de las líneas
+
     - name: Actualizar los repositorios
       become: yes
       community.general.pacman:
