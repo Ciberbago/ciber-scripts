@@ -334,7 +334,8 @@
       ansible.builtin.systemd:
         name: "wol@{{ ansible_facts['default_ipv4']['interface'] }}.service"
         enabled: true
-        state: started
+        state: stopped
+        masked: false
         
     # 11. Instalar yay desde AUR
     - name: Clonar repositorio de yay
