@@ -16,7 +16,7 @@
     - name: Obtener lista de paquetes huérfanos
       command: pacman -Qdtq
       register: orphaned_packages
-      changed_when: orphaned_packages.stdout != ""  # Detectar cambios solo si hay huérfanos
+      ignore_errors: true  # Ignorar errores si no hay huérfanos
 
     - name: Comprobar si hay paquetes huérfanos
       set_fact:
