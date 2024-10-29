@@ -325,21 +325,21 @@
         - run-media-nas.automount
         - paccache.timer
 
-    - name: Obtener la interfaz predeterminada
-      set_fact:
-        interfaz: "{{ lookup('pipe', 'ip r | grep default | awk \'{print $5}\' | head -n1') }}"
+    - name: Obtener la interfaz predeterminada usando command
+      ansible.builtin.command: ip r | grep default | awk "{print \$5}" | head -n1
+      register: resultado_interfaz
 
     - name: Verificar interfaz obtenida
       debug:
-        msg: "La interfaz predeterminada es {{ interfaz }}"
+        msg: "La interfaz predeterminada es {{ resultado_interfaz.stdout }}"
 
     - name: Activar servicio WOL para la interfaz
       become: yes
       ansible.builtin.systemd:
-        name: "wol@{{ interfaz }}.service"
+        name: "wol@{{ resultado_interfaz.stdout }}.service"
         enabled: true
         state: started
-
+        
     # 11. Instalar yay desde AUR
     - name: Clonar repositorio de yay
       ansible.builtin.git:
