@@ -4,59 +4,103 @@
 
   tasks:
     - name: Configurar tema oscuro
-      ansible.builtin.command:
-        cmd: gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
-      when: "'prefer-dark' not in (lookup('command', 'gsettings get org.gnome.desktop.interface color-scheme'))"
+      ansible.builtin.shell: |
+        current_value=$(gsettings get org.gnome.desktop.interface color-scheme)
+        if [[ $current_value != "'prefer-dark'" ]]; then
+          gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
+        fi
+      register: result_tema_oscuro
+      changed_when: result_tema_oscuro.stdout != ""
 
     - name: Desactivar confirmación al apagar
-      ansible.builtin.command:
-        cmd: gsettings set org.gnome.SessionManager logout-prompt false
-      when: "'false' not in (lookup('command', 'gsettings get org.gnome.SessionManager logout-prompt'))"
+      ansible.builtin.shell: |
+        current_value=$(gsettings get org.gnome.SessionManager logout-prompt)
+        if [[ $current_value != "false" ]]; then
+          gsettings set org.gnome.SessionManager logout-prompt false
+        fi
+      register: result_logout_prompt
+      changed_when: result_logout_prompt.stdout != ""
 
     - name: Quitar el suspender pantalla
-      ansible.builtin.command:
-        cmd: gsettings set org.gnome.desktop.session idle-delay 0
-      when: "0 not in (lookup('command', 'gsettings get org.gnome.desktop.session idle-delay'))"
+      ansible.builtin.shell: |
+        current_value=$(gsettings get org.gnome.desktop.session idle-delay)
+        if [[ $current_value != "0" ]]; then
+          gsettings set org.gnome.desktop.session idle-delay 0
+        fi
+      register: result_idle_delay
+      changed_when: result_idle_delay.stdout != ""
 
     - name: Desactivar workspaces dinámicos
-      ansible.builtin.command:
-        cmd: gsettings set org.gnome.mutter dynamic-workspaces false
-      when: "'false' not in (lookup('command', 'gsettings get org.gnome.mutter dynamic-workspaces'))"
+      ansible.builtin.shell: |
+        current_value=$(gsettings get org.gnome.mutter dynamic-workspaces)
+        if [[ $current_value != "false" ]]; then
+          gsettings set org.gnome.mutter dynamic-workspaces false
+        fi
+      register: result_dynamic_workspaces
+      changed_when: result_dynamic_workspaces.stdout != ""
 
     - name: Configurar número de workspaces
-      ansible.builtin.command:
-        cmd: gsettings set org.gnome.desktop.wm.preferences num-workspaces 1
-      when: "1 not in (lookup('command', 'gsettings get org.gnome.desktop.wm.preferences num-workspaces'))"
+      ansible.builtin.shell: |
+        current_value=$(gsettings get org.gnome.desktop.wm.preferences num-workspaces)
+        if [[ $current_value != "1" ]]; then
+          gsettings set org.gnome.desktop.wm.preferences num-workspaces 1
+        fi
+      register: result_num_workspaces
+      changed_when: result_num_workspaces.stdout != ""
 
     - name: Activar localización del puntero
-      ansible.builtin.command:
-        cmd: gsettings set org.gnome.desktop.interface locate-pointer true
-      when: "'true' not in (lookup('command', 'gsettings get org.gnome.desktop.interface locate-pointer'))"
+      ansible.builtin.shell: |
+        current_value=$(gsettings get org.gnome.desktop.interface locate-pointer)
+        if [[ $current_value != "true" ]]; then
+          gsettings set org.gnome.desktop.interface locate-pointer true
+        fi
+      register: result_locate_pointer
+      changed_when: result_locate_pointer.stdout != ""
 
     - name: Ajustar reloj
-      ansible.builtin.command:
-        cmd: gsettings set org.gnome.desktop.interface clock-format '12h'
-      when: "'12h' not in (lookup('command', 'gsettings get org.gnome.desktop.interface clock-format'))"
+      ansible.builtin.shell: |
+        current_value=$(gsettings get org.gnome.desktop.interface clock-format)
+        if [[ $current_value != "'12h'" ]]; then
+          gsettings set org.gnome.desktop.interface clock-format '12h'
+        fi
+      register: result_clock_format
+      changed_when: result_clock_format.stdout != ""
 
     - name: Mostrar segundos en el reloj
-      ansible.builtin.command:
-        cmd: gsettings set org.gnome.desktop.interface clock-show-seconds true
-      when: "'true' not in (lookup('command', 'gsettings get org.gnome.desktop.interface clock-show-seconds'))"
+      ansible.builtin.shell: |
+        current_value=$(gsettings get org.gnome.desktop.interface clock-show-seconds)
+        if [[ $current_value != "true" ]]; then
+          gsettings set org.gnome.desktop.interface clock-show-seconds true
+        fi
+      register: result_clock_seconds
+      changed_when: result_clock_seconds.stdout != ""
 
     - name: Mostrar día de la semana en el reloj
-      ansible.builtin.command:
-        cmd: gsettings set org.gnome.desktop.interface clock-show-weekday true
-      when: "'true' not in (lookup('command', 'gsettings get org.gnome.desktop.interface clock-show-weekday'))"
+      ansible.builtin.shell: |
+        current_value=$(gsettings get org.gnome.desktop.interface clock-show-weekday)
+        if [[ $current_value != "true" ]]; then
+          gsettings set org.gnome.desktop.interface clock-show-weekday true
+        fi
+      register: result_clock_weekday
+      changed_when: result_clock_weekday.stdout != ""
 
     - name: Configurar diseño de botones de la ventana
-      ansible.builtin.command:
-        cmd: gsettings set org.gnome.desktop.wm.preferences button-layout 'appmenu:minimize,maximize,close'
-      when: "'appmenu:minimize,maximize,close' not in (lookup('command', 'gsettings get org.gnome.desktop.wm.preferences button-layout'))"
+      ansible.builtin.shell: |
+        current_value=$(gsettings get org.gnome.desktop.wm.preferences button-layout)
+        if [[ $current_value != "'appmenu:minimize,maximize,close'" ]]; then
+          gsettings set org.gnome.desktop.wm.preferences button-layout 'appmenu:minimize,maximize,close'
+        fi
+      register: result_button_layout
+      changed_when: result_button_layout.stdout != ""
 
     - name: Configurar tema GTK
-      ansible.builtin.command:
-        cmd: gsettings set org.gnome.desktop.interface gtk-theme 'adw-gtk3-dark'
-      when: "'adw-gtk3-dark' not in (lookup('command', 'gsettings get org.gnome.desktop.interface gtk-theme'))"
+      ansible.builtin.shell: |
+        current_value=$(gsettings get org.gnome.desktop.interface gtk-theme)
+        if [[ $current_value != "'adw-gtk3-dark'" ]]; then
+          gsettings set org.gnome.desktop.interface gtk-theme 'adw-gtk3-dark'
+        fi
+      register: result_gtk_theme
+      changed_when: result_gtk_theme.stdout != ""
 
     - name: Importar configuración de dash-to-panel
       command: dconf load /org/gnome/shell/extensions/dash-to-panel/
