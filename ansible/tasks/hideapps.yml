@@ -1,0 +1,52 @@
+---
+- name: Configuración de archivos .desktop
+  hosts: localhost
+  become: true  # Ejecutar como root
+  tasks:
+    - name: Crear directorio /usr/local/share/applications
+      file:
+        path: /usr/local/share/applications
+        state: directory
+        mode: '0755'
+
+    - name: Copiar archivos .desktop a /usr/local/share/applications
+      copy:
+        src: "/usr/share/applications/{{ item }}"
+        dest: "/usr/local/share/applications/"
+        mode: '0644'
+      loop:
+        - nnn.desktop
+        - btop.desktop
+        - avahi-discover.desktop
+        - assistant.desktop
+        - designer.desktop
+        - linguist.desktop
+        - qdbusviewer.desktop
+        - qv4l2.desktop
+        - qvidcap.desktop
+        - bvnc.desktop
+        - bssh.desktop
+        - fish.desktop
+        - scrcpy-console.desktop
+        - scrcpy.desktop
+
+    - name: Añadir 'Hidden=true' al final de los archivos .desktop
+      lineinfile:
+        path: "/usr/local/share/applications/{{ item }}"
+        line: "Hidden=true"
+        state: present
+      loop:
+        - nnn.desktop
+        - btop.desktop
+        - avahi-discover.desktop
+        - assistant.desktop
+        - designer.desktop
+        - linguist.desktop
+        - qdbusviewer.desktop
+        - qv4l2.desktop
+        - qvidcap.desktop
+        - bvnc.desktop
+        - bssh.desktop
+        - fish.desktop
+        - scrcpy-console.desktop
+        - scrcpy.desktop
