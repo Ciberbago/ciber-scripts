@@ -87,7 +87,7 @@
       - multilib/steam
       - extra/tailscale
       - extra/tilix
-      - extra/traceroute
+      - core/traceroute
       - extra/ttf-firacode-nerd
       - extra/tumbler
       - extra/uget
