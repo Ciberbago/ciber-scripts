@@ -325,18 +325,14 @@
         - run-media-nas.automount
         - paccache.timer
 
-    - name: Obtener la interfaz predeterminada usando command
-      ansible.builtin.command: ip r | grep default | awk "{print \$5}" | head -n1
-      register: resultado_interfaz
-
-    - name: Verificar interfaz obtenida
+    - name: Verificar la interfaz primaria
       debug:
-        msg: "La interfaz predeterminada es {{ resultado_interfaz.stdout }}"
+        msg: "La interfaz primaria es {{ ansible_facts['default_ipv4']['interface'] }}"
 
     - name: Activar servicio WOL para la interfaz
       become: yes
       ansible.builtin.systemd:
-        name: "wol@{{ resultado_interfaz.stdout }}.service"
+        name: "wol@{{ ansible_facts['default_ipv4']['interface'] }}.service"
         enabled: true
         state: started
         
