@@ -104,7 +104,12 @@ sudo gpasswd -a $USER vboxusers
 chsh -s /usr/bin/fish
 
 #<-------Servicios------->
-sudo systemctl enable gdm.service bluetooth.service reflector.service tailscaled run-media-nas.automount paccache.timer
+sudo systemctl enable gdm.service
+sudo systemctl enable bluetooth.service
+sudo systemctl enable reflector.service
+sudo systemctl enable tailscaled
+sudo systemctl enable run-media-nas.automount
+sudo systemctl enable paccache.timer
 sudo systemctl enable wol@$interfaz.service 
 #<-------instalar yay------->
 git clone https://aur.archlinux.org/yay.git
