@@ -111,6 +111,7 @@ sudo systemctl enable tailscaled
 sudo systemctl enable run-media-nas.automount
 sudo systemctl enable paccache.timer
 sudo systemctl enable wol@$interfaz.service 
+sudo timedatectl set-timezone "America/Tijuana"
 #<-------instalar yay------->
 git clone https://aur.archlinux.org/yay.git
 cd yay
