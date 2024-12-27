@@ -1,0 +1,24 @@
+---
+- name: Extensiones de GNOME
+  hosts: localhost
+  roles:
+    - role: PeterMosmans.customize-gnome
+  vars:
+    gnome_extensions:
+      - id: 4269
+        enable: yes
+      - id: 615
+        enable: yes
+      - id: 3193
+        enable: yes
+      - id: 1160
+        enable: yes
+      - id: 5940
+        enable: yes
+      - id: 2917
+        enable: yes
+      - id: 6784
+        enable: yes
+      - id: 2932
+        enable: yes
+    gtk_version: 4.0
