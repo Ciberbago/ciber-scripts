@@ -58,7 +58,8 @@ mkdir -p gnome
 mkdir -p Screenshots/tmp
 mkdir -p ~/.local/share/nautilus/scripts
 sudo mkdir -p /usr/local/share/applications
-#<-------Dotfiles------->
+#<-------Dotfiles------->#
+wget -O ~/.config/firefoxuser.js ${dotfiles}/firefoxuser.js
 wget -O ~/.config/dashtopanel.conf ${dotfiles}/extensions/dashtopanel.conf
 wget -O ~/.config/tilix.conf ${dotfiles}/extensions/tilix.conf
 wget -O ~/.config/executor.conf ${dotfiles}/extensions/executor.conf
@@ -91,6 +92,7 @@ wget -O ~/hideapps.sh ${scriptsv}/hideapps.sh
 wget -O ~/removeapps.sh ${scriptsv}/removeapps.sh
 wget -O ~/appimages.sh ${scriptsv}/appimages.sh
 wget -O ~/aur.sh ${scriptsv}/aur.sh
+wget -O ~/firefoxconfig.sh ${scriptsv}/firefoxconfig.sh
 wget -O ~/postinstall.sh ${scriptsv}/postinstall.sh
 wget -O ~/.local/share/nautilus/scripts/mediainfo.sh ${scriptsv}/mediainfo.sh
 sudo wget -O /usr/local/bin/wallpaper ${scriptsv}/wallpaper.sh
