@@ -26,6 +26,9 @@ user_pref("browser.startup.page", 1);
 user_pref("browser.newtabpage.activity-stream.showSponsored", false);
 user_pref("browser.newtabpage.activity-stream.showSponsoredTopSites", false);
 user_pref("browser.newtabpage.activity-stream.default.sites", "");
+user_pref("browser.formfill.enable", false);
+user_pref("signon.rememberSignons", false);
+user_pref("services.sync.engine.passwords", false);
 
 /** GFX ***/
 user_pref("gfx.canvas.accelerated.cache-items", 4096);
