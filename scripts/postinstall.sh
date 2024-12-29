@@ -1,7 +1,7 @@
 #!/bin/bash
 yay -S python-tqdm --noconfirm
 # Lista de scripts a ejecutar
-scripts=("aur.sh" "ext.sh" "gnomeconfig.sh" "firefoxconfig.sh" "hideapps.sh" "removeapps.sh" "gnome.sh" "appimages.sh")
+scripts=("firefoxconfig.sh" "aur.sh" "ext.sh" "gnomeconfig.sh" "hideapps.sh" "removeapps.sh" "gnome.sh" "appimages.sh")
 
 # Directorio donde se encuentran los scripts
 directorio="$HOME"

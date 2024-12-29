@@ -1,2 +1,2 @@
 #!/bin/bash
-am -i blender czkawka google-chrome heroic-games-launcher prismlauncher suyu ventoy
+am -i czkawka google-chrome heroic-games-launcher prismlauncher suyu ventoy blender
