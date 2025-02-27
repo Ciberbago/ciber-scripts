@@ -54,6 +54,7 @@ alias mkdir="mkdir -pv" && funcsave mkdir
 alias espacio="gdu /" && funcsave espacio
 alias rebootuefi='sudo systemctl reboot --firmware-setup' && funcsave rebootuefi
 function cheat; curl cheat.sh/$argv; end; and funcsave cheat
+function subir; curl -F 'file=@-' 0x0.st < $argv[1]; end; and funcsave subir
 curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source && fisher install jorgebucaran/fisher
 fisher install IlanCosman/tide@v6
 fisher install oh-my-fish/plugin-bang-bang
