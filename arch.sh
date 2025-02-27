@@ -139,6 +139,7 @@ alias ssd="sudo systemctl daemon-reload" && funcsave ssd
 function buscar; /usr/bin/find . -type f -iname "*$argv*"; end; and funcsave buscar
 function cheat; curl cheat.sh/$argv; end; and funcsave cheat
 function convimg; magick mogrify -path $argv[2] -strip -interlace Plane -quality 80% -format jpg -verbose $argv[1]/*; end; and funcsave convimg
+function subir; curl -F 'file=@-' 0x0.st < $argv[1]; end; and funcsave subir
 function img2mp4; for file in *.gif; ffmpeg -i $file "$file.mp4"; end; end; and funcsave img2mp4
 fisher install IlanCosman/tide@v6
 fisher install oh-my-fish/plugin-bang-bang
