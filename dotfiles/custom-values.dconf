@@ -23,25 +23,10 @@ binding='<Alt>r'
 command='clicker -d 25 -b Right'
 name='r click'
 
-[custom5]
-binding='<Shift><Control>semicolon'
-command="tilix --working-directory=/run/media/storage/jaimedrive/notas -e 'micro -autosave 1'"
-name='Notas'
-
 [custom6]
 binding='<Shift><Control>Escape'
 command='resources'
 name='task manager'
-
-[custom7]
-binding='<Super>bracketleft'
-command='obs-cmd recording start'
-name='OBS start'
-
-[custom8]
-binding='<Super>bracketright'
-command='obs-cmd recording stop'
-name='OBS Stop'
 
 [custom9]
 binding='<Control>minus'

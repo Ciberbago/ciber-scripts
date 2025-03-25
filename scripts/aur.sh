@@ -6,4 +6,4 @@ sudo pacman -U 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-mirrorlist.pkg
 echo "[chaotic-aur]
 Include = /etc/pacman.d/chaotic-mirrorlist" | sudo tee -a /etc/pacman.conf
 sudo pacman -Syu
-yay -S chaotic-aur/deadbeef-git chaotic-aur/ani-cli clicker-git chaotic-aur/fsearch gnome-extensions-cli headsetcontrol-git chaotic-aur/insync chaotic-aur/protonplus obs-cmd chaotic-aur/obs-studio-git chaotic-aur/rtl88xxau-aircrack-dkms-git --noconfirm
+yay -S chaotic-aur/deadbeef-git chaotic-aur/ani-cli clicker-git chaotic-aur/fsearch gnome-extensions-cli headsetcontrol-git chaotic-aur/insync chaotic-aur/protonplus chaotic-aur/rtl88xxau-aircrack-dkms-git --noconfirm
