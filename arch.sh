@@ -83,6 +83,8 @@ sudo wget -O /etc/modules-load.d/virtualbox.conf ${dotfiles}/virtualbox.conf
 sudo wget -O /etc/systemd/system/wol@.service ${sdcondfig}/wol@.service
 sudo wget -O /etc/systemd/system/run-media-nas.mount ${sdcondfig}/run-media-nas.mount
 sudo wget -O /etc/systemd/system/run-media-nas.automount ${sdcondfig}/run-media-nas.automount
+sudo wget -O /boot/loader/entries/cachyos.conf ${sdconfig}/cachyos.conf
+sudo wget -O /boot/loader/entries/lts.conf ${sdconfig}/lts.conf
 
 #<-------Scripts y programas------->
 wget -O ~/gnome.sh ${scriptsv}/gnome.sh
@@ -102,6 +104,8 @@ echo "export QT_QPA_PLATFORMTHEME=qt5ct" | sudo tee /etc/environment
 chmod +x *.sh
 chmod +x ~/.local/share/nautilus/scripts/*.sh
 sudo chmod +x /usr/local/bin/*
+sudo chmod 755 /boot/loader/entries/cachyos.conf
+sudo chmod 755 /boot/loader/entries/lts.conf
 sudo gpasswd -a $USER vboxusers
 chsh -s /usr/bin/fish
 
