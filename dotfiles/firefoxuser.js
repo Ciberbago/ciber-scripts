@@ -29,6 +29,7 @@ user_pref("browser.newtabpage.activity-stream.default.sites", "");
 user_pref("browser.formfill.enable", false);
 user_pref("signon.rememberSignons", false);
 user_pref("services.sync.engine.passwords", false);
+user_pref("browser.urlbar.update2.engineAliasRefresh", true); //allows me to create a new search engine
 
 /** GFX ***/
 user_pref("gfx.canvas.accelerated.cache-items", 4096);
