@@ -78,7 +78,7 @@ wget -O ~/.config/yay/config.json ${dotfiles}/yayconfig.json
 wget -O ~/gnome/custom-keys.dconf ${dotfiles}/custom-keys.dconf
 wget -O ~/gnome/custom-values.dconf ${dotfiles}/custom-values.dconf
 wget -O ~/gnome/keybindings.dconf ${dotfiles}/keybindings.dconf
-sudo wget -O /etc/xdg/reflector/reflector.conf ${dotfiles}/reflector.con
+sudo wget -O /etc/xdg/reflector/reflector.conf ${dotfiles}/reflector.conf
 sudo wget -O /etc/modules-load.d/virtualbox.conf ${dotfiles}/virtualbox.conf
 sudo wget -O /etc/systemd/system/wol@.service ${sdcondfig}/wol@.service
 sudo wget -O /etc/systemd/system/run-media-nas.mount ${sdcondfig}/run-media-nas.mount
@@ -112,9 +112,9 @@ chsh -s /usr/bin/fish
 #<-------Servicios------->
 sudo systemctl enable gdm.service
 sudo systemctl enable bluetooth.service
-sudo systemctl enable reflector.service
 sudo systemctl enable tailscaled
 sudo systemctl enable run-media-nas.automount
+sudo systemctl enable reflector.timer
 sudo systemctl enable paccache.timer
 sudo systemctl enable wol@$interfaz.service 
 sudo timedatectl set-timezone "America/Tijuana"
