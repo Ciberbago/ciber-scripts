@@ -33,7 +33,7 @@ wget -O ~/scripts/portainerupdate.sh ${scriptsv}/portainerupdate.sh
 wget -O ~/.config/nvim/init.vim ${dotfiles}/init.vim
 wget -O ~/.config/nvim/vim-plug/plugins.vim ${dotfiles}/plugins.vim
 wget -O ~/.config/nvim/autoload/plug.vim https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-sudo wget -O /usr/local/bin/nvim https://github.com/neovim/neovim/releases/latest/download/nvim.appimage
+sudo wget -O /usr/local/bin/nvim https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.appimage
 sudo wget -O /usr/local/bin/ufetch ${scriptsv}/ufetch.sh
 #Instalacion de tailscale
 curl -fsSL https://tailscale.com/install.sh | sh
@@ -48,7 +48,7 @@ sudo chmod +x /usr/local/bin/*
 sudo chown jaime /opt/docker
 sudo chsh -s $(which fish) $(whoami)
 #Configuro micro para que use el portapeles de SSH
-echo '{ "clipboard": "terminal" }' | >> .config/micro/settings.json
+echo '{ "clipboard": "terminal" }' > $HOME/.config/micro/settings.json
 #Servicios
 git clone https://github.com/Ciberbago/ciber-docker.git /opt/docker
 nvim -es -u ~/.config/nvim/init.vim -i NONE -c "PlugInstall" -c "qa"
