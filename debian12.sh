@@ -1,19 +1,16 @@
-#actualizar repositorios
+SOURCE_LIST="/etc/apt/sources.list"
+
+# Hacer respaldo
+sudo cp "$SOURCE_LIST" "$SOURCE_LIST.bak"
+
+# Reescribir correctamente cada línea que empiece con deb o deb-src
+sed -i -E \
+    's|^(deb(-src)?\s+\S+\s+\S+)\s+.*|\1 main non-free non-free-firmware|' \
+    "$SOURCE_LIST"
+
+# Actualizar los repos
 sudo apt update
 
-#Habilitar repositorio non-free editando sources.list
-if grep -q "^deb .* main contrib non-free$" /etc/apt/sources.list; then
-  echo "El repositorio non-free ya está habilitado."
-else
-  # Encontrar la primera línea 'deb' que contenga 'main' y 'contrib' y añadir 'non-free' al final
-  sudo sed -i '/^deb .* main .* contrib /{s/$/ non-free/}' /etc/apt/sources.list
-  if [ $? -eq 0 ]; then
-    echo "Se ha intentado añadir el repositorio non-free."
-  else
-    echo "Error al intentar añadir el repositorio non-free."
-  fi
-fi
-read -p "Presione Enter para continuar después de la operación del repositorio non-free..."
 
 #Instalacion de paquetes
 sudo apt install -y nala
