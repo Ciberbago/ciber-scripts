@@ -4,7 +4,7 @@ SOURCE_LIST="/etc/apt/sources.list"
 sudo cp "$SOURCE_LIST" "$SOURCE_LIST.bak"
 
 # Reescribir correctamente cada línea que empiece con deb o deb-src
-sed -i -E \
+sudo sed -i -E \
     's|^(deb(-src)?\s+\S+\s+\S+)\s+.*|\1 main non-free non-free-firmware|' \
     "$SOURCE_LIST"
 
