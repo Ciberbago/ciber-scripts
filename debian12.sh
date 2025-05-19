@@ -5,16 +5,15 @@ sudo apt update
 if grep -q "^deb .* main contrib non-free$" /etc/apt/sources.list; then
   echo "El repositorio non-free ya está habilitado."
 else
-  # Encontrar la primera línea 'deb' y añadir 'non-free' al final
-  sudo sed -i '0,/^deb /{s/$/ non-free/}' /etc/apt/sources.list
+  # Encontrar la primera línea 'deb' que contenga 'main' y 'contrib' y añadir 'non-free' al final
+  sudo sed -i '/^deb .* main .* contrib /{s/$/ non-free/}' /etc/apt/sources.list
   if [ $? -eq 0 ]; then
-    echo "Se ha añadido el repositorio non-free."
+    echo "Se ha intentado añadir el repositorio non-free."
   else
     echo "Error al intentar añadir el repositorio non-free."
   fi
-  read -p "Presione Enter para continuar después de intentar añadir non-free..."
-  sudo apt update
 fi
+read -p "Presione Enter para continuar después de la operación del repositorio non-free..."
 
 #Instalacion de paquetes
 sudo apt install -y nala
