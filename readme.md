@@ -61,7 +61,7 @@ wget -O - https://bit.ly/ciberdebian11 | bash
 Para debian 12:
 
 ```
-wget -O - https://bit.ly/ciberserver12 | bash
+wget -O - https://debian.jaimelopez.top | bash
 ```
 
 
