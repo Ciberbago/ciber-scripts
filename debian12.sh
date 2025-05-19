@@ -2,16 +2,17 @@
 sudo apt update
 
 #Habilitar repositorio non-free editando sources.list
-if grep -q "^deb .* non-free" /etc/apt/sources.list; then
+if grep -q "^deb .* main contrib non-free$" /etc/apt/sources.list; then
   echo "El repositorio non-free ya está habilitado."
 else
-  sudo sed -i 's|^deb \(.*\) main contrib$|\0 non-free|' /etc/apt/sources.list
+  # Encontrar la primera línea 'deb' y añadir 'non-free' al final
+  sudo sed -i '0,/^deb /{s/$/ non-free/}' /etc/apt/sources.list
   if [ $? -eq 0 ]; then
-    echo "Repositorio non-free habilitado."
+    echo "Se ha añadido el repositorio non-free."
   else
-    echo "Error al intentar habilitar el repositorio non-free."
+    echo "Error al intentar añadir el repositorio non-free."
   fi
-  read -p "Presione Enter para continuar..."
+  read -p "Presione Enter para continuar después de intentar añadir non-free..."
   sudo apt update
 fi
 
