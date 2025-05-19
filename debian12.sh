@@ -1,8 +1,17 @@
 #actualizar repositorios
 sudo apt update
+
+#Agregar non-free
+if grep -q "^deb .* non-free" /etc/apt/sources.list; then
+  echo "El repositorio non-free ya está habilitado."
+else
+  sudo sed -i 's|^deb \(.*\) main contrib$|\0 non-free|' /etc/apt/sources.list
+  sudo apt update
+fi
+
 #Instalacion de paquetes
 sudo apt install -y nala
-sudo nala install -y bat curl duf exa fish fuse fzf gdu git htop lm-sensors lshw micro nload powertop radeontop rclone time tmux unattended-upgrades wakeonlan 
+sudo nala install -y bat curl duf exa fish fuse fzf gdu git htop intel-media-va-driver-non-free lm-sensors lshw micro nload powertop radeontop rclone time tmux unattended-upgrades wakeonlan 
 
 #<-------Variables------->
 dotfiles='https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/dotfiles'
