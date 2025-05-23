@@ -177,12 +177,7 @@ else {
 mkdir $env:USERPROFILE\Documents\scripts
 #Descarga de archivos
 Write-Host "Descargando script de autohotkey y handbrake" -ForegroundColor Black -BackgroundColor White
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Kudostoy0u/pwsh10k/master/pwsh10k.omp.json" -OutFile "$env:USERPROFILE\pwsh10k.omp.json"
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/config/autohotkey.ahk" -OutFile "$env:USERPROFILE\Documents\autohotkey.ahk"
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/config/HBProfile.json" -OutFile "$env:USERPROFILE\Documents\HBProfile.json"
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts/gif2mp4.ps1" -OutFile "$env:USERPROFILE\Documents\scripts\gif2mp4.ps1"
-Invoke-WebRequest -Uri "https://github.com/Ciberbago/ciber-scripts/blob/main/config/rectify11.zip?raw=true" -OutFile "$env:TEMP\rectify11.zip"
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/config/Caskaydia.ttf" -OutFile "C:\Windows\fonts\Caskaydia.ttf"
 
 #Desactivo sticky keys
 Set-ItemProperty -Path "HKCU:\Control Panel\Accessibility\StickyKeys" -Name "Flags" -Type String -Value "506"
@@ -221,13 +216,6 @@ Crear-AccesoDirecto "\ShareX.lnk" "$env:USERPROFILE\scoop\apps\sharex\current\Sh
 Crear-AccesoDirecto "\Tailscale.lnk" "$env:USERPROFILE\scoop\apps\tailscale\current\tailscale-ipn.exe" ""
 Crear-AccesoDirecto "\Windhawk.lnk" "$env:USERPROFILE\scoop\apps\windhawk\current\Windhawk\windhawk.exe" "-tray-only"
 #Mejoro el perfil de PS5
-if (!(Test-Path -Path $PROFILE)) {
-    New-Item -ItemType File -Path $PROFILE -Force
-}
-Add-Content -Path $env:USERPROFILE\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1 -Value ('Invoke-Expression (&sfsu hook)') -PassThru
-C:\Windows\fonts\Caskaydia.ttf
-#Copio el perfil de PS5 para PS7
-xcopy $env:USERPROFILE\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1 $env:USERPROFILE\Documents\PowerShell\Microsoft.PowerShell_profile.ps1*
 Write-Host "Desinstala las optional features" -ForegroundColor Black -BackgroundColor White
 & cmd /c start ms-settings:optionalfeatures
 
