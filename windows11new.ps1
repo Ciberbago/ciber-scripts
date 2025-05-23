@@ -37,7 +37,6 @@ $appsAmbos = @(
 	"crystaldiskmark"
 	"curl"
 	"dark"
-	"ddu"
 	"dotnet-sdk"
 	"dotnet6-sdk"
 	"everything"
@@ -48,8 +47,8 @@ $appsAmbos = @(
 	"iperf3"
 	"lanspeedtest"
 	"lockhunter"
-	"losslesscut"
 	"macrorit-partition-expert"
+	"naps2"
 	"neatdownloadmanager"
 	"netbscanner"
 	"patchcleaner"
@@ -58,8 +57,6 @@ $appsAmbos = @(
 	"pwsh"
 	"sfsu"
 	"sharex"
-	"speedtest-cli"
-	"sudo"
 	"tailscale"
 	"vcredist-aio"
 	"ventoy"
@@ -220,4 +217,7 @@ Write-Host "Desinstala las optional features" -ForegroundColor Black -Background
 & cmd /c start ms-settings:optionalfeatures
 
 Write-Host "Decarga drivers y ponlos en modo minimal" -ForegroundColor Black -BackgroundColor White
+Write-Host "Decarga mods de windhawk: Modernize folder picker dialog, taskbar clock customization, taskbar thumbnail reorder, windows 11 taskbar styler" -ForegroundColor Black -BackgroundColor White
+
+
 Stop-Transcript
