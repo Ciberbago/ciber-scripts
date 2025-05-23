@@ -52,23 +52,17 @@ Incluye cosas como:
 
 Asi como instalar todos los modulos necesarios en una nueva instalación de debian minimal para cualquier servidor de pruebas o producción que pueda llegar a necesitar con el siguiente comando:
 
-Para debian 11:
-
-```
-wget -O - https://bit.ly/ciberdebian11 | bash
-```
-
 Para debian 12:
 
 ```
-wget -O - https://debian.jaimelopez.top | bash
+wget -O - debian.jaimelopez.top | bash
 ```
 
 
 Incluye cosas como:
 - Monitoreo
-    - htop
-    - ncdu
+    - btop
+    - gdu
     - exa
     - lm-sensors
     - nload
@@ -76,8 +70,8 @@ Incluye cosas como:
     - Docker
     - rClone
 - QOL
-    - zsh
-    - powerlevel10k
+    - fish shell
+    - neovim with plugins
     - git
     - micro
 - Red
