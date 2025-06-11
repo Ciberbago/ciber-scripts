@@ -19,6 +19,7 @@ sudo nala install -y bat curl duf exa fish fuse fzf gdu git htop intel-media-va-
 #<-------Variables------->
 dotfiles='https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/dotfiles'
 scriptsv='https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts'
+sdconfig='https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/systemd'
 interfaz=$(ip r | grep default | cut -d ' ' -f 5 | head -n1)
 
 #Crear carpetas
@@ -28,11 +29,13 @@ mkdir -p ~/.config/nvim/vim-plug
 mkdir -p ~/.config/nvim/autoload/plugged
 sudo mkdir -p /opt/docker
 #Descarga de scripts
-wget -O ~/scripts/backup.sh ${scriptsv}/backupdebian.sh
-wget -O ~/scripts/portainerupdate.sh ${scriptsv}/portainerupdate.sh
+wget -O /usr/local/bin/backup.sh ${scriptsv}/backupdebian.sh
+#wget -O ~/scripts/portainerupdate.sh ${scriptsv}/portainerupdate.sh
 wget -O ~/.config/nvim/init.vim ${dotfiles}/init.vim
 wget -O ~/.config/nvim/vim-plug/plugins.vim ${dotfiles}/plugins.vim
 wget -O ~/.config/nvim/autoload/plug.vim https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+sudo wget -O /etc/systemd/system/backup.service ${sdconfig}/backup.service
+sudo wget -O /etc/systemd/system/backup.timer ${sdconfig}/backup.timer
 sudo wget -O /usr/local/bin/nvim https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.appimage
 sudo wget -O /usr/local/bin/ufetch ${scriptsv}/ufetch.sh
 #Instalacion de tailscale
@@ -46,6 +49,7 @@ docker run hello-world
 sudo chmod +x ~/scripts/*
 sudo chmod +x /usr/local/bin/*
 sudo chown jaime /opt/docker
+sudo systemctl enable backup.timer
 sudo chsh -s $(which fish) $(whoami)
 #Configuro micro para que use el portapeles de SSH
 echo '{ "clipboard": "terminal" }' > $HOME/.config/micro/settings.json
