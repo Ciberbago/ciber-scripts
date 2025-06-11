@@ -1,0 +1,10 @@
+[Unit]
+Description=Ejecutar Script de Backup Diario con Temporizador
+
+[Timer]
+OnCalendar=*-*-* 18:00:00
+Persistent=true
+Unit=backup.service
+
+[Install]
+WantedBy=timers.target

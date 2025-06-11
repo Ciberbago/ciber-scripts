@@ -1,0 +1,14 @@
+[Unit]
+Description=Script de Backup Diario
+After=network.target # Opcional: Asegura que la red esté disponible si tu script lo necesita
+
+[Service]
+Type=oneshot # El script se ejecuta una vez y luego el servicio se detiene
+ExecStart=/usr/local/bin/backup.sh
+# Si tu script requiere alguna variable de entorno específica, puedes añadirla aquí
+# Environment="RUTA_BACKUP=/mnt/backups"
+# User=root # Por defecto, los servicios de sistema se ejecutan como root, pero puedes especificarlo explícitamente.
+# Group=root
+
+[Install]
+WantedBy=multi-user.target
