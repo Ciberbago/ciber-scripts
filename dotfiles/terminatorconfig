@@ -1,0 +1,28 @@
+[global_config]
+[keybindings]
+  new_tab = <Primary>t
+  close_term = <Primary>w
+  copy = <Primary>c
+  paste = <Primary>v
+[profiles]
+  [[default]]
+    background_darkness = 0.7
+    background_type = transparent
+    font = FiraCode Nerd Font Propo 10
+    show_titlebar = False
+    palette = "#000000:#aa0000:#00aa00:#aa5500:#0000aa:#aa00aa:#00aaaa:#aaaaaa:#555555:#ff5555:#55ff55:#ffff55:#5555ff:#ff55ff:#55ffff:#ffffff"
+    use_system_font = False
+    use_theme_colors = True
+    bold_is_bright = True
+    title_hide_sizetext = True
+[layouts]
+  [[default]]
+    [[[window0]]]
+      type = Window
+      parent = ""
+      size = 900, 500
+    [[[child1]]]
+      type = Terminal
+      parent = window0
+      profile = default
+[plugins]

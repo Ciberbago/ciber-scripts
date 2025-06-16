@@ -28,7 +28,7 @@ sudo pacman -Syy
 declare -a pkgs pkgs_200 pkgs_202 pkgs_404
 declare -A pkgs_301
 
-pkgs=(7zip adw-gtk-theme android-tools baobab base-devel bat bluez bluez-utils btop dkms ethtool eza fastfetch ffmpegthumbnailer file-roller firefox fish fisher flameshot fragments freerdp fzf gdm gdu git gnome-bluetooth-3.0 gnome-calculator gnome-characters gnome-control-center gnome-disk-utility gnome-font-viewer gnome-keyring gnome-remote-desktop gnome-shell gnome-tweaks gnome-text-editor gvfs gvfs-smb handbrake imagemagick jre8-openjdk jre17-openjdk jre21-openjdk jq iperf3 less libmad linux-headers linux-lts loupe mangohud mesa micro mpv-mpris nautilus net-tools nnn noto-fonts-cjk ntfs-3g obs-studio papirus-icon-theme pacman-contrib pkgfile python-tqdm qt5ct qt6-base radeontop reflector remmina resources rocm-smi-lib rust scrcpy smbclient steam tailscale tilix traceroute ttf-firacode-nerd tumbler uget unrar usbutils virtualbox virtualbox-guest-iso vulkan-radeon webp-pixbuf-loader wget wl-clipboard xdg-desktop-portal-gnome yt-dlp)
+pkgs=(7zip adw-gtk-theme android-tools baobab base-devel bat bluez bluez-utils btop dkms ethtool eza fastfetch ffmpegthumbnailer file-roller firefox fish fisher flameshot fragments freerdp fzf gdm gdu git gnome-bluetooth-3.0 gnome-calculator gnome-characters gnome-control-center gnome-disk-utility gnome-font-viewer gnome-keyring gnome-remote-desktop gnome-shell gnome-tweaks gnome-text-editor gvfs gvfs-smb handbrake imagemagick jre8-openjdk jre17-openjdk jre21-openjdk jq iperf3 less libmad linux-headers linux-lts loupe mangohud mesa micro mpv-mpris nautilus net-tools nnn noto-fonts-cjk ntfs-3g obs-studio papirus-icon-theme pacman-contrib pkgfile python-tqdm qt5ct qt6-base radeontop reflector remmina resources rocm-smi-lib rust scrcpy smbclient steam tailscale terminator traceroute ttf-firacode-nerd tumbler uget unrar usbutils virtualbox virtualbox-guest-iso vulkan-radeon webp-pixbuf-loader wget wl-clipboard xdg-desktop-portal-gnome yt-dlp)
 
 pkgs=($(printf '%s\n' "${pkgs[@]}"|sort -u))
 pkgs_200=($(comm -12 <(pacman -Slq|sort -u) <(printf '%s\n' "${pkgs[@]}")))
@@ -61,7 +61,8 @@ sudo mkdir -p /usr/local/share/applications
 #<-------Dotfiles------->#
 wget -O ~/.config/firefoxuser.js ${dotfiles}/firefoxuser.js
 wget -O ~/.config/dashtopanel.conf ${dotfiles}/extensions/dashtopanel.conf
-wget -O ~/.config/tilix.conf ${dotfiles}/extensions/tilix.conf
+#wget -O ~/.config/tilix.conf ${dotfiles}/extensions/tilix.conf
+wget -O ~/.config/terminator/config ${dotfiles}/terminatorconf
 wget -O ~/.config/executor.conf ${dotfiles}/extensions/executor.conf
 wget -O ~/.config/poweroffmenu.conf ${dotfiles}/extensions/poweroffmenu.conf
 wget -O ~/.config/autostart/wallpaper.desktop ${dotfiles}/wallpaper.desktop
