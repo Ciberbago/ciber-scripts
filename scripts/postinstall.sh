@@ -25,3 +25,11 @@ for script in "${scripts[@]}"; do
         echo "El script $ruta no existe o no tiene permisos de ejecución."
     fi
 done
+
+# Ejecutar archbootgen si existe y es ejecutable
+if command -v archbootgen &> /dev/null; then
+    echo "Ejecutando archbootgen..."
+    sudo archbootgen
+else
+    echo "No se encontró archbootgen en el PATH."
+fi
