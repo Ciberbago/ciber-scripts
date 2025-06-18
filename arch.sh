@@ -99,6 +99,7 @@ wget -O ~/firefoxconfig.sh ${scriptsv}/firefoxconfig.sh
 wget -O ~/postinstall.sh ${scriptsv}/postinstall.sh
 wget -O ~/.local/share/nautilus/scripts/mediainfo.sh ${scriptsv}/mediainfo.sh
 sudo wget -O /usr/local/bin/wallpaper ${scriptsv}/wallpaper.sh
+sudo wget -O /usr/local/bin/archbootgen ${scriptsv}/archbootgen.sh
 
 #<-------Configuraciones------->
 echo "export QT_QPA_PLATFORMTHEME=qt5ct" | sudo tee /etc/environment
