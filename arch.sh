@@ -58,6 +58,9 @@ mkdir -p gnome
 mkdir -p Screenshots/tmp
 mkdir -p ~/.local/share/nautilus/scripts
 sudo mkdir -p /usr/local/share/applications
+sudo mkdir -p /etc/systemd/system.conf.d/
+sudo mkdir -p /etc/sysctl.d/
+
 #<-------Dotfiles------->#
 wget -O ~/.config/firefoxuser.js ${dotfiles}/firefoxuser.js
 wget -O ~/.config/dashtopanel.conf ${dotfiles}/extensions/dashtopanel.conf
@@ -86,6 +89,10 @@ sudo wget -O /etc/systemd/system/run-media-nas.mount ${sdcondfig}/run-media-nas.
 sudo wget -O /etc/systemd/system/run-media-nas.automount ${sdcondfig}/run-media-nas.automount
 sudo wget -O /boot/loader/entries/cachyos.conf ${sdconfig}/cachyos.conf
 sudo wget -O /boot/loader/entries/lts.conf ${sdconfig}/lts.conf
+sudo wget -O /etc/sysctl.d/80-gaming.conf ${sdconfig}/80-gaming.conf
+sudo wget -O /etc/sysctl.d/99-cachyos-settings.conf ${sdconfig}/99-cachyos-settings.conf
+sudo wget -O /etc/systemd/system.conf.d/00-timeout.conf ${sdconfig}/00-timeout.conf
+
 
 #<-------Scripts y programas------->
 wget -O ~/gnome.sh ${scriptsv}/gnome.sh
@@ -110,6 +117,7 @@ sudo chmod 755 /boot/loader/entries/cachyos.conf
 sudo chmod 755 /boot/loader/entries/lts.conf
 sudo gpasswd -a $USER vboxusers
 chsh -s /usr/bin/fish
+sudo sed -i '/^#\?MaxRetentionSec=/cMaxRetentionSec=1w' /etc/systemd/journald.conf
 
 #<-------Servicios------->
 sudo systemctl enable gdm.service
