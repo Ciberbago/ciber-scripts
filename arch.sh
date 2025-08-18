@@ -92,6 +92,10 @@ sudo wget -O /boot/loader/entries/lts.conf ${sdconfig}/lts.conf
 sudo wget -O /etc/sysctl.d/80-gaming.conf ${sdconfig}/80-gaming.conf
 sudo wget -O /etc/sysctl.d/99-cachyos-settings.conf ${sdconfig}/99-cachyos-settings.conf
 sudo wget -O /etc/systemd/system.conf.d/00-timeout.conf ${sdconfig}/00-timeout.conf
+sudo wget -O /usr/lib/systemd/zram-generator.conf ${sdconfig}/zram-generator.conf
+sudo wget -O /usr/lib/udev/rules.d/30-zram.rules ${sdconfig}/30-zram.rules
+
+
 
 
 #<-------Scripts y programas------->
