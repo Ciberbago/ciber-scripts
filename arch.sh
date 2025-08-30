@@ -94,9 +94,7 @@ sudo wget -O /etc/sysctl.d/99-cachyos-settings.conf ${sdconfig}/99-cachyos-setti
 sudo wget -O /etc/systemd/system.conf.d/00-timeout.conf ${sdconfig}/00-timeout.conf
 sudo wget -O /usr/lib/systemd/zram-generator.conf ${sdconfig}/zram-generator.conf
 sudo wget -O /usr/lib/udev/rules.d/30-zram.rules ${sdconfig}/30-zram.rules
-
-
-
+sudo wget -O /etc/systemd/system/dpm-high.service ${sdconfig}/dpm-high.service
 
 #<-------Scripts y programas------->
 wget -O ~/gnome.sh ${scriptsv}/gnome.sh
@@ -131,6 +129,7 @@ sudo systemctl enable run-media-nas.automount
 sudo systemctl enable reflector.timer
 sudo systemctl enable paccache.timer
 sudo systemctl enable wol@$interfaz.service 
+sudo systemctl enable dpm-high.service
 sudo timedatectl set-timezone "America/Tijuana"
 #<-------instalar yay------->
 git clone https://aur.archlinux.org/yay.git

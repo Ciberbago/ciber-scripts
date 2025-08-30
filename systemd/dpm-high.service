@@ -1,0 +1,11 @@
+[Unit]
+Description=Set AMDGPU DPM level to 'high'
+After=multi-user.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c 'GPU_PATH=$(ls /sys/class/drm/*/device/power_dpm_force_performance_level | grep card); echo "high" > "$GPU_PATH"'
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
