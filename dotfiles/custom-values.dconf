@@ -1,6 +1,6 @@
 [custom0]
 binding='<Super>t'
-command='tilix'
+command='terminator'
 name='Terminal'
 
 [custom1]
@@ -23,13 +23,22 @@ binding='<Alt>r'
 command='clicker -d 25 -b Right'
 name='r click'
 
+[custom5]
+binding='<Control>F8'
+command='obs-cmd recording start'
+name='OBS Start record'
+
 [custom6]
 binding='<Shift><Control>Escape'
 command='resources'
 name='task manager'
 
+[custom7]
+binding='<Control>F9'
+command='obs-cmd recording stop'
+name='OBS Stop record'
+
 [custom9]
 binding='<Control>minus'
-command='script --command "flameshot gui" /dev/null'
+command='script --command "QT_QPA_PLATFORM=wayland flameshot gui" /dev/null'
 name='Flameshot'
-
