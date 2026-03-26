@@ -24,4 +24,5 @@ dconf load /com/gexperts/Tilix/ < ~/.config/tilix.conf
 dconf load /org/gnome/shell/extensions/executor/ < ~/.config/executor.conf
 #Configuracion de los botones de apagado
 dconf load /org/gnome/shell/extensions/bring-out-submenu-of-power-off-logout/ < ~/.config/poweroffmenu.conf
-
+#Deshabilitar emoji selector de ibus para usar la extension mejor
+gsettings set org.freedesktop.ibus.panel.emoji hotkey "[]"
