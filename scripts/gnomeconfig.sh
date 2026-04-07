@@ -16,6 +16,8 @@ gsettings set org.gnome.desktop.interface clock-show-weekday true
 #Gnome tweaks
 gsettings set org.gnome.desktop.wm.preferences button-layout 'appmenu:minimize,maximize,close'
 gsettings set org.gnome.desktop.interface gtk-theme 'adw-gtk3-dark'
+gsettings set org.gnome.desktop.interface icon-theme 'Papirus-Dark'
+gsettings set org.gnome.desktop.interface cursor-theme 'Bibata-Rainbow-Modern'
 #Import dash to panel config
 dconf load /org/gnome/shell/extensions/dash-to-panel/ < ~/.config/dashtopanel.conf
 #Configuracion de la terminal
