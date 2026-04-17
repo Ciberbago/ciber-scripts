@@ -2,6 +2,8 @@
 gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
 #No me pide confirmacion al apagar
 gsettings set org.gnome.SessionManager logout-prompt false
+#Volver a mostrar el boton de logout
+gsettings set org.gnome.shell always-show-log-out true
 #Quita el suspender pantalla
 gsettings set org.gnome.desktop.session idle-delay 0
 #Quita los workspaces
