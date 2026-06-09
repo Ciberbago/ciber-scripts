@@ -1,0 +1,6 @@
+[Unit]
+Description=Servicio de notificaciones precisas Todoist
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/todoist.sh

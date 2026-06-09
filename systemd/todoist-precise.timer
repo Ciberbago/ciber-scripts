@@ -1,0 +1,11 @@
+[Unit]
+Description=Ejecutar revisión de Todoist cada minuto
+
+[Timer]
+OnCalendar=*:0/1
+# AccuracySec asegura que sea lo más exacto posible al segundo 0
+AccuracySec=1s
+Unit=todoist-precise.service
+
+[Install]
+WantedBy=timers.target

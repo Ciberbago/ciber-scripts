@@ -27,13 +27,17 @@ mkdir -p ~/scripts
 mkdir -p ~/.config/micro
 mkdir -p ~/.config/nvim/vim-plug
 mkdir -p ~/.config/nvim/autoload/plugged
+mkdir -p ~/.config/systemd/user
 sudo mkdir -p /opt/docker
 #Descarga de scripts
 wget -O /usr/local/bin/backup.sh ${scriptsv}/backupdebian.sh
+wget -O /usr/local/bin/todoist.sh ${scriptsv}/todoist.sh
 #wget -O ~/scripts/portainerupdate.sh ${scriptsv}/portainerupdate.sh
 wget -O ~/.config/nvim/init.vim ${dotfiles}/init.vim
 wget -O ~/.config/nvim/vim-plug/plugins.vim ${dotfiles}/plugins.vim
 wget -O ~/.config/nvim/autoload/plug.vim https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+wget -O ~/.config/systemd/user/todoist-precise.service ${sdconfig}/todoist-precise.service
+wget -O ~/.config/systemd/user/todoist-precise.timer ${sdconfig}/todoist-precise.timer
 sudo wget -O /etc/systemd/system/backup.service ${sdconfig}/backup.service
 sudo wget -O /etc/systemd/system/backup.timer ${sdconfig}/backup.timer
 sudo wget -O /usr/local/bin/nvim https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.appimage
@@ -49,6 +53,7 @@ docker run hello-world
 sudo chmod +x ~/scripts/*
 sudo chmod +x /usr/local/bin/*
 sudo chown jaime /opt/docker
+systemctl --user enable --now todoist-check.timer
 sudo systemctl enable backup.timer
 sudo chsh -s $(which fish) $(whoami)
 #Configuro micro para que use el portapeles de SSH

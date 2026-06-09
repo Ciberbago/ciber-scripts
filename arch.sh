@@ -125,6 +125,7 @@ chsh -s /usr/bin/fish
 sudo sed -i '/^#\?MaxRetentionSec=/cMaxRetentionSec=1w' /etc/systemd/journald.conf
 
 #<-------Servicios------->
+
 sudo systemctl enable gdm.service
 sudo systemctl enable bluetooth.service
 sudo systemctl enable tailscaled
@@ -139,31 +140,14 @@ git clone https://aur.archlinux.org/yay.git
 cd yay
 makepkg -si --noconfirm
 #<-------Crear aliases e instalar extensiones en fish shell------->
+
 fish <<'EOF'
 set -Ux EDITOR micro
-alias limpiar="paccache -rk1 && paccache -ruk0 && yay -Sc && sudo pacman -Qdtq | sudo pacman -Runs -" && funcsave limpiar
-alias historial="history | fzf" && funcsave historial
-alias cat="bat" && funcsave cat
-alias cc="cd && clear" && funcsave cc
-alias ls="exa -lha --icons" && funcsave ls
-alias mkdir="mkdir -pv" && funcsave mkdir
-alias espacio="gdu /" && funcsave espacio
-alias f34='firefox -P "Cyb_R34" -no-remote' && funcsave f34
-alias orphans='sudo pacman -Qdtq | sudo pacman -Runs  -' && funcsave orphans
-alias rebootuefi='sudo systemctl reboot --firmware-setup' && funcsave rebootuefi
-alias sss="sudo systemctl status" && funcsave sss
-alias ssa="sudo systemctl start" && funcsave ssa
-alias sso="sudo systemctl stop" && funcsave sso
-alias sse="sudo systemctl enable" && funcsave sse
-alias ssd="sudo systemctl daemon-reload" && funcsave ssd
-function buscar; /usr/bin/find . -type f -iname "*$argv*"; end; and funcsave buscar
-function cheat; curl cheat.sh/$argv; end; and funcsave cheat
-function convimg; magick mogrify -path $argv[2] -strip -interlace Plane -quality 80% -format jpg -verbose $argv[1]/*; end; and funcsave convimg
-function subir; curl -F 'file=@-' 0x0.st < $argv[1]; end; and funcsave subir
-function img2mp4; for file in *.gif; ffmpeg -i $file "$file.mp4"; end; end; and funcsave img2mp4
+alias limpiar="paccache -rk1 && paccache -ruk0 && yay -Sc && sudo pacman -Qdtq | sudo pacman -Runs -" && funcsave limpiar                        alias historial="history | fzf" && funcsave historial                                                                                            alias cat="bat" && funcsave cat                                                                                                                  alias cc="cd && clear" && funcsave cc                                                                                                            alias ls="exa -lha --icons" && funcsave ls                                                                                                       alias mkdir="mkdir -pv" && funcsave mkdir                                                                                                        alias espacio="gdu /" && funcsave espacio                                                                                                        alias f34='firefox -P "Cyb_R34" -no-remote' && funcsave f34                                                                                      alias orphans='sudo pacman -Qdtq | sudo pacman -Runs  -' && funcsave orphans                                                                     alias rebootuefi='sudo systemctl reboot --firmware-setup' && funcsave rebootuefi                                                                 alias sss="sudo systemctl status" && funcsave sss                                                                                                alias ssa="sudo systemctl start" && funcsave ssa                                                                                                 alias sso="sudo systemctl stop" && funcsave sso                                                                                                  alias sse="sudo systemctl enable" && funcsave sse                                                                                                alias ssd="sudo systemctl daemon-reload" && funcsave ssd                                                                                         function buscar; /usr/bin/find . -type f -iname "*$argv*"; end; funcsave buscar                                                                  function cheat; curl cheat.sh/$argv; end; funcsave cheat                                                                                         function convimg; magick mogrify -path $argv[2] -strip -interlace Plane -quality 80% -format jpg -verbose $argv[1]/*; end; funcsave convimg      function subir; curl -F 'file=@-' 0x0.st < $argv[1]; end; funcsave subir                                                                         function img2mp4; for file in *.gif; ffmpeg -i $file "$file.mp4"; end; end; funcsave img2mp4                                                     function tts; set ts (date "+%Y%m%d_%H%M%S"); set f "tts_$ts.mp3"; curl -s --get --data-urlencode "ie=UTF-8" --data-urlencode "client=tw-ob" --data-urlencode "tl=es-mx" --data-urlencode "q=$argv" "https://translate.google.com/translate_tts" > $f; echo "Guardado: $f"; end; funcsave tts
 fisher install IlanCosman/tide@v6
-fisher install oh-my-fish/plugin-bang-bang
+fisher install oh-my-fish/plugin-bang-bang                                            
 EOF
+
 #<-----Errores de instalacion----->
 printf "\n301 Moved Permanently:\n" >&2
 paste -d : <(printf "%s\n" "${!pkgs_301[@]}") <(printf "%s\n" "${pkgs_301[@]}") >&2
