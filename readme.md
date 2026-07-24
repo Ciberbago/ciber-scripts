@@ -7,7 +7,7 @@ Este es un repositorio personal
 Basicamente tiene lo mismo que windows. Preparado con los drivers de amd, para juegos y herramientas necesarias para mi uso. Con el entorno de esctritorio GNOME minimal edition.
 
 ```
-bash <(curl -L arch.jaimelopez.top)
+bash <(curl -L url.jaimelopez.top/arch)
 ```
 
 ## Windows
@@ -15,7 +15,7 @@ bash <(curl -L arch.jaimelopez.top)
 Principalmente lo hice para poder instalar la mayoría de programas y configuraciones que necesito en Windows 11 con el siguiente comando:
 
 ```
-irm windows.jaimelopez.top | iex
+irm url.jaimelopez.top/windows | iex
 ```
 
 Incluye cosas como:
@@ -46,7 +46,7 @@ Asi como instalar todos los modulos necesarios en una nueva instalación de debi
 Para debian 12:
 
 ```
-wget -O - debian.jaimelopez.top | bash
+wget -O - url.jaimelopez.top/debian | bash
 ```
 
 
