@@ -20,6 +20,9 @@ pacman_packages:
   - git
   - linux-headers
   - linux-lts
+  # Sin estos, dkms no compila virtualbox ni el driver de wifi para el kernel
+  # LTS, que es justo el que usarias como respaldo si el principal falla.
+  - linux-lts-headers
   - rust
 
   # --- dependencias que necesita este propio playbook ---
