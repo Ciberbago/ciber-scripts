@@ -40,6 +40,12 @@ gnome_dconf:
   - { key: /org/gnome/desktop/interface/clock-show-seconds, value: "true" }
   - { key: /org/gnome/desktop/interface/clock-show-weekday, value: "true" }
 
+  # --- capturas de pantalla ---
+  # Antes <Control>minus era un atajo personalizado (custom9) que lanzaba
+  # flameshot. Al quitar flameshot del setup, el atajo se reasigna a la
+  # herramienta integrada de GNOME. Se conserva 'Print', que es el default.
+  - { key: /org/gnome/shell/keybindings/show-screenshot-ui, value: "['<Control>minus', 'Print']" }
+
   # --- libera el atajo de emoji de ibus para usar la extension ---
   - { key: /org/freedesktop/ibus/panel/emoji/hotkey,   value: "@as []" }
 

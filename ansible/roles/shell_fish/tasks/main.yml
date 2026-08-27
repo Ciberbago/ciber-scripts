@@ -58,6 +58,7 @@
   become: false
   register: fisher_check
   changed_when: false
+  check_mode: false
   failed_when: false
 
 - name: Instalar plugins de fish

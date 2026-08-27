@@ -37,8 +37,3 @@ name='task manager'
 binding='<Control>F9'
 command='obs-cmd recording stop'
 name='OBS Stop record'
-
-[custom9]
-binding='<Control>minus'
-command='script --command "QT_QPA_PLATFORM=wayland flameshot gui" /dev/null'
-name='Flameshot'

@@ -50,12 +50,14 @@
             cmd: findmnt --noheadings --output SOURCE --target /
           register: root_source
           changed_when: false
+          check_mode: false
 
         - name: Detectar el PARTUUID de root
           ansible.builtin.command:
             cmd: "blkid -s PARTUUID -o value {{ root_source.stdout | trim }}"
           register: root_partuuid
           changed_when: false
+          check_mode: false
           become: true
 
         - name: Detectar el sistema de archivos de root
@@ -63,6 +65,7 @@
             cmd: findmnt --noheadings --output FSTYPE --target /
           register: root_fstype
           changed_when: false
+          check_mode: false
 
         - name: Buscar la imagen de microcodigo del CPU
           ansible.builtin.find:

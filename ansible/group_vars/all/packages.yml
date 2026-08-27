@@ -136,6 +136,7 @@ pacman_packages:
   # --- escritorio y utilidades ---
   - bluez
   - bluez-utils
+  - extension-manager
   - eyedropper
   - firefox
   - fragments
@@ -181,6 +182,7 @@ aur_packages:
   # necesitaba ya no se usa. Si vuelve a hacer falta, busca el nombre actual con
   # 'yay -Ss 8812au' antes de agregarlo.
   - gnome-extensions-cli
+  - parabolic
 
 # AppImages via AM
 appimage_packages:

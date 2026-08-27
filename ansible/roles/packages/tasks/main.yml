@@ -29,12 +29,14 @@
     cmd: pacman -Qq
   register: pacman_installed
   changed_when: false
+  check_mode: false
 
 - name: Listar los paquetes disponibles en los repos
   ansible.builtin.command:
     cmd: pacman -Slq
   register: pacman_disponibles
   changed_when: false
+  check_mode: false
 
 - name: Separar pendientes, instalables e inexistentes
   ansible.builtin.set_fact:

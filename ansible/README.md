@@ -66,8 +66,33 @@ ciber-apply --start-at-task "Instalar paquetes de los repos oficiales"
 ciber-session                   # config de GNOME (dentro de la sesión)
 ```
 
-`--check --diff` es el que más vas a usar: te muestra el diff exacto de cada
-archivo que cambiaría antes de tocar nada.
+### Simulacro: `--check --diff`
+
+Es la forma de ver **qué se desviaría del repo sin tocar nada**. Útil cuando
+editaste un dotfile a mano y quieres saber en qué difiere del declarado.
+
+```bash
+ciber-apply --check --diff --tags dotfiles    # solo los dotfiles del $HOME
+ciber-apply --check --diff --tags files       # dotfiles + /etc + /usr/local/bin
+ciber-apply --check --diff                    # todo el sistema
+ciber-session --check --diff --tags gnome     # dconf y extensiones
+```
+
+Por cada archivo que difiera imprime el diff unificado, en el sentido
+"tu máquina → lo que dice el repo": las líneas `-` son lo que tienes de más y
+las `+` lo que el repo pondría.
+
+Para que esto funcione, las tareas `command` que sólo **consultan** estado
+(`pacman -Qq`, `which gext`, `findmnt`…) llevan `check_mode: false`. Sin eso
+Ansible las salta en modo check, sus registros quedan sin `rc`, y las
+condiciones que dependen de ellos fallan a mitad del simulacro.
+
+Dos cosas que `--check` no puede predecir, y es correcto que no lo haga:
+
+- Lo que hacen los comandos que **sí** modifican (compilar del AUR, `am -i`):
+  se saltan, porque ejecutarlos ya no sería un simulacro.
+- Los efectos en cadena. Si el simulacro dice que instalaría 20 paquetes, no
+  puede saber qué archivos traerían esos paquetes.
 
 ## Ver el progreso mientras corre
 

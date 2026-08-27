@@ -13,6 +13,7 @@
     cmd: "pacman-key --list-keys {{ chaotic_key_id }}"
   register: chaotic_key_check
   changed_when: false
+  check_mode: false
   failed_when: false
   become: true
 
@@ -43,6 +44,7 @@
     - chaotic-mirrorlist
   register: chaotic_base
   changed_when: false
+  check_mode: false
   failed_when: false
 
 - name: Instalar keyring y mirrorlist de chaotic-aur
@@ -84,6 +86,7 @@
   loop: "{{ chaotic_packages }}"
   register: chaotic_check
   changed_when: false
+  check_mode: false
   failed_when: false
 
 - name: Que sigue - binarios de chaotic
@@ -133,6 +136,7 @@
     cmd: pacman -Qq yay
   register: yay_check
   changed_when: false
+  check_mode: false
   failed_when: false
 
 - name: Ver que paquetes del AUR faltan
@@ -141,6 +145,7 @@
   loop: "{{ aur_packages }}"
   register: aur_check
   changed_when: false
+  check_mode: false
   failed_when: false
 
 - name: Compilar del AUR

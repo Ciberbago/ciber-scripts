@@ -68,6 +68,7 @@
     cmd: which gext
   register: gext_check
   changed_when: false
+  check_mode: false
   failed_when: false
 
 - name: Ver que extensiones ya estan instaladas
@@ -199,3 +200,44 @@
       loop_control:
         label: "{{ item.uuid }}"
       become: false
+
+# --- Habilitar ---
+#
+# 'gext --filesystem install' despliega la extension y la habilita, pero las que
+# se compilan desde su repo NO quedan activadas: su build solo copia archivos.
+# Esta parte cierra las dos rutas por igual y es idempotente.
+
+- name: Ver que extensiones estan habilitadas
+  ansible.builtin.command:
+    cmd: gnome-extensions list --enabled
+  register: ext_enabled
+  changed_when: false
+  check_mode: false
+  failed_when: false
+
+- name: Habilitar las extensiones que falten
+  ansible.builtin.command:
+    cmd: "gnome-extensions enable {{ item }}"
+  loop: >-
+    {{ (gnome_extensions | map(attribute='uuid') | list
+        + gnome_extensions_git | default([]) | map(attribute='uuid') | list)
+       | difference(ext_enabled.stdout_lines | default([])) }}
+  become: false
+  changed_when: true
+  failed_when: false
+  register: ext_enable
+
+- name: Reportar extensiones que no se pudieron habilitar
+  # Habilitar una extension recien instalada puede fallar porque GNOME Shell
+  # todavia no la conoce: no relee el disco en caliente. Eso se resuelve solo al
+  # cerrar sesion y volver a entrar, y en la siguiente corrida ya no aparece.
+  ansible.builtin.debug:
+    msg:
+      no_habilitadas: >-
+        {{ ext_enable.results | default([]) | rejectattr('rc', 'equalto', 0)
+           | map(attribute='item') | list }}
+      por_que: >-
+        Normal si se acaban de instalar: GNOME Shell no las conoce hasta que
+        cierres sesion y vuelvas a entrar. Corre 'ciber-session --tags gnome'
+        despues del login y deberian quedar activas.
+  when: ext_enable.results | default([]) | rejectattr('rc', 'equalto', 0) | list | length > 0
