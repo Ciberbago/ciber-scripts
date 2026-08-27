@@ -43,78 +43,129 @@
   become: true
   notify: Recargar sysctl
 
-# --- Entradas de systemd-boot (llevan el PARTUUID de esta maquina) ---
+# --- Entradas de systemd-boot ---
+#
+# Todo este bloque esta detras de boot_entries_enabled, que viene en false. El
+# modo de fallo es "la maquina no arranca", asi que se activa a mano por maquina.
+#
+# Los archivos originales del repo tenian "root=PARTUUID=[UUIDDISCODELKERNELBUENO
+# sudo blkid]" como recordatorio para editarlos a mano, y el script de bash los
+# copiaba tal cual a /boot/loader/entries/.
 
-- name: Detectar el dispositivo de la particion root
-  ansible.builtin.command:
-    cmd: findmnt --noheadings --output SOURCE --target /
-  register: root_source
-  changed_when: false
+- name: Entradas de systemd-boot
+  when: boot_entries_enabled
+  block:
+    - name: Exigir una entrada default declarada
+      # Sin 'default' en loader.conf, agregar entradas Type #1 deja el arranque
+      # al orden de sorteo de systemd-boot. Si vamos a agregar entradas, el
+      # default tiene que ser explicito.
+      ansible.builtin.assert:
+        that: boot_default_entry | length > 0
+        fail_msg: >-
+          boot_entries_enabled es true pero boot_default_entry esta vacio.
+          Pon el id de una entrada que sepas que arranca (velos con 'bootctl list').
+        quiet: true
 
-- name: Detectar el PARTUUID de root
-  ansible.builtin.command:
-    cmd: "blkid -s PARTUUID -o value {{ root_source.stdout | trim }}"
-  register: root_partuuid
-  changed_when: false
-  become: true
+    - name: Comprobar que existe /boot/loader/entries
+      ansible.builtin.stat:
+        path: /boot/loader/entries
+      register: entries_dir
+      become: true
 
-- name: Detectar el sistema de archivos de root
-  ansible.builtin.command:
-    cmd: findmnt --noheadings --output FSTYPE --target /
-  register: root_fstype
-  changed_when: false
+    - name: Avisar si no hay carpeta de entradas
+      ansible.builtin.debug:
+        msg: >-
+          /boot/loader/entries no existe: se omiten las entradas. Si tu ESP no
+          esta en /boot, ajusta las rutas en files.yml -> system_templates.
+      when: not entries_dir.stat.exists
 
-- name: Guardar los datos de root
-  ansible.builtin.set_fact:
-    ciber_root_partuuid: "{{ root_partuuid.stdout | trim }}"
-    ciber_root_fstype: "{{ root_fstype.stdout | trim }}"
+    - name: Escribir las entradas
+      when: entries_dir.stat.exists
+      block:
+        - name: Detectar el dispositivo de la particion root
+          ansible.builtin.command:
+            cmd: findmnt --noheadings --output SOURCE --target /
+          register: root_source
+          changed_when: false
 
-- name: Comprobar que se detecto el PARTUUID
-  # Sin esto la entrada de boot quedaria con "root=PARTUUID=" vacio, que es
-  # exactamente el problema que veniamos a arreglar pero mas silencioso.
-  ansible.builtin.assert:
-    that:
-      - ciber_root_partuuid | length > 0
-      - ciber_root_fstype | length > 0
-    fail_msg: >-
-      No se pudo detectar el PARTUUID o el fstype de la particion root
-      ({{ root_source.stdout | trim }}). Si tu root esta en LVM o LUKS, las
-      entradas de systemd-boot hay que escribirlas a mano: quita
-      system_templates de files.yml.
-    quiet: true
+        - name: Detectar el PARTUUID de root
+          ansible.builtin.command:
+            cmd: "blkid -s PARTUUID -o value {{ root_source.stdout | trim }}"
+          register: root_partuuid
+          changed_when: false
+          become: true
 
-- name: Mostrar los datos detectados de root
-  ansible.builtin.debug:
-    msg:
-      dispositivo: "{{ root_source.stdout | trim }}"
-      partuuid: "{{ ciber_root_partuuid }}"
-      fstype: "{{ ciber_root_fstype }}"
+        - name: Detectar el sistema de archivos de root
+          ansible.builtin.command:
+            cmd: findmnt --noheadings --output FSTYPE --target /
+          register: root_fstype
+          changed_when: false
 
-- name: Ver si se usa systemd-boot
-  ansible.builtin.stat:
-    path: "{{ item.requires_dir }}"
-  loop: "{{ system_templates }}"
-  loop_control:
-    label: "{{ item.requires_dir }}"
-  register: boot_dirs
-  become: true
+        - name: Buscar la imagen de microcodigo del CPU
+          ansible.builtin.find:
+            paths: /boot
+            patterns: "*-ucode.img"
+            recurse: false
+          register: ucode_img
+          become: true
 
-- name: Escribir las entradas de systemd-boot
-  ansible.builtin.template:
-    src: "{{ item.item.src }}"
-    dest: "{{ item.item.dest }}"
-    owner: root
-    group: root
-    mode: "0644"
-  loop: "{{ boot_dirs.results | selectattr('stat.exists') | list }}"
-  loop_control:
-    label: "{{ item.item.dest }}"
-  become: true
+        - name: Guardar los datos detectados
+          ansible.builtin.set_fact:
+            ciber_root_partuuid: "{{ root_partuuid.stdout | trim }}"
+            ciber_root_fstype: "{{ root_fstype.stdout | trim }}"
+            ciber_ucode_initrd: >-
+              {{ ucode_img.files | map(attribute='path') | map('basename')
+                 | sort | first | default('', true) }}
 
-- name: Avisar si no se uso systemd-boot
-  ansible.builtin.debug:
-    msg: >-
-      No existe {{ boot_dirs.results | rejectattr('stat.exists')
-        | map(attribute='item.requires_dir') | unique | join(', ') }}:
-      se omitieron las entradas de boot (no usas systemd-boot).
-  when: boot_dirs.results | rejectattr('stat.exists') | list | length > 0
+        - name: Comprobar que se detecto lo necesario
+          ansible.builtin.assert:
+            that:
+              - ciber_root_partuuid | length > 0
+              - ciber_root_fstype | length > 0
+            fail_msg: >-
+              No se pudo detectar el PARTUUID o el fstype de root
+              ({{ root_source.stdout | trim }}). Si tu root esta en LVM o LUKS,
+              escribe las entradas a mano y deja boot_entries_enabled en false.
+            quiet: true
+
+        - name: Comprobar que los kernels referenciados existen
+          # Escribir una entrada que apunta a un vmlinuz inexistente es la forma
+          # mas rapida de tener un menu de arranque roto.
+          ansible.builtin.stat:
+            path: "/boot/vmlinuz-{{ item }}"
+          loop: [linux-cachyos, linux-lts]
+          register: kernels_stat
+
+        - name: Mostrar lo detectado
+          ansible.builtin.debug:
+            msg:
+              dispositivo: "{{ root_source.stdout | trim }}"
+              partuuid: "{{ ciber_root_partuuid }}"
+              fstype: "{{ ciber_root_fstype }}"
+              microcodigo: "{{ ciber_ucode_initrd | default('(ninguno)', true) }}"
+              kernels_presentes: >-
+                {{ kernels_stat.results | selectattr('stat.exists')
+                   | map(attribute='item') | list }}
+              kernels_faltantes: >-
+                {{ kernels_stat.results | rejectattr('stat.exists')
+                   | map(attribute='item') | list }}
+
+        - name: Fijar la entrada default de systemd-boot
+          ansible.builtin.lineinfile:
+            path: /boot/loader/loader.conf
+            regexp: '^#?\s*default\s'
+            line: "default {{ boot_default_entry }}"
+            insertbefore: BOF
+          become: true
+
+        - name: Escribir las entradas de systemd-boot
+          ansible.builtin.template:
+            src: "{{ item.src }}"
+            dest: "{{ item.dest }}"
+            owner: root
+            group: root
+            mode: "0644"
+          loop: "{{ system_templates }}"
+          loop_control:
+            label: "{{ item.dest }}"
+          become: true

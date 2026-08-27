@@ -19,3 +19,25 @@
   changed_when: false
   # pkgfile no tiene forma de consultar si su base esta al dia, asi que se
   # ejecuta siempre pero no se reporta como cambio.
+
+- name: Determinar el microcodigo segun el CPU
+  # Se usa el fact en lugar de leer /proc/cpuinfo con un comando: no necesita
+  # shell, funciona en check mode, y evita meter un 'awk -F": "' en el YAML.
+  ansible.builtin.set_fact:
+    ciber_ucode_pkg: >-
+      {{ 'amd-ucode'
+         if ('AuthenticAMD' in (ansible_facts.processor | join(' ')))
+         else 'intel-ucode' }}
+
+- name: Instalar el microcodigo del CPU
+  # No estaba en la lista de paquetes, pero las entradas de systemd-boot
+  # referenciaban "/amd-ucode.img": un initrd inexistente hace que systemd-boot
+  # falle la entrada completa.
+  community.general.pacman:
+    name: "{{ ciber_ucode_pkg }}"
+    state: present
+  become: true
+
+- name: Mostrar el microcodigo elegido
+  ansible.builtin.debug:
+    msg: "CPU: {{ ansible_facts.processor | join(' ') | truncate(60) }} -> {{ ciber_ucode_pkg }}"

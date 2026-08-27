@@ -66,3 +66,20 @@ appimage_install_path: /opt
 # Opciones del kernel comunes a todas las entradas. El root= y el rootfstype se
 # detectan solos de la particion montada en /.
 boot_kernel_options: "zswap.enabled=0 rw"
+
+# --- Entradas de systemd-boot: APAGADAS por default ---
+#
+# El modo de fallo aqui es "la maquina no arranca", asi que hay que activarlo a
+# mano por maquina. Ponlo en true SOLO cuando:
+#   - uses systemd-boot con entradas Type #1 (no UKI), y
+#   - los kernels que referencian las plantillas esten instalados, y
+#   - hayas puesto boot_default_entry a una entrada que sepas que arranca.
+#
+# Si archinstall te dejo un UKI (/boot/EFI/Linux/*.efi) y loader.conf sin linea
+# 'default', agregar entradas Type #1 deja el default al orden de sorteo de
+# systemd-boot. De ahi que esto venga apagado.
+boot_entries_enabled: false
+
+# Entrada que systemd-boot debe arrancar por default. Obligatoria si
+# boot_entries_enabled es true. Ver los ids con 'bootctl list'.
+boot_default_entry: "arch-linux.efi"

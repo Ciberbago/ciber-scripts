@@ -1,7 +1,10 @@
 # Generado por Ansible. No editar a mano.
-# El PARTUUID se detecta de la particion root real en cada corrida.
+# El PARTUUID, el fstype y el microcodigo se detectan de esta maquina.
 title   Arch Linux LTS (linux)
+sort-key arch-lts
 linux   /vmlinuz-linux-lts
-initrd  /amd-ucode.img
+{% if ciber_ucode_initrd %}
+initrd  /{{ ciber_ucode_initrd }}
+{% endif %}
 initrd  /initramfs-linux-lts.img
 options root=PARTUUID={{ ciber_root_partuuid }} {{ boot_kernel_options }} rootfstype={{ ciber_root_fstype }}
