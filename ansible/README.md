@@ -15,6 +15,12 @@ El segundo paso existe porque `dconf`, `gsettings` y `gext` hablan por DBus con
 la sesión del usuario. En un Arch recién instalado esa sesión no existe, así que
 si se corrieran junto con el resto fallarían de formas confusas.
 
+Por la misma razón, `session.yml` también instala las **AppImages** (AM registra
+sus lanzadores en la rejilla de aplicaciones, y eso sólo prende bien con la
+sesión abierta) y **oculta los lanzadores** de `gnome_hide_apps`. En el flujo
+original de bash las dos cosas corrían desde `postinstall.sh`, después del
+primer login; ponerlas en el playbook de sistema fue una regresión.
+
 ## Cómo cambiar cosas
 
 Todo se edita en `group_vars/all/`. Nunca hace falta tocar un rol para el
@@ -122,9 +128,10 @@ tmux new-session 'ciber-apply' \; split-window -v -p 25 'ciber-watch' \; attach
 | `systemd` | unidades |
 | `shell`, `fish` | aliases y plugins de fish |
 | `aur` | chaotic-aur, yay y paquetes del AUR |
-| `appimages` | AM y AppImages |
-| `cleanup` | ocultar lanzadores, quitar paquetes y huérfanos |
+| `cleanup` | quitar paquetes y huérfanos (site) / ocultar lanzadores (session) |
 | `gnome` | (solo en `session.yml`) dconf y extensiones |
+| `appimages` | (solo en `session.yml`) AM y AppImages |
+| `hide` | (solo en `session.yml`) ocultar lanzadores |
 | `firefox` | (solo en `session.yml`) perfil de Firefox |
 
 ## Estructura

@@ -89,20 +89,23 @@
 - name: Instalar binarios de chaotic-aur
   # Son paquetes de un repo normal: los instala pacman sin compilar nada.
   #
-  # Va UNO POR UNO a proposito, no en una sola llamada con la lista completa.
-  # En una sola llamada esta tarea tardaba mas de dos minutos sin imprimir una
-  # linea: Ansible bufferea el stdout del modulo y lo suelta al terminar. Con el
-  # loop, cada paquete imprime su resultado al completarse y ves el avance.
-  # El costo es que pacman hace una transaccion por paquete en lugar de una sola;
-  # como son binarios y lo que domina es la descarga, la diferencia es chica.
+  # UNA SOLA transaccion con toda la lista, no un loop por paquete. Se probo el
+  # loop para ver avance en pantalla y fue un error: con ParallelDownloads = 20
+  # en pacman.conf, una transaccion baja hasta 20 paquetes en paralelo, mientras
+  # que N transacciones separadas bajan de uno en uno. Partirlo tiraba a la
+  # basura esa optimizacion, y ademas pierde la resolucion conjunta de
+  # dependencias.
+  #
+  # Para ver el avance dentro de esta tarea esta 'ciber-watch' en otra terminal,
+  # que lee /var/log/pacman.log y da mas detalle que las lineas de Ansible.
   #
   # Se pasan los nombres SIN el prefijo "chaotic-aur/": el modulo interpreta un
   # nombre con "/" como ruta a un archivo y usa -U en lugar de -S.
   community.general.pacman:
-    name: "{{ item }}"
+    name: "{{ chaotic_check.results | selectattr('rc', 'equalto', 0) | map(attribute='item') | list }}"
     state: present
-  loop: "{{ chaotic_check.results | selectattr('rc', 'equalto', 0) | map(attribute='item') | list }}"
   become: true
+  when: chaotic_check.results | selectattr('rc', 'equalto', 0) | list | length > 0
 
 - name: Avisar de paquetes que no estan en chaotic-aur
   ansible.builtin.debug:

@@ -21,6 +21,13 @@
 
   roles:
     - { role: gnome_session, tags: [gnome] }
+    # AM registra los lanzadores de las AppImages en la rejilla de GNOME, y eso
+    # solo prende bien con la sesion ya abierta. Antes estaba en site.yml, que
+    # corre sin sesion grafica: era una regresion respecto al flujo de bash,
+    # donde appimages.sh se ejecutaba desde postinstall.sh tras el primer login.
+    - { role: appimages,     tags: [appimages] }
+    # Misma razon: tocar la rejilla de aplicaciones quiere la sesion viva.
+    - { role: hide_apps,     tags: [cleanup, hide] }
     - { role: firefox,       tags: [firefox] }
 
   post_tasks:

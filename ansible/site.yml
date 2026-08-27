@@ -40,8 +40,11 @@
     - { role: dotfiles,         tags: [files, dotfiles] }
     - { role: shell_fish,       tags: [shell, fish] }
     - { role: aur,              tags: [aur] }
-    - { role: appimages,        tags: [appimages] }
-    - { role: desktop_cleanup,  tags: [cleanup] }
+    - { role: pkg_cleanup,      tags: [cleanup] }
+    # appimages y hide_apps NO van aqui: viven en session.yml porque tocan la
+    # rejilla de aplicaciones de GNOME y necesitan la sesion abierta. En el
+    # flujo original de bash tambien corrian despues del login, desde
+    # postinstall.sh.
 
   post_tasks:
     - name: Resumen
@@ -49,5 +52,5 @@
         msg:
           - "Sistema configurado."
           - "Reinicia y entra a GNOME."
-          - "Luego ejecuta: ciber-session"
+          - "Luego ejecuta: ciber-session  (ahi van AppImages, GNOME y Firefox)"
       tags: always

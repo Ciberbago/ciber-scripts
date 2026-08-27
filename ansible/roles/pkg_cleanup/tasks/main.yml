@@ -1,0 +1,29 @@
+---
+# Quitar paquetes no deseados y huerfanos. No necesita sesion grafica.
+
+- name: Quitar paquetes no deseados
+  # En bash un solo 'pacman -Runs vlc python-pip python-poetry' fallaba completo
+  # si UNO de los tres no estaba instalado. El modulo maneja eso solo.
+  community.general.pacman:
+    name: "{{ pacman_remove }}"
+    state: absent
+    extra_args: --recursive --unneeded
+  become: true
+
+- name: Buscar huerfanos
+  # El modulo pacman no tiene concepto de huerfano, asi que se consultan aparte
+  ansible.builtin.command:
+    cmd: pacman -Qdtq
+  register: huerfanos
+  changed_when: false
+  failed_when: false
+
+- name: Quitar huerfanos
+  # 'pacman -Qdtq | pacman -Runs -' devolvia error cuando la lista salia vacia
+  # ("no targets specified"). Aqui la tarea simplemente se omite.
+  community.general.pacman:
+    name: "{{ huerfanos.stdout_lines }}"
+    state: absent
+    extra_args: --recursive --unneeded
+  become: true
+  when: huerfanos.stdout_lines | length > 0
