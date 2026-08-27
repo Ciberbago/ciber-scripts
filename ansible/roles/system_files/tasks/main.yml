@@ -57,25 +57,23 @@
 
 # --- Entradas de systemd-boot ---
 #
-# Todo este bloque esta detras de boot_entries_enabled, que viene en false. El
-# modo de fallo es "la maquina no arranca", asi que se activa a mano por maquina.
-#
-# Los archivos originales del repo tenian "root=PARTUUID=[UUIDDISCODELKERNELBUENO
-# sudo blkid]" como recordatorio para editarlos a mano, y el script de bash los
-# copiaba tal cual a /boot/loader/entries/.
+# Se genera UNA ENTRADA POR KERNEL INSTALADO, descubriendolos de /boot/vmlinuz-*.
+# Antes habia una plantilla escrita a mano por kernel (cachyos.conf.j2,
+# lts.conf.j2), lo cual significaba que agregar un kernel a packages.yml exigia
+# escribir tambien un archivo nuevo. Ahora no: instala el kernel y su entrada
+# aparece sola; quitalo y su entrada se borra.
 
 - name: Entradas de systemd-boot
   when: boot_entries_enabled
   block:
     - name: Exigir una entrada default declarada
-      # Sin 'default' en loader.conf, agregar entradas Type #1 deja el arranque
-      # al orden de sorteo de systemd-boot. Si vamos a agregar entradas, el
-      # default tiene que ser explicito.
+      # Sin 'default' en loader.conf, systemd-boot elige por orden de sorteo, y
+      # agregar entradas cambiaria en silencio con que kernel arrancas.
       ansible.builtin.assert:
         that: boot_default_entry | length > 0
         fail_msg: >-
           boot_entries_enabled es true pero boot_default_entry esta vacio.
-          Pon el id de una entrada que sepas que arranca (velos con 'bootctl list').
+          Pon el id de una entrada que sepas que arranca ('bootctl list').
         quiet: true
 
     - name: Comprobar que existe /boot/loader/entries
@@ -88,10 +86,10 @@
       ansible.builtin.debug:
         msg: >-
           /boot/loader/entries no existe: se omiten las entradas. Si tu ESP no
-          esta en /boot, ajusta las rutas en files.yml -> system_templates.
+          esta montada en /boot, esta parte hay que ajustarla.
       when: not entries_dir.stat.exists
 
-    - name: Escribir las entradas
+    - name: Generar las entradas
       when: entries_dir.stat.exists
       block:
         - name: Detectar el dispositivo de la particion root
@@ -121,7 +119,7 @@
           register: ucode_img
           become: true
 
-        - name: Guardar los datos detectados
+        - name: Guardar los datos de root y microcodigo
           ansible.builtin.set_fact:
             ciber_root_partuuid: "{{ root_partuuid.stdout | trim }}"
             ciber_root_fstype: "{{ root_fstype.stdout | trim }}"
@@ -137,30 +135,47 @@
             fail_msg: >-
               No se pudo detectar el PARTUUID o el fstype de root
               ({{ root_source.stdout | trim }}). Si tu root esta en LVM o LUKS,
-              escribe las entradas a mano y deja boot_entries_enabled en false.
+              escribe las entradas a mano y pon boot_entries_enabled en false.
             quiet: true
 
-        - name: Comprobar que los kernels referenciados existen
-          # Escribir una entrada que apunta a un vmlinuz inexistente es la forma
-          # mas rapida de tener un menu de arranque roto.
+        - name: Descubrir los kernels instalados
+          ansible.builtin.find:
+            paths: /boot
+            patterns: "vmlinuz-*"
+            file_type: file
+            recurse: false
+          register: kernel_images
+          become: true
+
+        - name: Ver cuales tienen initramfs clasico
           ansible.builtin.stat:
-            path: "/boot/vmlinuz-{{ item }}"
-          loop: [linux-cachyos, linux-lts]
-          register: kernels_stat
+            path: "/boot/initramfs-{{ item }}.img"
+          loop: >-
+            {{ kernel_images.files | map(attribute='path') | map('basename')
+               | map('regex_replace', '^vmlinuz-', '') | sort | list }}
+          register: initramfs_stat
+          become: true
+
+        - name: Fijar la lista de kernels con entrada propia
+          # Un kernel SIN initramfs-<nombre>.img esta empaquetado como UKI:
+          # systemd-boot ya lo encuentra solo como entrada Type #2, y escribirle
+          # una Type #1 lo duplicaria en el menu.
+          ansible.builtin.set_fact:
+            boot_kernels: >-
+              {{ initramfs_stat.results | selectattr('stat.exists')
+                 | map(attribute='item') | list }}
+            boot_kernels_uki: >-
+              {{ initramfs_stat.results | rejectattr('stat.exists')
+                 | map(attribute='item') | list }}
 
         - name: Mostrar lo detectado
           ansible.builtin.debug:
             msg:
-              dispositivo: "{{ root_source.stdout | trim }}"
               partuuid: "{{ ciber_root_partuuid }}"
               fstype: "{{ ciber_root_fstype }}"
               microcodigo: "{{ ciber_ucode_initrd | default('(ninguno)', true) }}"
-              kernels_presentes: >-
-                {{ kernels_stat.results | selectattr('stat.exists')
-                   | map(attribute='item') | list }}
-              kernels_faltantes: >-
-                {{ kernels_stat.results | rejectattr('stat.exists')
-                   | map(attribute='item') | list }}
+              con_entrada: "{{ boot_kernels }}"
+              son_uki_se_omiten: "{{ boot_kernels_uki }}"
 
         - name: Fijar la entrada default de systemd-boot
           ansible.builtin.lineinfile:
@@ -170,14 +185,31 @@
             insertbefore: BOF
           become: true
 
-        - name: Escribir las entradas de systemd-boot
+        - name: Escribir una entrada por kernel
           ansible.builtin.template:
-            src: "{{ item.src }}"
-            dest: "{{ item.dest }}"
+            src: entry.conf.j2
+            dest: "/boot/loader/entries/ciber-{{ item }}.conf"
             owner: root
             group: root
             mode: "0644"
-          loop: "{{ system_templates }}"
-          loop_control:
-            label: "{{ item.dest }}"
+          loop: "{{ boot_kernels }}"
+          become: true
+
+        - name: Buscar entradas nuestras ya existentes
+          ansible.builtin.find:
+            paths: /boot/loader/entries
+            patterns: "ciber-*.conf"
+          register: entradas_nuestras
+          become: true
+
+        - name: Quitar entradas de kernels que ya no estan
+          # Solo se tocan las que empiezan con "ciber-": las de archinstall o las
+          # que hayas puesto a mano nunca se borran.
+          ansible.builtin.file:
+            path: "/boot/loader/entries/{{ item }}"
+            state: absent
+          loop: >-
+            {{ entradas_nuestras.files | map(attribute='path') | map('basename') | list
+               | difference(boot_kernels | map('regex_replace', '^', 'ciber-')
+                                         | map('regex_replace', '$', '.conf') | list) }}
           become: true

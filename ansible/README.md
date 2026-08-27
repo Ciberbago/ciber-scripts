@@ -162,38 +162,38 @@ principio con la lista completa de lo que falta.
 
 ## Entradas de systemd-boot
 
-**Vienen apagadas: `boot_entries_enabled: false` en `main.yml`.** El modo de
-fallo de esta parte es "la máquina no arranca", así que se activa a mano por
-máquina.
+El playbook genera **una entrada por kernel instalado**, descubriéndolos de
+`/boot/vmlinuz-*`. No hay lista ni plantilla que mantener: agregas un kernel a
+`packages.yml` y su entrada aparece sola en la siguiente corrida; lo quitas y su
+entrada se borra.
 
-Los archivos `systemd/cachyos.conf` y `systemd/lts.conf` del repo tenían
-`root=PARTUUID=[UUIDDISCODELKERNELBUENO sudo blkid]` — recordatorios para
-editarlos a mano — y un `initrd /amd-ucode.img` fijo. El script de bash los
-copiaba tal cual a `/boot/loader/entries/`; un `initrd` inexistente hace que
-systemd-boot falle la entrada completa.
+Sólo se generan para kernels que tengan `initramfs-<nombre>.img`. Un kernel sin
+initramfs clásico está empaquetado como **UKI**, y systemd-boot ya lo encuentra
+solo como entrada Type #2 — escribirle una Type #1 lo duplicaría en el menú. Eso
+pasa con el kernel `linux` cuando `archinstall` lo configuró como UKI.
 
-Ahora son plantillas en `roles/system_files/templates/` que rellenan:
+Las entradas propias se llaman `ciber-<kernel>.conf`. El prefijo importa: la
+limpieza de entradas obsoletas sólo toca archivos que empiezan así, nunca las
+que puso `archinstall` ni las que hayas escrito a mano.
+
+Cada entrada rellena sola:
 
 - el PARTUUID y el fstype de la partición montada en `/` (`findmnt` + `blkid`)
-- el microcódigo del CPU, si existe alguna `/boot/*-ucode.img` (y el rol
+- el microcódigo del CPU, si existe alguna `/boot/*-ucode.img` (el rol
   `packages` instala `amd-ucode` o `intel-ucode` según el fabricante)
+- el título, de `boot_entry_titles` en `main.yml`; si el kernel no está ahí, usa
+  `Arch Linux (<kernel>)`
 
-Antes de poner `boot_entries_enabled: true` necesitas:
+Y escribe la línea `default` en `loader.conf` con `boot_default_entry`. Sin ella
+systemd-boot elige por orden de sorteo, así que agregar entradas cambiaría en
+silencio con qué kernel arrancas. Ponla al id de una entrada que sepas que
+arranca (`bootctl list`).
 
-1. Usar entradas Type #1, no UKI. Si `bootctl list` muestra
-   `type: Boot Loader Specification Type #2 (UKI, .efi)`, tu kernel es un
-   binario EFI único y agregar entradas Type #1 cambia cómo se elige el default.
-2. Tener los kernels instalados. El rol avisa cuáles faltan, pero escribe las
-   entradas igual.
-3. Poner `boot_default_entry` al id de una entrada que sepas que arranca (velos
-   con `bootctl list`). El rol lo exige con un `assert` y escribe la línea
-   `default` en `loader.conf` — sin ella, systemd-boot elige por orden de sorteo.
+Para apagarlo todo: `boot_entries_enabled: false` en `main.yml`. Hazlo si tu
+root está en LVM o LUKS, donde la detección del PARTUUID no aplica.
 
-Si tu root está en LVM o LUKS la detección no aplica: déjalo apagado y escribe
-las entradas a mano.
-
-Ojo con el espacio de la ESP: con UKI cada kernel son decenas de MB, y tres
-kernels pueden llenar una ESP de 512 MB. Revisa con `df -h /boot`.
+Ojo con el espacio de la ESP: cada kernel son decenas de MB entre `vmlinuz` e
+`initramfs`, y con UKI más. Revisa con `df -h /boot`.
 
 ## Notas sobre partes delicadas
 

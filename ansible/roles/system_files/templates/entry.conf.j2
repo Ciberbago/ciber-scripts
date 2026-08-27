@@ -1,0 +1,10 @@
+# Generado por Ansible desde roles/system_files/templates/entry.conf.j2
+# No editar a mano: se sobrescribe en cada corrida.
+title    {{ boot_entry_titles[item] | default('Arch Linux (' ~ item ~ ')') }}
+sort-key ciber-{{ item }}
+linux    /vmlinuz-{{ item }}
+{% if ciber_ucode_initrd %}
+initrd   /{{ ciber_ucode_initrd }}
+{% endif %}
+initrd   /initramfs-{{ item }}.img
+options  root=PARTUUID={{ ciber_root_partuuid }} {{ boot_kernel_options }} rootfstype={{ ciber_root_fstype }}
