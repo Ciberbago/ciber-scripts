@@ -19,7 +19,6 @@ user_files:
   - { src: dotfiles/extensions/poweroffmenu.conf,    dest: ~/.config/poweroffmenu.conf }
   - { src: dotfiles/terminatorconfig,                dest: ~/.config/terminator/config }
   - { src: dotfiles/wallpaper.desktop,               dest: ~/.config/autostart/wallpaper.desktop }
-  - { src: dotfiles/flameshot.ini,                   dest: ~/.config/flameshot/flameshot.ini }
   - { src: dotfiles/mpv.conf,                        dest: ~/.config/mpv/mpv.conf }
   - { src: dotfiles/modern.lua,                      dest: ~/.config/mpv/scripts/modern.lua }
   - { src: dotfiles/thumbfast.lua,                   dest: ~/.config/mpv/scripts/thumbfast.lua }
@@ -35,7 +34,6 @@ user_files:
 
 # --- Carpetas extra a crear en $HOME (las de user_files se crean solas) ---
 user_dirs:
-  - ~/Screenshots/tmp
   - ~/.local/share/nautilus/scripts
 
 # --- Archivos de sistema: /etc, /boot, /usr/lib ---
@@ -52,8 +50,6 @@ system_files:
 cli_tools:
   - { src: scripts/wallpaper.sh,    dest: /usr/local/bin/wallpaper }
   - { src: scripts/archbootgen.sh,  dest: /usr/local/bin/archbootgen }
-  - { src: scripts/swapshot,        dest: /usr/local/bin/swapshot }
-  - { src: scripts/ufetch.sh,       dest: /usr/local/bin/ufetch }
   # Progreso en vivo del playbook, para correr en otra terminal
   - { src: scripts/ciber-watch.sh,  dest: /usr/local/bin/ciber-watch }
 

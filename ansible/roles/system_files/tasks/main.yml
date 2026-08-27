@@ -53,4 +53,6 @@
   loop_control:
     label: "{{ item.dest }}"
   become: true
-  notify: Recargar sysctl
+  notify:
+    - Recargar sysctl
+    - Avisar de claves de sysctl que el kernel no acepto

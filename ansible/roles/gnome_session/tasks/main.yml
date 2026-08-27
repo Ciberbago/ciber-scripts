@@ -70,20 +70,38 @@
   changed_when: false
   failed_when: false
 
-- name: Listar extensiones ya instaladas
-  ansible.builtin.command:
-    cmd: gext list
-  register: gext_list
-  changed_when: false
-  failed_when: false
-  when: gext_check.rc == 0
-
-- name: Instalar extensiones de GNOME Shell
-  ansible.builtin.command:
-    cmd: "gext --filesystem install {{ item.id }}"
+- name: Ver que extensiones ya estan instaladas
+  # El directorio existe si la extension esta desplegada, este habilitada o no.
+  ansible.builtin.stat:
+    path: "{{ ciber_home }}/.local/share/gnome-shell/extensions/{{ item.uuid }}"
   loop: "{{ gnome_extensions }}"
   loop_control:
-    label: "{{ item.id }} {{ item.name }}"
+    label: "{{ item.uuid }}"
+  register: ext_stat
+
+- name: Que sigue - extensiones de GNOME
+  ansible.builtin.debug:
+    msg:
+      sigue: >-
+        Instalar {{ ext_stat.results | rejectattr('stat.exists')
+                    | map(attribute='item.name') | list }}
+      tarda: "~2 s por extension, es descarga desde extensions.gnome.org"
+      importante: >-
+        No se ven en la app de Extensiones hasta que cierres sesion y vuelvas a
+        entrar: se instalan a disco y el shell no las relee en caliente.
+  when:
+    - gext_check.rc == 0
+    - ext_stat.results | rejectattr('stat.exists') | list | length > 0
+
+- name: Instalar extensiones de GNOME Shell
+  # Por UUID, no por ID numerico: gext acepta ambos y el UUID es verificable
+  # leyendo el archivo. Con --filesystem porque el backend de DBus abre un
+  # dialogo de confirmacion por extension, imposible de automatizar.
+  ansible.builtin.command:
+    cmd: "gext --filesystem install {{ item.item.uuid }}"
+  loop: "{{ ext_stat.results | rejectattr('stat.exists') | list }}"
+  loop_control:
+    label: "{{ item.item.uuid }}"
   become: false
   when: gext_check.rc == 0
   register: gext_install
@@ -91,13 +109,14 @@
   failed_when: false
 
 - name: Reportar extensiones que fallaron
-  # Mismo arreglo que en el rol appimages: sin el selectattr('rc','defined'),
-  # que ocultaba los fallos de become (no traen 'rc').
+  # NO filtrar con selectattr('rc','defined'): un fallo de become o de conexion
+  # revienta antes de ejecutar el modulo y su resultado no trae 'rc'. Ese filtro
+  # descartaba justo esos casos y el reporte se saltaba en silencio.
   ansible.builtin.debug:
     msg:
       fallaron: >-
         {{ gext_install.results | default([]) | rejectattr('rc', 'equalto', 0)
-           | map(attribute='item.name') | list }}
+           | map(attribute='item.item.uuid') | list }}
       motivos: >-
         {{ gext_install.results | default([]) | rejectattr('rc', 'equalto', 0)
            | map(attribute='msg') | list | unique }}
@@ -109,3 +128,74 @@
       gext no esta instalado (paquete AUR gnome-extensions-cli): se omitieron
       las extensiones. Corre 'ciber-apply --tags aur' primero.
   when: gext_check.rc != 0
+
+# --- Extensiones que hay que compilar del repo ---
+#
+# Las que no estan en extensions.gnome.org. Se clona y se corre su script de
+# build. La guarda por UUID evita recompilar en cada corrida.
+
+- name: Ver que extensiones de git ya estan instaladas
+  ansible.builtin.stat:
+    path: "{{ ciber_home }}/.local/share/gnome-shell/extensions/{{ item.uuid }}"
+  loop: "{{ gnome_extensions_git | default([]) }}"
+  loop_control:
+    label: "{{ item.uuid }}"
+  register: extgit_stat
+
+- name: Compilar extensiones desde su repo
+  when: extgit_stat.results | rejectattr('stat.exists') | list | length > 0
+  block:
+    - name: Que sigue - extensiones desde git
+      ansible.builtin.debug:
+        msg:
+          sigue: >-
+            Clonar y compilar:
+            {{ extgit_stat.results | rejectattr('stat.exists')
+               | map(attribute='item.name') | list }}
+          nota: >-
+            Si el script de build pide sudo, va a fallar aqui: Ansible no tiene
+            terminal para el prompt. El reporte de abajo lo dira.
+
+    - name: Clonar el repo de la extension
+      ansible.builtin.git:
+        repo: "{{ item.item.repo }}"
+        dest: "/tmp/ciber-ext-{{ item.item.uuid }}"
+        depth: 1
+        version: "{{ item.item.version | default('HEAD') }}"
+      loop: "{{ extgit_stat.results | rejectattr('stat.exists') | list }}"
+      loop_control:
+        label: "{{ item.item.uuid }}"
+      become: false
+
+    - name: Compilar e instalar la extension
+      ansible.builtin.command:
+        cmd: "{{ item.item.build }}"
+        chdir: "/tmp/ciber-ext-{{ item.item.uuid }}"
+      loop: "{{ extgit_stat.results | rejectattr('stat.exists') | list }}"
+      loop_control:
+        label: "{{ item.item.uuid }}"
+      become: false
+      changed_when: true
+      failed_when: false
+      register: extgit_build
+
+    - name: Reportar extensiones de git que fallaron
+      ansible.builtin.debug:
+        msg:
+          fallaron: >-
+            {{ extgit_build.results | default([]) | rejectattr('rc', 'equalto', 0)
+               | map(attribute='item.item.uuid') | list }}
+          motivos: >-
+            {{ extgit_build.results | default([]) | rejectattr('rc', 'equalto', 0)
+               | map(attribute='stderr') | list | unique }}
+      when: extgit_build.results | default([]) | rejectattr('rc', 'equalto', 0) | list | length > 0
+
+  always:
+    - name: Limpiar los clones
+      ansible.builtin.file:
+        path: "/tmp/ciber-ext-{{ item.uuid }}"
+        state: absent
+      loop: "{{ gnome_extensions_git | default([]) }}"
+      loop_control:
+        label: "{{ item.uuid }}"
+      become: false

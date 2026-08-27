@@ -101,6 +101,17 @@
   loop: "{{ appimage_packages }}"
   register: am_installed
 
+- name: Que sigue - AppImages
+  ansible.builtin.debug:
+    msg:
+      sigue: >-
+        Instalar con AM:
+        {{ am_installed.results | rejectattr('stat.exists')
+           | map(attribute='item') | list }}
+      tarda: "Lo mas lento de session.yml. Varias se construyen sobre la marcha"
+      nota: "Cada AppImage imprime al terminar, asi que si veras avance"
+  when: am_installed.results | rejectattr('stat.exists') | list | length > 0
+
 - name: Instalar AppImages faltantes
   # Una por una para ver el avance: cada AppImage tarda y varias se construyen
   # sobre la marcha, asi que aqui el loop si vale la pena (a diferencia de

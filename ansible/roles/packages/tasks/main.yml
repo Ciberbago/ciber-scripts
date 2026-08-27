@@ -1,16 +1,85 @@
 ---
 # Paquetes de los repos oficiales.
 #
-# En bash habia una clasificacion casera 200/202/301/404 que reimplementaba (mal)
-# la resolucion que pacman ya hace, y expandia un array asociativo de forma
-# impredecible. El modulo pacman resuelve todo y reporta exactamente que instalo.
+# En bash habia una clasificacion casera 200/202/301/404. La parte que
+# reimplementaba la resolucion de dependencias sobraba (pacman ya la hace), pero
+# la de comprobar QUE NOMBRES EXISTEN resolvia un problema real, y aqui esta de
+# vuelta: sin ella, un solo nombre mal escrito o un paquete renombrado hace
+# fallar la instalacion de los otros cien.
+
+- name: Ver que paquetes ya estan instalados
+  # Una sola consulta a la base local. Preguntar 'pacman -Qq <pkg>' uno por uno
+  # serian 100 invocaciones y ~30 s solo para averiguar que hay que hacer.
+  ansible.builtin.command:
+    cmd: pacman -Qq
+  register: pacman_installed
+  changed_when: false
+
+- name: Listar los paquetes disponibles en los repos
+  ansible.builtin.command:
+    cmd: pacman -Slq
+  register: pacman_disponibles
+  changed_when: false
+
+- name: Separar pendientes, instalables e inexistentes
+  ansible.builtin.set_fact:
+    pacman_pendientes: "{{ pacman_packages | difference(pacman_installed.stdout_lines) }}"
+    pacman_inexistentes: >-
+      {{ pacman_packages | difference(pacman_installed.stdout_lines)
+         | difference(pacman_disponibles.stdout_lines) }}
+
+- name: Avisar de paquetes que no existen en ningun repo
+  # Ojo con el orden: este rol corre ANTES de 'aur', asi que chaotic-aur todavia
+  # no esta configurado en una maquina limpia. Un paquete que solo viva en
+  # chaotic va a aparecer aqui: su lugar es chaotic_packages, no pacman_packages.
+  ansible.builtin.debug:
+    msg:
+      no_existen: "{{ pacman_inexistentes }}"
+      que_hacer: >-
+        Revisa el nombre con 'pacman -Ss <termino>'. Si el paquete vive en
+        chaotic-aur muevelo a chaotic_packages, y si hay que compilarlo, a
+        aur_packages. Se instala todo lo demas.
+  when: pacman_inexistentes | length > 0
+
+- name: Que sigue - paquetes oficiales
+  # Ansible NO imprime de forma fiable el banner de la tarea siguiente antes de
+  # ejecutarla: con profile_tasks activo, lo ultimo que queda en pantalla durante
+  # una tarea larga es la linea de tiempos de la ANTERIOR. Por eso estos avisos
+  # son tareas propias: imprimen y terminan ANTES de que arranque la lenta.
+  #
+  # No se reporta el tamano de descarga: 'pacman -Sp --print-format %s' no existe
+  # (no imprime nada), y la unica fuente es el "Download Size" de 'pacman -Si',
+  # que es texto legible con unidades y depende del locale. Parsearlo seria
+  # fragil; el conteo y la lista de nombres son la informacion accionable.
+  ansible.builtin.debug:
+    msg:
+      sigue: >-
+        Instalar {{ pacman_pendientes | difference(pacman_inexistentes) | length }}
+        paquetes nuevos (de {{ pacman_packages | length }} declarados)
+      cuales: "{{ pacman_pendientes | difference(pacman_inexistentes) }}"
+      tarda: >-
+        {{ 'segundos: no hay nada que instalar'
+           if pacman_pendientes | difference(pacman_inexistentes) | length == 0
+           else 'proporcional a la descarga. Referencia: la lista completa
+                 (~1.6 GiB) tardo ~9 min en una VM' }}
+      por_que_no_imprime: >-
+        Ansible captura el stdout de pacman y lo suelta al terminar. Para ver
+        paquete por paquete: 'ciber-watch' en otra terminal (Ctrl+Alt+F2).
 
 - name: Instalar paquetes de los repos oficiales
+  # Se pasa la lista completa menos los inexistentes: los ya instalados son
+  # no-ops con state: present, y asi un nombre muerto no tumba a los demas.
   community.general.pacman:
-    name: "{{ pacman_packages }}"
+    name: "{{ pacman_packages | difference(pacman_inexistentes) }}"
     state: present     # equivale a --needed: no reinstala lo que ya esta
   become: true
   register: pacman_result
+
+- name: Que sigue - base de pkgfile
+  ansible.builtin.debug:
+    msg:
+      sigue: "Descargar la base de datos de pkgfile (para 'comando no encontrado')"
+      tarda: "~20-40 s, siempre: no es incremental"
 
 - name: Actualizar la base de pkgfile (comando no encontrado)
   ansible.builtin.command:

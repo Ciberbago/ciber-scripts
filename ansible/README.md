@@ -102,10 +102,14 @@ Lo que sí ayuda, en orden de utilidad:
 1. **`ciber-watch` en otra terminal.** Lee el log de pacman y los procesos de
    compilación en vivo. Es lo único que te dice qué está pasando *dentro* de una
    tarea. En la consola: Ctrl+Alt+F2 para otra TTY, Ctrl+Alt+F1 para volver.
-2. **El callback `profile_tasks`** (ya activo en `ansible.cfg`): imprime la
+2. **Las tareas "Que sigue - ..."** antes de cada tarea larga. Ansible ya imprime
+   el nombre de la siguiente tarea, pero un nombre genérico no dice si va a
+   tardar un segundo o nueve minutos. Estos avisos dicen qué va a hacer, cuántos
+   elementos, cuánto suele tardar y dónde mirar el avance.
+3. **El callback `profile_tasks`** (ya activo en `ansible.cfg`): imprime la
    duración de cada tarea y el acumulado, y al final el ranking de las más
    lentas. Te da el ritmo, no el detalle.
-3. **Tareas con `loop` en vez de una llamada con la lista completa.** Cada
+4. **Tareas con `loop` en vez de una llamada con la lista completa.** Cada
    elemento imprime su resultado al completarse. Por eso el rol `aur` instala
    los paquetes de chaotic uno por uno: en una sola llamada eran dos minutos
    mudos.

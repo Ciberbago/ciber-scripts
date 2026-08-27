@@ -1,6 +1,29 @@
 ---
+# 'sysctl --system' devuelve codigo 1 si UNA sola clave falla, aunque aplique
+# todas las demas. Y falla legitimamente cuando la clave se refiere a hardware
+# que esta maquina no tiene: en una VM, kernel.nmi_watchdog da "Unknown error
+# 524" (ENOTSUPP) porque no hay NMI watchdog que configurar.
+#
+# Abortar la corrida por eso es incorrecto: el resto de las claves si se aplico.
+# Pero tampoco se puede silenciar, porque una clave mal escrita se veria igual.
+# Asi que no falla, y lo que no se pudo aplicar se reporta.
+
 - name: Recargar sysctl
   ansible.builtin.command:
     cmd: sysctl --system
   become: true
+  register: sysctl_result
   changed_when: true
+  failed_when: false
+
+- name: Avisar de claves de sysctl que el kernel no acepto
+  ansible.builtin.debug:
+    msg:
+      no_aplicadas: "{{ sysctl_result.stderr_lines | default([]) }}"
+      nota: >-
+        Si la clave se refiere a hardware que esta maquina no tiene, es normal
+        (error 524 = ENOTSUPP). Si el nombre de la clave esta mal escrito en
+        algun archivo de /etc/sysctl.d, esto es lo que te lo va a decir.
+  when:
+    - sysctl_result is defined
+    - sysctl_result.stderr | default('') | length > 0

@@ -86,6 +86,16 @@
   changed_when: false
   failed_when: false
 
+- name: Que sigue - binarios de chaotic
+  ansible.builtin.debug:
+    msg:
+      sigue: >-
+        Instalar {{ chaotic_check.results | selectattr('rc', 'equalto', 0)
+        | map(attribute='item') | list | length }} paquetes binarios de
+        chaotic-aur (incluye el kernel linux-cachyos)
+      tarda: "~2 min en limpio. Es descarga, no compilacion"
+      avance: "ciber-watch en otra terminal"
+
 - name: Instalar binarios de chaotic-aur
   # Son paquetes de un repo normal: los instala pacman sin compilar nada.
   #
@@ -155,6 +165,13 @@
       become: false
       when: yay_check.rc != 0
 
+    - name: Que sigue - compilar yay
+      ansible.builtin.debug:
+        msg:
+          sigue: "Compilar yay desde el AUR con makepkg"
+          tarda: "~40 s. Aqui si es compilacion, no descarga"
+      when: yay_check.rc != 0
+
     - name: Compilar e instalar yay
       # makepkg NO puede correr como root: become false a proposito.
       ansible.builtin.command:
@@ -163,6 +180,17 @@
       become: false
       when: yay_check.rc != 0
       changed_when: true
+
+    - name: Que sigue - compilar del AUR
+      ansible.builtin.debug:
+        msg:
+          sigue: >-
+            Compilar del AUR con yay:
+            {{ aur_check.results | rejectattr('rc', 'equalto', 0)
+               | map(attribute='item') | list }}
+          tarda: "Varios minutos. Los paquetes -git y los dkms son los lentos"
+          avance: >-
+            'ciber-watch' muestra los procesos de compilacion en curso cada 5 s
 
     - name: Instalar paquetes del AUR con yay
       # No aborta el play si uno falla. Compilar el AUR toma minutos, y perder

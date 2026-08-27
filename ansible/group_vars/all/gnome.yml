@@ -56,17 +56,38 @@ gnome_dconf_loads:
 # una sola tecla y no un volcado. El archivo la trae ya en formato GVariant.
 gnome_custom_keybindings_list_src: dotfiles/custom-keys.dconf
 
-# Extensiones de GNOME Shell (id de extensions.gnome.org : nombre legible)
+# Extensiones de GNOME Shell, por UUID.
+#
+# Se usan UUIDs y no los IDs numericos de extensions.gnome.org a proposito: el
+# UUID es lo que reporta 'gext list' en tu propia maquina, es estable, y se lee
+# solo. Con IDs numericos, un numero equivocado instala la extension equivocada
+# en silencio y no hay forma de notarlo leyendo el archivo.
+#
+# Para agregar una: instalala a mano, corre 'gext list' y pega el UUID aqui.
 gnome_extensions:
-  - { id: 4269, name: Alphabetical App Grid }
-  - { id: 615,  name: AppIndicator Support }
-  - { id: 3193, name: Blur my Shell }
-  - { id: 1160, name: Dash to Panel }
-  - { id: 5940, name: Emoji Copy }
-  - { id: 2917, name: Executor }
-  - { id: 2932, name: Sound Input and Output Chooser }
-  - { id: 6242, name: Bring Out Submenu Of Power Off }
-  - { id: 8834, name: Clipboard History }
+  - { uuid: "AlphabeticalAppGrid@stuarthayhurst",       name: "Alphabetical App Grid" }
+  - { uuid: "appindicatorsupport@rgcjonas.gmail.com",   name: "AppIndicator Support" }
+  - { uuid: "bluetooth-battery@michalw.github.com",     name: "Bluetooth battery indicator" }
+  - { uuid: "blur-my-shell@aunetx",                     name: "Blur my Shell" }
+  - { uuid: "BringOutSubmenuOfPowerOffLogoutButton@pratap.fastmail.fm", name: "Bring Out Submenu Of Power Off" }
+  - { uuid: "copyous@boerdereinar.dev",                 name: "Copyous" }
+  - { uuid: "dash-to-panel@jderose9.github.com",        name: "Dash to Panel" }
+  - { uuid: "emoji-copy@felipeftn",                     name: "Emoji Copy" }
+  - { uuid: "executor@raujonas.github.io",              name: "Executor" }
+  - { uuid: "quick-settings-audio-panel@rayzeq.github.io",              name: "Quick Settings Audio Panel" }
+  - { uuid: "quicksettings-audio-devices-hider@marcinjahn.com",         name: "Audio Devices Hider" }
+  - { uuid: "quicksettings-audio-devices-renamer@marcinjahn.com",       name: "Audio Devices Renamer" }
+
+# Extensiones que NO estan en extensions.gnome.org y hay que compilar del repo.
+# Se clonan y se ejecuta 'build'. Con la guarda de 'uuid', si ya esta instalada
+# no se vuelve a compilar.
+#
+# Para agregar otra, una entrada aqui: no hay codigo que tocar.
+gnome_extensions_git:
+  - uuid: "gradia-integration@alexandervanhee.github.io"
+    name: "Gradia Capture"
+    repo: "https://github.com/AlexanderVanhee/gradia-capture.git"
+    build: "./build.sh -i"
 
 # Lanzadores a ocultar del menu de aplicaciones. Se copia el .desktop a
 # /usr/local/share/applications con Hidden=true, para no tocar /usr/share
@@ -74,6 +95,12 @@ gnome_extensions:
 gnome_hide_apps:
   - assistant
   - avahi-discover
+  # Estos tres son nombres de archivo .desktop sin extension. Si el rol los
+  # reporta como "no instalados", el nombre real es otro: buscalo con
+  #   ls /usr/share/applications | grep -iE 'lstopo|micro|fresh'
+  - lstopo          # "Hardware locality lstopo", del paquete hwloc
+  - micro
+  - fresh
   - bssh
   - btop
   - bvnc
