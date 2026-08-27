@@ -15,13 +15,23 @@
 #  de lista, no texto pegado en una linea de 3185 caracteres.
 # =============================================================================
 
+# Directorios que se agregan al PATH de fish (con fish_add_path, idempotente).
+# ~/.local/bin lo necesita AM: ahi deja los enlaces de las AppImages locales, y
+# el propio instalador avisa "is not in PATH, local apps may not run".
+fish_paths:
+  - ~/.local/bin
+
 fish_aliases:
   - { name: limpiar,    body: "paccache -rk1 && paccache -ruk0 && yay -Sc && sudo pacman -Qdtq | sudo pacman -Runs -" }
   - { name: historial,  body: "history | fzf" }
   - { name: cat,        body: "bat" }
   - { name: cc,         body: "cd && clear" }
-  # Era 'exa' en el script viejo, pero el paquete que se instala es 'eza'
-  - { name: ls,         body: "eza -lha --icons" }
+  # Era 'exa' en el script viejo, pero el paquete que se instala es 'eza'.
+  # El '=auto' no es opcional: en las versiones nuevas de eza '--icons' exige un
+  # valor, y sin el se come el siguiente argumento. Con "--icons" pelado,
+  # cualquier 'ls <directorio>' fallaba con
+  # "invalid value '<ruta>' for '--icons [<WHEN>]'".
+  - { name: ls,         body: "eza -lha --icons=auto" }
   - { name: mkdir,      body: "mkdir -pv" }
   - { name: espacio,    body: "gdu /" }
   - { name: f34,        body: "firefox -P 'Cyb_R34' -no-remote" }

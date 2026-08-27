@@ -195,6 +195,32 @@ root está en LVM o LUKS, donde la detección del PARTUUID no aplica.
 Ojo con el espacio de la ESP: cada kernel son decenas de MB entre `vmlinuz` e
 `initramfs`, y con UKI más. Revisa con `df -h /boot`.
 
+## AppImages (AM)
+
+Se instalan en **modo local** (`am -i --user`), no a nivel sistema. Tres razones,
+todas descubiertas depurando en una máquina real:
+
+- El instalador de AM se hace dueño de `/opt/am` para el usuario invocante, o sea
+  que AM está diseñado para correr como usuario normal. Con `become: true` la
+  tarea fallaba con `sudo: a password is required`.
+- En modo local los `.desktop` van a `~/.local/share/applications`, que es donde
+  GNOME construye la rejilla del usuario. Instalando como root los lanzadores no
+  aparecían en Actividades.
+- Los enlaces quedan en `~/.local/bin`, que el playbook agrega al PATH de fish
+  vía `fish_paths` en `shell.yml`.
+
+Lo que hacía imposible automatizarlo: **la primera vez, `am -i --user` lanza un
+asistente interactivo** preguntando dónde instalar. Sin TTY se quedaba colgado.
+El rol escribe `~/.config/appman/appman-config` antes de instalar nada, con la
+ruta de `appimage_install_path`, y así el asistente nunca aparece.
+
+Ese archivo **no se sobrescribe** si ya existe: AM exige desinstalar todo antes
+de mover la ubicación. Si no coincide con `appimage_install_path`, el rol avisa
+en lugar de romper las apps instaladas.
+
+Sólo aplican al usuario que corre `ciber-session`. Si alguna app tiene que estar
+disponible para todos los usuarios, ésa va aparte con instalación de sistema.
+
 ## Notas sobre partes delicadas
 
 **AUR.** `makepkg` se niega a correr como root, pero necesita sudo para instalar

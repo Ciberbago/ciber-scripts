@@ -1,5 +1,16 @@
 ---
-# AppImages via AM (https://github.com/ivan-hc/AM)
+# AppImages via AM (https://github.com/ivan-hc/AM), en modo local ("AppMan Mode").
+#
+# Dos decisiones que salieron de depurar esto en una maquina real:
+#
+# 1. Las apps se instalan con 'am -i --user', SIN become. El instalador de AM se
+#    hace dueno de /opt/am para el usuario invocante, o sea que AM esta disenado
+#    para correr como usuario normal despues de instalarse. Con 'become: true'
+#    fallaba con "sudo: a password is required" y no instalaba nada.
+#
+# 2. En modo local los .desktop van a ~/.local/share/applications, que es donde
+#    GNOME construye la rejilla de aplicaciones del usuario. Instalando como root
+#    iban a rutas de sistema y los lanzadores no aparecian en Actividades.
 
 - name: Ver si AM ya esta instalado
   ansible.builtin.command:
@@ -9,7 +20,8 @@
   failed_when: false
 
 - name: Instalar AM
-  # En bash esto bajaba el INSTALL al directorio actual y lo dejaba de basura.
+  # El instalador de AM si necesita root: pone 'am' en /usr/local/bin y crea
+  # /opt/am (y se lo chowna al usuario). Solo esto va con become.
   when: am_check.rc != 0
   block:
     - name: Descargar el instalador de AM
@@ -31,21 +43,74 @@
         state: absent
       become: false
 
-- name: Ver que AppImages ya estan instaladas
-  # Se comprueba la ruta de instalacion en lugar de un flag de 'am', porque los
-  # flags de AM cambian entre versiones. /opt es el APPSPATH por default de AM:
-  # si lo configuraste distinto, ajusta appimage_install_path.
+# --- Config de AppMan: esto es lo que mataba la automatizacion ---
+#
+# La PRIMERA vez que corres 'am -i --user', AM lanza un asistente interactivo
+# ("Configure AppMan") preguntando donde instalar, y espera entrada por teclado.
+# Bajo Ansible no hay TTY, asi que ahi se quedaba. Escribiendo el archivo de
+# config antes, el asistente no aparece nunca.
+
+- name: Crear la carpeta de config de AppMan
+  ansible.builtin.file:
+    path: "{{ ciber_home }}/.config/appman"
+    state: directory
+    mode: "0755"
+  become: false
+
+- name: Ver si ya hay config de AppMan
   ansible.builtin.stat:
-    path: "{{ appimage_install_path }}/{{ item }}"
+    path: "{{ ciber_home }}/.config/appman/appman-config"
+  register: appman_cfg
+
+- name: Leer la config existente
+  ansible.builtin.slurp:
+    src: "{{ ciber_home }}/.config/appman/appman-config"
+  register: appman_cfg_raw
+  when: appman_cfg.stat.exists
+
+- name: Escribir la config de AppMan
+  # El archivo es una sola linea con la ruta absoluta de instalacion.
+  # force: false a proposito: AM advierte que para cambiar la ubicacion hay que
+  # desinstalar todo primero, asi que si ya existe NO se sobrescribe.
+  ansible.builtin.copy:
+    dest: "{{ ciber_home }}/.config/appman/appman-config"
+    content: "{{ appimage_install_path | expanduser }}\n"
+    mode: "0644"
+    force: false
+  become: false
+
+- name: Avisar si la config no coincide con appimage_install_path
+  ansible.builtin.debug:
+    msg: >-
+      La config de AppMan apunta a
+      '{{ appman_cfg_raw.content | b64decode | trim }}' pero
+      appimage_install_path dice '{{ appimage_install_path | expanduser }}'.
+      No se sobrescribio: AM exige desinstalar todo antes de mover la ubicacion.
+      Ajusta appimage_install_path en main.yml para que coincidan.
+  when:
+    - appman_cfg.stat.exists
+    - (appman_cfg_raw.content | b64decode | trim) != (appimage_install_path | expanduser)
+
+# --- Instalacion ---
+
+- name: Ver que AppImages ya estan instaladas
+  # AM en modo local crea un directorio por app dentro de appimage_install_path
+  # (~/Applications por default) y un symlink en ~/.local/bin.
+  ansible.builtin.stat:
+    path: "{{ appimage_install_path | expanduser }}/{{ item }}"
   loop: "{{ appimage_packages }}"
   register: am_installed
 
 - name: Instalar AppImages faltantes
-  # En bash era un solo 'am -i' con los 8: si uno fallaba se perdian los demas
-  # y no quedaba claro cual habia sido.
+  # Una por una para ver el avance: cada AppImage tarda y varias se construyen
+  # sobre la marcha, asi que aqui el loop si vale la pena (a diferencia de
+  # pacman, donde partirlo tiraba los ParallelDownloads).
+  #
+  # failed_when: false para que una app con upstream caido no tumbe las otras
+  # siete ni el resto del playbook. Lo que falle se reporta abajo.
   ansible.builtin.command:
-    cmd: "am -i {{ item.item }}"
-  become: true
+    cmd: "am -i --user {{ item.item }}"
+  become: false
   loop: "{{ am_installed.results | rejectattr('stat.exists') | list }}"
   loop_control:
     label: "{{ item.item }}"
@@ -54,11 +119,17 @@
   failed_when: false
 
 - name: Reportar AppImages que fallaron
+  # NO filtrar con selectattr('rc','defined'): un fallo de become o de conexion
+  # revienta antes de ejecutar el modulo y su resultado no trae 'rc'. Ese filtro
+  # descartaba justo esos casos y el reporte se saltaba en silencio.
+  # rejectattr('rc','equalto',0) ya los conserva, porque un atributo indefinido
+  # no es igual a 0.
   ansible.builtin.debug:
-    msg: >-
-      Fallaron: {{ am_result.results | default([])
-        | selectattr('rc', 'defined') | rejectattr('rc', 'equalto', 0)
-        | map(attribute='item.item') | list | join(', ') }}
-  when: >-
-    am_result.results | default([]) | selectattr('rc', 'defined')
-    | rejectattr('rc', 'equalto', 0) | list | length > 0
+    msg:
+      fallaron: >-
+        {{ am_result.results | default([]) | rejectattr('rc', 'equalto', 0)
+           | map(attribute='item.item') | list }}
+      motivos: >-
+        {{ am_result.results | default([]) | rejectattr('rc', 'equalto', 0)
+           | map(attribute='msg') | list | unique }}
+  when: am_result.results | default([]) | rejectattr('rc', 'equalto', 0) | list | length > 0

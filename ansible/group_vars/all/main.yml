@@ -59,8 +59,13 @@ fish_plugins:
   - oh-my-fish/plugin-bang-bang
 
 # --- AppImages / AM ---
-# APPSPATH de AM: donde instala las AppImages a nivel sistema
-appimage_install_path: /opt
+# Donde instala AM en modo local ("AppMan Mode"): un directorio por app aqui,
+# mas un symlink en ~/.local/bin. Es el default de AM y el playbook lo escribe
+# en ~/.config/appman/appman-config para que su asistente interactivo no aparezca.
+#
+# Si lo cambias en una maquina que ya tiene apps instaladas, AM exige
+# desinstalarlas primero: el rol no sobrescribe una config existente, solo avisa.
+appimage_install_path: ~/Applications
 
 # --- Entradas de systemd-boot ---
 #
@@ -80,6 +85,8 @@ boot_entries_enabled: true
 # Entrada que systemd-boot arranca por default. Sin esta linea en loader.conf,
 # systemd-boot elige por orden de sorteo, y agregar entradas cambiaria en
 # silencio con que kernel arrancas. Ve los ids con 'bootctl list'.
+# El id de una entrada Type #1 es su nombre de archivo, con .conf incluido.
+# Veelos con 'bootctl list'. "arch-linux.efi" es el UKI que dejo archinstall.
 boot_default_entry: "ciber-linux-cachyos.conf"
 
 # Opciones del kernel comunes a todas las entradas. El root= y el rootfstype se

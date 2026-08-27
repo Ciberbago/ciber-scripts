@@ -91,14 +91,17 @@
   failed_when: false
 
 - name: Reportar extensiones que fallaron
+  # Mismo arreglo que en el rol appimages: sin el selectattr('rc','defined'),
+  # que ocultaba los fallos de become (no traen 'rc').
   ansible.builtin.debug:
-    msg: >-
-      Fallaron: {{ gext_install.results | default([])
-        | selectattr('rc', 'defined') | rejectattr('rc', 'equalto', 0)
-        | map(attribute='item.name') | list | join(', ') }}
-  when: >-
-    gext_install.results | default([]) | selectattr('rc', 'defined')
-    | rejectattr('rc', 'equalto', 0) | list | length > 0
+    msg:
+      fallaron: >-
+        {{ gext_install.results | default([]) | rejectattr('rc', 'equalto', 0)
+           | map(attribute='item.name') | list }}
+      motivos: >-
+        {{ gext_install.results | default([]) | rejectattr('rc', 'equalto', 0)
+           | map(attribute='msg') | list | unique }}
+  when: gext_install.results | default([]) | rejectattr('rc', 'equalto', 0) | list | length > 0
 
 - name: Avisar si gext no esta
   ansible.builtin.debug:

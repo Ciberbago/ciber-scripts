@@ -4,6 +4,10 @@
 #  Para cambiar un alias, editalo en shell.yml y vuelve a aplicar.
 # =============================================================================
 
+{% for d in fish_paths | default([]) %}
+fish_add_path -g {{ d | replace('~', '$HOME') }}
+{% endfor %}
+
 {% for a in fish_aliases %}
 alias {{ a.name }} '{{ a.body | replace("'", "\\'") }}'
 {% endfor %}
