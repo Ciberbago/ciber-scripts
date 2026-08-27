@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# Vuelve a aplicar el playbook de sistema.
+#
+#   ciber-apply                      todo
+#   ciber-apply --check --diff       simulacro: dice que cambiaria, sin tocar nada
+#   ciber-apply --tags packages      solo paquetes
+#   ciber-apply --tags systemd       solo unidades de systemd
+#   ciber-apply --list-tags          ver todas las etiquetas
+#
+# Generado por Ansible. No editar a mano: se sobrescribe en cada run.
+set -euo pipefail
+
+# ansible-pull entra a la raiz del checkout, pero el ansible.cfg vive en ansible/
+export ANSIBLE_CONFIG="{{ ciber_checkout_dir }}/ansible/ansible.cfg"
+
+exec ansible-pull \
+    --url "{{ ciber_git_repo }}" \
+    --directory "{{ ciber_checkout_dir }}" \
+    --inventory ansible/inventory.ini \
+    --ask-become-pass \
+    ansible/site.yml "$@"

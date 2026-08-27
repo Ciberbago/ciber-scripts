@@ -1,0 +1,5 @@
+---
+# Instalar con:  ansible-galaxy collection install -r ansible/requirements.yml
+collections:
+  - name: community.general     # dconf, pacman, pacman_key, timezone, ini_file
+    version: ">=8.0.0"

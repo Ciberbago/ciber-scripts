@@ -1,0 +1,47 @@
+---
+# =============================================================================
+#  SYSTEMD  -  agregar una unidad nueva son 2 pasos, ninguno toca codigo
+# =============================================================================
+#
+#  1. Pon el archivo en  systemd/  del repo  (.service .timer .mount .automount
+#     .socket .path).  El rol lo descubre solo y lo copia a /etc/systemd/system/
+#     No hay lista de archivos que mantener: se descubren por glob.
+#
+#  2. Si quieres que arranque en boot, agrega su nombre a systemd_units_enabled.
+#     Si no lo agregas, el archivo queda instalado pero deshabilitado.
+#
+#  Los .conf que hay en systemd/ (sysctl, zram, entradas de boot) NO son
+#  unidades: esos van en system_files, dentro de files.yml
+# =============================================================================
+
+# Unidades a habilitar en boot. Acepta unidades que vienen con los paquetes
+# (gdm, bluetooth) y las del repo (dpm-high, run-media-nas).
+systemd_units_enabled:
+  - gdm.service
+  - bluetooth.service
+  - tailscaled.service
+  - reflector.timer
+  - paccache.timer
+  - dpm-high.service
+  - run-media-nas.automount
+  # Wake-on-LAN: unidad plantilla, la instancia es la interfaz de red detectada.
+  # Si no hay ruta default, el rol la omite con un aviso en vez de fallar.
+  - "wol@{{ ciber_default_iface }}.service"
+
+# Unidades que estan en systemd/ del repo pero NO pertenecen a esta maquina.
+# El autodescubrimiento agarra todo lo que hay en la carpeta, y ahi conviven las
+# unidades del servidor Debian (backup, todoist). Sin esta lista se instalarian
+# en el Arch: no rompen nada porque quedan deshabilitadas, pero ensucian
+# /etc/systemd/system. Si algun dia se portea Debian, cada grupo del inventario
+# tendra su propia exclusion.
+systemd_units_exclude:
+  - backup.service
+  - backup.timer
+  - todoist-precise.service
+  - todoist-precise.timer
+
+# Unidades a habilitar Y arrancar de una vez (no esperan al reboot)
+systemd_units_started: []
+
+# Unidades de usuario (systemctl --user). Van en systemd/user/ del repo.
+systemd_user_units_enabled: []

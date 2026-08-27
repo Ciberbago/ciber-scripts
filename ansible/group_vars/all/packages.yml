@@ -1,0 +1,172 @@
+---
+# =============================================================================
+#  PAQUETES  -  para agregar o quitar algo, edita SOLO este archivo
+# =============================================================================
+#
+#  pacman_packages    repos oficiales (core/extra/multilib)
+#  chaotic_packages   chaotic-aur, son binarios: los instala pacman, no compila
+#  aur_packages       AUR de verdad, hay que compilar (lento)
+#  appimage_packages  AppImages via AM
+#  pacman_remove      paquetes a desinstalar
+#
+#  Antes de agregar algo al AUR, revisa si esta en chaotic-aur: es el mismo
+#  paquete ya compilado y se instala en segundos en lugar de minutos.
+# =============================================================================
+
+pacman_packages:
+  # --- base y desarrollo ---
+  - base-devel
+  - dkms
+  - git
+  - linux-headers
+  - linux-lts
+  - rust
+
+  # --- dependencias que necesita este propio playbook ---
+  - python-psutil          # requerido por el modulo community.general.dconf
+
+  # --- terminal y CLI ---
+  - bat
+  - btop
+  - eza
+  - fastfetch
+  - fish
+  - fisher
+  - fzf
+  - gdu
+  - jq
+  - less
+  - micro
+  - nnn
+  - pacman-contrib
+  - pkgfile
+  - python-tqdm
+  - reflector
+  - terminator
+  - wget
+
+  # --- red ---
+  - ethtool
+  - iperf3
+  - net-tools
+  - smbclient
+  - tailscale
+  - traceroute
+
+  # --- GNOME ---
+  - gdm
+  - gnome-bluetooth-3.0
+  - gnome-calculator
+  - gnome-characters
+  - gnome-control-center
+  - gnome-disk-utility
+  - gnome-font-viewer
+  - gnome-keyring
+  - gnome-remote-desktop
+  - gnome-shell
+  - gnome-text-editor
+  - gnome-tweaks
+  - nautilus
+  - xdg-desktop-portal-gnome
+
+  # --- temas y apariencia ---
+  - adw-gtk-theme
+  - noto-fonts-cjk
+  - papirus-icon-theme
+  - qt5ct
+  - qt6-base
+  - ttf-firacode-nerd
+
+  # --- archivos y almacenamiento ---
+  - 7zip
+  - baobab
+  - file-roller
+  - gvfs
+  - gvfs-smb
+  - minizip
+  - ntfs-3g
+  - unrar
+
+  # --- multimedia ---
+  - amberol
+  - decibels
+  - ffmpegthumbnailer
+  - handbrake
+  - imagemagick
+  - libmad
+  - loupe
+  - mpv-mpris
+  - obs-studio
+  - papers
+  - tumbler
+  - video-trimmer
+  - webp-pixbuf-loader
+
+  # --- graficos / AMD / juegos ---
+  - mangohud
+  - mesa
+  - radeontop
+  - rocm-smi-lib
+  - steam
+  - vulkan-radeon
+
+  # --- escritorio y utilidades ---
+  - bluez
+  - bluez-utils
+  - eyedropper
+  - firefox
+  - fragments
+  - resources
+  - uget
+  - wl-clipboard
+
+  # --- remoto y virtualizacion ---
+  - android-tools
+  - freerdp
+  - remmina
+  - scrcpy
+  - usbutils
+  - virtualbox
+  - virtualbox-guest-iso
+
+  # --- java ---
+  - jre8-openjdk
+  - jre17-openjdk
+  - jre21-openjdk
+
+# Binarios de chaotic-aur (se instalan con pacman, sin compilar)
+chaotic_packages:
+  - ani-cli
+  - bibata-rainbow-cursor-theme
+  - fresh-editor
+  - fsearch
+  - insync
+  - linux-cachyos
+  - linux-cachyos-headers
+  - protonplus
+  - protontricks-git
+  - rtl88xxau-aircrack-dkms-git
+
+# AUR de verdad: hay que compilar
+aur_packages:
+  - clicker-git
+  - flameshot-git
+  - gnome-extensions-cli
+  - headsetcontrol-git
+
+# AppImages via AM
+appimage_packages:
+  - blender
+  - czkawka
+  - google-chrome
+  - heroic-games-launcher
+  - prismlauncher
+  - suyu
+  - teamviewer
+  - ventoy
+
+# Paquetes a quitar si estan instalados
+pacman_remove:
+  - vlc
+  - python-pip
+  - python-poetry

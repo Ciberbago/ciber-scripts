@@ -1,0 +1,132 @@
+---
+# chaotic-aur (repo binario) + yay + los paquetes que si hay que compilar.
+#
+# Este es el rol mas delicado del playbook, por una razon estructural: makepkg se
+# niega a correr como root, pero necesita sudo para instalar dependencias. Como
+# ansible-pull no es una terminal interactiva, yay no puede pedir el password a
+# medias. La solucion es un permiso NOPASSWD temporal, limitado a /usr/bin/pacman
+# y a este usuario, que se retira siempre al final (bloque always) incluso si
+# algo falla.
+
+- name: Importar la llave de chaotic-aur
+  community.general.pacman_key:
+    id: "{{ chaotic_key_id }}"
+    keyserver: "{{ chaotic_keyserver }}"
+    state: present
+  become: true
+
+- name: Ver si el keyring y el mirrorlist de chaotic ya estan
+  ansible.builtin.command:
+    cmd: "pacman -Qq {{ item }}"
+  loop:
+    - chaotic-keyring
+    - chaotic-mirrorlist
+  register: chaotic_base
+  changed_when: false
+  failed_when: false
+
+- name: Instalar keyring y mirrorlist de chaotic-aur
+  # Se instalan por URL (pacman -U). La guarda de arriba evita reinstalarlos en
+  # cada corrida: instalar por URL no es idempotente por si solo.
+  community.general.pacman:
+    name: "https://cdn-mirror.chaotic.cx/chaotic-aur/{{ item.item }}.pkg.tar.zst"
+    state: present
+  loop: "{{ chaotic_base.results | rejectattr('rc', 'equalto', 0) | list }}"
+  loop_control:
+    label: "{{ item.item }}"
+  become: true
+
+- name: Agregar el repo chaotic-aur a pacman.conf
+  # En bash esto era 'tee -a', que duplicaba la seccion en cada corrida.
+  # blockinfile usa marcadores, asi que reemplaza su propio bloque.
+  ansible.builtin.blockinfile:
+    path: /etc/pacman.conf
+    marker: "# {mark} chaotic-aur (ansible)"
+    block: |
+      [chaotic-aur]
+      Include = /etc/pacman.d/chaotic-mirrorlist
+  become: true
+  register: chaotic_repo
+
+- name: Sincronizar bases despues de agregar chaotic-aur
+  community.general.pacman:
+    update_cache: true
+  become: true
+  when: chaotic_repo is changed
+
+- name: Instalar binarios de chaotic-aur
+  # Son paquetes de un repo normal: los instala pacman sin compilar nada.
+  community.general.pacman:
+    name: "{{ chaotic_packages | map('regex_replace', '^', 'chaotic-aur/') | list }}"
+    state: present
+  become: true
+
+# --- A partir de aqui, compilacion del AUR ---
+
+- name: Ver si yay ya esta instalado
+  ansible.builtin.command:
+    cmd: pacman -Qq yay
+  register: yay_check
+  changed_when: false
+  failed_when: false
+
+- name: Ver que paquetes del AUR faltan
+  ansible.builtin.command:
+    cmd: "pacman -Qq {{ item }}"
+  loop: "{{ aur_packages }}"
+  register: aur_check
+  changed_when: false
+  failed_when: false
+
+- name: Compilar del AUR
+  when: yay_check.rc != 0 or (aur_check.results | rejectattr('rc', 'equalto', 0) | list | length > 0)
+  block:
+    - name: Permitir pacman sin password temporalmente
+      ansible.builtin.copy:
+        dest: /etc/sudoers.d/99-ciber-aur
+        content: "{{ ciber_user }} ALL=(root) NOPASSWD: /usr/bin/pacman\n"
+        owner: root
+        group: root
+        mode: "0440"
+        validate: "visudo -cf %s"
+      become: true
+
+    - name: Clonar yay
+      ansible.builtin.git:
+        repo: https://aur.archlinux.org/yay.git
+        dest: /tmp/ciber-build-yay
+        depth: 1
+        version: master
+      become: false
+      when: yay_check.rc != 0
+
+    - name: Compilar e instalar yay
+      # makepkg NO puede correr como root: become false a proposito.
+      ansible.builtin.command:
+        cmd: makepkg -si --noconfirm --needed
+        chdir: /tmp/ciber-build-yay
+      become: false
+      when: yay_check.rc != 0
+      changed_when: true
+
+    - name: Instalar paquetes del AUR con yay
+      ansible.builtin.command:
+        cmd: "yay -S --needed --noconfirm --answerclean None --answerdiff None {{ item.item }}"
+      become: false
+      loop: "{{ aur_check.results | rejectattr('rc', 'equalto', 0) | list }}"
+      loop_control:
+        label: "{{ item.item }}"
+      changed_when: true
+
+  always:
+    - name: Retirar el permiso NOPASSWD
+      ansible.builtin.file:
+        path: /etc/sudoers.d/99-ciber-aur
+        state: absent
+      become: true
+
+    - name: Limpiar el directorio de compilacion
+      ansible.builtin.file:
+        path: /tmp/ciber-build-yay
+        state: absent
+      become: false

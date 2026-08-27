@@ -1,0 +1,56 @@
+---
+# Scripts del repo que se instalan como comandos en /usr/local/bin.
+#
+# En bash esto era 'chmod +x /usr/local/bin/*', que aplicaba a TODO el
+# directorio (incluso a binarios que no eran nuestros). Aqui el modo se aplica
+# archivo por archivo.
+
+- name: Comprobar que los scripts existen en el repo
+  ansible.builtin.stat:
+    path: "{{ ciber_repo_root }}/{{ item.src }}"
+  loop: "{{ cli_tools }}"
+  loop_control:
+    label: "{{ item.src }}"
+  register: clitools_stat
+  become: false
+
+- name: Fallar con la lista de scripts que faltan
+  ansible.builtin.assert:
+    that: clitools_stat.results | rejectattr('stat.exists') | list | length == 0
+    fail_msg: >-
+      Faltan estos scripts en el repo:
+      {{ clitools_stat.results | rejectattr('stat.exists')
+         | map(attribute='item.src') | list | join(', ') }}
+    quiet: true
+
+- name: Instalar comandos en /usr/local/bin
+  ansible.builtin.copy:
+    src: "{{ ciber_repo_root }}/{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: root
+    group: root
+    mode: "0755"
+  loop: "{{ cli_tools }}"
+  loop_control:
+    label: "{{ item.dest }}"
+  become: true
+
+- name: Instalar el comando ciber-session
+  # Envoltorio para volver a aplicar solo la parte de sesion grafica
+  ansible.builtin.template:
+    src: ciber-session.j2
+    dest: /usr/local/bin/ciber-session
+    owner: root
+    group: root
+    mode: "0755"
+  become: true
+
+- name: Instalar el comando ciber-apply
+  # Envoltorio para volver a aplicar el playbook de sistema
+  ansible.builtin.template:
+    src: ciber-apply.j2
+    dest: /usr/local/bin/ciber-apply
+    owner: root
+    group: root
+    mode: "0755"
+  become: true

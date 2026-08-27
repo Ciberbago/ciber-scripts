@@ -1,0 +1,16 @@
+# =============================================================================
+#  Generado por Ansible desde ansible/group_vars/all/shell.yml
+#  NO EDITAR A MANO: se sobrescribe en cada 'ciber-apply'.
+#  Para cambiar un alias, editalo en shell.yml y vuelve a aplicar.
+# =============================================================================
+
+{% for a in fish_aliases %}
+alias {{ a.name }} '{{ a.body | replace("'", "\\'") }}'
+{% endfor %}
+
+{% for f in fish_functions %}
+function {{ f.name }}
+{{ f.body | trim | indent(4, first=True) }}
+end
+
+{% endfor %}

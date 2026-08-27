@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# Aplica la configuracion de la sesion de GNOME (dconf, extensiones, firefox).
+#
+# Requiere estar dentro de GNOME: dconf y gsettings hablan por DBus con la
+# sesion del usuario, asi que esto no funciona por SSH ni desde una TTY.
+#
+#   ciber-session                    todo
+#   ciber-session --check --diff     simulacro
+#   ciber-session --tags gnome       solo GNOME, sin tocar el perfil de Firefox
+#
+# Generado por Ansible. No editar a mano: se sobrescribe en cada run.
+set -euo pipefail
+
+export ANSIBLE_CONFIG="{{ ciber_checkout_dir }}/ansible/ansible.cfg"
+
+exec ansible-pull \
+    --url "{{ ciber_git_repo }}" \
+    --directory "{{ ciber_checkout_dir }}" \
+    --inventory ansible/inventory.ini \
+    --ask-become-pass \
+    ansible/session.yml "$@"

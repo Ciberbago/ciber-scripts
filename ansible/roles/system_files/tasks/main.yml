@@ -1,0 +1,44 @@
+---
+# Archivos de configuracion de sistema (/etc, /boot, /usr/lib).
+#
+# Los archivos vienen del repo clonado, NO de URLs. Esto elimina la causa raiz
+# de la mitad de los bugs del script de bash: 'wget -O' truncaba el destino
+# antes de saber si la descarga sirvio, asi que un typo en la URL (o en el
+# nombre de la variable, como el famoso ${sdcondfig}) dejaba un archivo de 0
+# bytes y algo se rompia 40 lineas despues sin decir por que.
+#
+# Con 'copy' el archivo o existe en el repo o la tarea falla en el momento,
+# senalando exactamente cual falta.
+
+- name: Comprobar que los archivos de sistema existen en el repo
+  ansible.builtin.stat:
+    path: "{{ ciber_repo_root }}/{{ item.src }}"
+  loop: "{{ system_files }}"
+  loop_control:
+    label: "{{ item.src }}"
+  register: sysfiles_stat
+  become: false
+
+- name: Fallar con la lista de archivos que faltan
+  ansible.builtin.assert:
+    that: sysfiles_stat.results | rejectattr('stat.exists') | list | length == 0
+    fail_msg: >-
+      Faltan estos archivos en el repo:
+      {{ sysfiles_stat.results | rejectattr('stat.exists')
+         | map(attribute='item.src') | list | join(', ') }}
+    quiet: true
+
+- name: Instalar archivos de configuracion de sistema
+  ansible.builtin.copy:
+    src: "{{ ciber_repo_root }}/{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: root
+    group: root
+    # Configuracion, no ejecutables. El script viejo ponia 0755 en las entradas
+    # de systemd-boot, que no tiene sentido para un archivo de texto.
+    mode: "{{ item.mode | default('0644') }}"
+  loop: "{{ system_files }}"
+  loop_control:
+    label: "{{ item.dest }}"
+  become: true
+  notify: Recargar sysctl

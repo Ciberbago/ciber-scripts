@@ -1,0 +1,75 @@
+---
+# fish: aliases, funciones y plugins.
+#
+# El bug original aqui fue de formato: los 15 aliases estaban en UNA sola linea
+# fisica de 3185 caracteres separados por espacios, asi que fish parseaba todo lo
+# que seguia al primer "&& funcsave limpiar" como ARGUMENTOS de funcsave y solo
+# se guardaba 1 de 15. Con una plantilla generada desde una lista YAML eso ya no
+# puede pasar: cada alias es una entrada, y la plantilla pone los saltos de linea.
+
+- name: Crear carpetas de fish
+  ansible.builtin.file:
+    path: "{{ ciber_home }}/.config/fish/{{ item }}"
+    state: directory
+    mode: "0755"
+  loop: [conf.d, functions, completions]
+  become: false
+
+- name: Instalar config.fish base
+  ansible.builtin.copy:
+    src: "{{ ciber_repo_root }}/dotfiles/config.fish"
+    dest: "{{ ciber_home }}/.config/fish/config.fish"
+    mode: "0644"
+  become: false
+
+- name: Generar aliases y funciones
+  # Va a conf.d/ y no a functions/ a proposito: funcsave escribe un archivo por
+  # funcion que despues nunca se sincroniza con el repo, asi que un alias que
+  # borras del repo seguiria vivo en la maquina para siempre. Con un solo archivo
+  # generado, el repo es la unica verdad.
+  ansible.builtin.template:
+    src: ciber.fish.j2
+    dest: "{{ ciber_home }}/.config/fish/conf.d/ciber.fish"
+    mode: "0644"
+  become: false
+
+- name: Limpiar funciones sueltas que dejo el script viejo
+  # El bash guardaba estos con funcsave; ahora los define conf.d/ciber.fish.
+  # Si se quedan, las dos definiciones compiten y gana la de functions/.
+  ansible.builtin.file:
+    path: "{{ ciber_home }}/.config/fish/functions/{{ item.name }}.fish"
+    state: absent
+  loop: "{{ fish_aliases + fish_functions }}"
+  loop_control:
+    label: "{{ item.name }}"
+  become: false
+
+- name: Fijar EDITOR como variable universal de fish
+  ansible.builtin.command:
+    cmd: "fish -c 'set -Ux EDITOR {{ fish_editor }}'"
+  become: false
+  register: fish_editor_result
+  changed_when: false
+  # 'set -U' ya es idempotente; no se reporta como cambio para no ensuciar el diff.
+
+- name: Comprobar que fisher esta disponible
+  ansible.builtin.command:
+    cmd: "fish -c 'type -q fisher'"
+  become: false
+  register: fisher_check
+  changed_when: false
+  failed_when: false
+
+- name: Instalar plugins de fish
+  ansible.builtin.command:
+    cmd: "fish -c 'fisher install {{ item }}'"
+  become: false
+  loop: "{{ fish_plugins }}"
+  when: fisher_check.rc == 0
+  register: fisher_install
+  changed_when: "'Installing' in (fisher_install.stdout | default(''))"
+
+- name: Avisar si fisher no esta
+  ansible.builtin.debug:
+    msg: "fisher no esta disponible: se omitieron los plugins {{ fish_plugins | join(', ') }}"
+  when: fisher_check.rc != 0

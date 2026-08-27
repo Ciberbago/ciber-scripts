@@ -1,0 +1,111 @@
+---
+# Unidades de systemd.
+#
+# AUTODESCUBRIMIENTO: no hay lista de archivos que mantener. Cualquier unidad
+# que pongas en systemd/ del repo se instala sola. Para agregar una unidad nueva
+# no se toca ningun archivo de codigo: se deja caer el .service en systemd/ y,
+# si debe arrancar en boot, se agrega su nombre a systemd_units_enabled.
+#
+# Los .conf que hay en systemd/ (sysctl, zram, entradas de boot) NO son unidades
+# y no los agarra el glob: esos van en system_files, dentro de files.yml
+
+- name: Descubrir unidades en el repo
+  ansible.builtin.find:
+    paths: "{{ ciber_repo_root }}/systemd"
+    patterns:
+      - "*.service"
+      - "*.timer"
+      - "*.mount"
+      - "*.automount"
+      - "*.socket"
+      - "*.path"
+      - "*.target"
+    file_type: file
+    recurse: false
+  register: unidades_encontradas
+
+- name: Quitar las unidades que no son de esta maquina
+  ansible.builtin.set_fact:
+    unidades: >-
+      {{ unidades_encontradas.files | map(attribute='path') | map('basename')
+         | difference(systemd_units_exclude) | sort | list }}
+
+- name: Mostrar el resultado del descubrimiento
+  ansible.builtin.debug:
+    msg:
+      instalar: "{{ unidades }}"
+      excluidas: "{{ systemd_units_exclude | sort }}"
+
+- name: Instalar unidades en /etc/systemd/system
+  ansible.builtin.copy:
+    src: "{{ ciber_repo_root }}/systemd/{{ item }}"
+    dest: "/etc/systemd/system/{{ item }}"
+    owner: root
+    group: root
+    mode: "0644"
+  loop: "{{ unidades }}"
+  become: true
+  notify: Recargar systemd
+
+# --- Unidades de usuario (systemctl --user), en systemd/user/ del repo ---
+
+- name: Ver si hay carpeta de unidades de usuario
+  ansible.builtin.stat:
+    path: "{{ ciber_repo_root }}/systemd/user"
+  register: dir_user_units
+
+- name: Descubrir unidades de usuario
+  ansible.builtin.find:
+    paths: "{{ ciber_repo_root }}/systemd/user"
+    patterns: ["*.service", "*.timer", "*.socket", "*.path", "*.target"]
+    file_type: file
+  register: unidades_usuario
+  when: dir_user_units.stat.exists
+
+- name: Instalar unidades de usuario
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "{{ ciber_home }}/.config/systemd/user/{{ item | basename }}"
+    mode: "0644"
+  loop: "{{ unidades_usuario.files | default([]) | map(attribute='path') | sort }}"
+  loop_control:
+    label: "{{ item | basename }}"
+  become: false
+
+# Recargar ANTES de habilitar: 'systemctl enable' sobre una unidad que systemd
+# todavia no conoce falla. En el script de bash el daemon-reload venia despues.
+- name: Recargar systemd ahora
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+  become: true
+  changed_when: false
+
+- name: Habilitar unidades en boot
+  ansible.builtin.systemd_service:
+    name: "{{ item }}"
+    enabled: true
+  # Si no hay interfaz de red default, ciber_default_iface esta vacia y la
+  # entrada quedaria como "wol@.service": una plantilla sin instancia, que
+  # systemd rechaza. El filtro descarta cualquier plantilla sin instancia; el
+  # aviso lo da site.yml en sus pre_tasks.
+  loop: >-
+    {{ systemd_units_enabled
+       | reject('search', '@[.](service|timer|mount|automount|socket|path|target)$')
+       | list }}
+  become: true
+
+- name: Habilitar y arrancar unidades
+  ansible.builtin.systemd_service:
+    name: "{{ item }}"
+    enabled: true
+    state: started
+  loop: "{{ systemd_units_started }}"
+  become: true
+
+- name: Habilitar unidades de usuario
+  ansible.builtin.systemd_service:
+    name: "{{ item }}"
+    enabled: true
+    scope: user
+  loop: "{{ systemd_user_units_enabled }}"
+  become: false

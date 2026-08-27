@@ -1,0 +1,50 @@
+---
+# =============================================================================
+#  Playbook de sistema. Se puede correr sin sesion grafica (recien instalado).
+#
+#  Todo lo que necesita GNOME corriendo (dconf, gsettings, extensiones) esta en
+#  session.yml, que se ejecuta con el comando 'ciber-session' despues del primer
+#  login. No es un detalle de estilo: dconf y gsettings hablan por DBus con la
+#  sesion del usuario, y en un sistema recien instalado esa sesion no existe.
+# =============================================================================
+- name: Configuracion de Arch Linux
+  hosts: workstations_arch
+  gather_facts: true
+
+  pre_tasks:
+    - name: Comprobar que estamos en Arch
+      ansible.builtin.assert:
+        that: ansible_facts.os_family == 'Archlinux'
+        fail_msg: >-
+          Este playbook es para Arch Linux, no para
+          {{ ansible_facts.distribution }}.
+        quiet: true
+      tags: always
+
+    - name: Avisar si no hay interfaz de red default
+      ansible.builtin.debug:
+        msg: >-
+          No se detecto interfaz de red default: las unidades wol@ se omitiran.
+      when: ciber_default_iface | length == 0
+      tags: always
+
+  roles:
+    - { role: pacman_setup,     tags: [pacman, base] }
+    - { role: packages,         tags: [packages] }
+    - { role: system_files,     tags: [files, system] }
+    - { role: systemd_units,    tags: [systemd] }
+    - { role: cli_tools,        tags: [files, tools] }
+    - { role: dotfiles,         tags: [files, dotfiles] }
+    - { role: shell_fish,       tags: [shell, fish] }
+    - { role: aur,              tags: [aur] }
+    - { role: appimages,        tags: [appimages] }
+    - { role: desktop_cleanup,  tags: [cleanup] }
+
+  post_tasks:
+    - name: Resumen
+      ansible.builtin.debug:
+        msg:
+          - "Sistema configurado."
+          - "Reinicia y entra a GNOME."
+          - "Luego ejecuta: ciber-session"
+      tags: always

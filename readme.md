@@ -10,6 +10,25 @@ Basicamente tiene lo mismo que windows. Preparado con los drivers de amd, para j
 bash <(curl -L url.jaimelopez.top/arch)
 ```
 
+Ahora esto es un **bootstrap de Ansible**: instala ansible, clona el repo y
+aplica el playbook. Despues del primer login en GNOME hay que ejecutar
+`ciber-session` para la parte que necesita sesion grafica.
+
+La configuracion se edita en `ansible/group_vars/all/` (paquetes, dotfiles,
+unidades de systemd, ajustes de GNOME, aliases). Ver
+[ansible/README.md](ansible/README.md) para la guia de mantenimiento.
+
+Comandos que quedan instalados:
+
+```
+ciber-apply                   # reaplica el sistema
+ciber-apply --check --diff    # simulacro, no toca nada
+ciber-apply --tags packages   # solo una parte
+ciber-session                 # config de GNOME
+```
+
+La version anterior en bash puro sigue en `legacy/arch-bash.sh`.
+
 ## Windows
 
 Principalmente lo hice para poder instalar la mayoría de programas y configuraciones que necesito en Windows 11 con el siguiente comando:

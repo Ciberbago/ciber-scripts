@@ -1,3 +1,13 @@
+#!/usr/bin/env bash
+#
+# Ajustes de GNOME. Requiere sesion grafica activa.
+set -uo pipefail
+
+if [[ -z "${DBUS_SESSION_BUS_ADDRESS:-}" ]]; then
+    echo "!!! Sin sesion DBus: entra a GNOME y vuelve a ejecutar" >&2
+    exit 1
+fi
+
 #Tema oscuro
 gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
 #No me pide confirmacion al apagar
@@ -20,13 +30,23 @@ gsettings set org.gnome.desktop.wm.preferences button-layout 'appmenu:minimize,m
 gsettings set org.gnome.desktop.interface gtk-theme 'adw-gtk3-dark'
 gsettings set org.gnome.desktop.interface icon-theme 'Papirus-Dark'
 gsettings set org.gnome.desktop.interface cursor-theme 'Bibata-Rainbow-Modern'
-#Import dash to panel config
-dconf load /org/gnome/shell/extensions/dash-to-panel/ < ~/.config/dashtopanel.conf
-#Configuracion de la terminal
-dconf load /com/gexperts/Tilix/ < ~/.config/tilix.conf
-#Configuracion barra de tareas comandos para audifonos
-dconf load /org/gnome/shell/extensions/executor/ < ~/.config/executor.conf
-#Configuracion de los botones de apagado
-dconf load /org/gnome/shell/extensions/bring-out-submenu-of-power-off-logout/ < ~/.config/poweroffmenu.conf
 #Deshabilitar emoji selector de ibus para usar la extension mejor
 gsettings set org.freedesktop.ibus.panel.emoji hotkey "[]"
+
+# BUG ORIGINAL: cargaba estos dconf sin comprobar que el archivo existiera. El
+# de tilix ademas nunca se descargaba (arch.sh lo tiene comentado porque ahora
+# se usa terminator), asi que 'dconf load' fallaba con el archivo faltante.
+cargar() { # cargar <ruta dconf> <archivo>
+    local ruta="$1" archivo="$2"
+    if [[ -s "$archivo" ]]; then
+        dconf load "$ruta" < "$archivo" && echo "    ok  ${ruta}"
+    else
+        echo "    -- no existe, se omite: ${archivo}"
+    fi
+}
+
+cargar /org/gnome/shell/extensions/dash-to-panel/ "$HOME/.config/dashtopanel.conf"
+cargar /com/gexperts/Tilix/                       "$HOME/.config/tilix.conf"
+cargar /org/gnome/shell/extensions/executor/      "$HOME/.config/executor.conf"
+cargar /org/gnome/shell/extensions/bring-out-submenu-of-power-off-logout/ \
+                                                  "$HOME/.config/poweroffmenu.conf"

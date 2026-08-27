@@ -1,0 +1,97 @@
+---
+# Perfil de Firefox con user.js y el CSS de onebar.
+#
+# Este rol es deliberadamente conservador: el script de bash empezaba con
+# 'rm -rf ~/.mozilla ~/.config/mozilla' sin red de seguridad, asi que correrlo
+# por error borraba marcadores, contrasenas y sesiones. Aqui no se borra nada:
+# si el perfil ya existe, solo se actualizan user.js y userChrome.css.
+
+- name: Ver si el perfil ya existe
+  ansible.builtin.stat:
+    path: "{{ ciber_home }}/.mozilla/firefox/profiles.ini"
+  register: ff_profiles
+  become: false
+
+- name: Crear el perfil de Firefox
+  when: not ff_profiles.stat.exists
+  block:
+    - name: Crear la carpeta base
+      ansible.builtin.file:
+        path: "{{ ciber_home }}/.mozilla/firefox"
+        state: directory
+        mode: "0755"
+      become: false
+
+    - name: Crear el perfil
+      ansible.builtin.command:
+        cmd: >-
+          firefox --CreateProfile
+          "{{ firefox_profile_name }} {{ ciber_home }}/.mozilla/firefox/{{ firefox_profile_name }}"
+      become: false
+      changed_when: true
+
+- name: Localizar la ruta del perfil
+  # Se busca el directorio real en lugar de parsear profiles.ini con grep/cut,
+  # que era la parte mas fragil del script viejo (si PROFPATH salia vacio, el cp
+  # terminaba escribiendo en "/user.js").
+  ansible.builtin.find:
+    paths: "{{ ciber_home }}/.mozilla/firefox"
+    patterns: "*.{{ firefox_profile_name }},{{ firefox_profile_name }}"
+    file_type: directory
+    use_regex: false
+  register: ff_dirs
+  become: false
+
+- name: Fallar si no se encontro el perfil
+  ansible.builtin.assert:
+    that: ff_dirs.files | length > 0
+    fail_msg: >-
+      No se encontro el perfil '{{ firefox_profile_name }}' en
+      {{ ciber_home }}/.mozilla/firefox. Abre Firefox una vez y vuelve a correr.
+    quiet: true
+
+- name: Fijar la ruta del perfil
+  ansible.builtin.set_fact:
+    ff_profile_path: "{{ ff_dirs.files | map(attribute='path') | sort | first }}"
+
+- name: Instalar user.js
+  ansible.builtin.copy:
+    src: "{{ ciber_repo_root }}/dotfiles/firefoxuser.js"
+    dest: "{{ ff_profile_path }}/user.js"
+    mode: "0644"
+  become: false
+
+- name: Crear la carpeta chrome
+  ansible.builtin.file:
+    path: "{{ ff_profile_path }}/chrome"
+    state: directory
+    mode: "0755"
+  become: false
+
+- name: Instalar userChrome.css
+  ansible.builtin.copy:
+    content: '@import "onebar/onebar.css";'
+    dest: "{{ ff_profile_path }}/chrome/userChrome.css"
+    mode: "0644"
+  become: false
+
+- name: Clonar firefox-onebar
+  # 'git clone' fallaba si el directorio ya existia; el modulo git hace pull.
+  ansible.builtin.git:
+    repo: "{{ firefox_onebar_repo }}"
+    dest: "{{ ff_profile_path }}/chrome/onebar"
+    depth: 1
+    version: "{{ firefox_onebar_version }}"
+  become: false
+
+- name: Marcar el perfil como default
+  # En bash este bloque se agregaba con '>>' en CADA corrida, dejando secciones
+  # [Install...] duplicadas en profiles.ini.
+  ansible.builtin.blockinfile:
+    path: "{{ ciber_home }}/.mozilla/firefox/profiles.ini"
+    marker: "# {mark} perfil default (ansible)"
+    block: |
+      [Install4F96D1932A9F858E]
+      Default={{ ff_profile_path }}
+      Locked=1
+  become: false

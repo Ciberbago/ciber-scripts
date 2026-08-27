@@ -1,0 +1,58 @@
+---
+# =============================================================================
+#  AJUSTES GENERALES
+# =============================================================================
+
+# Raiz del repo clonado (ansible-pull hace el checkout y entra ahi)
+ciber_repo_root: "{{ playbook_dir }}/.."
+
+# De donde se clona y donde queda el checkout local. Los usan los envoltorios
+# ciber-apply / ciber-session y tambien el bootstrap (arch.sh).
+ciber_git_repo: https://github.com/Ciberbago/ciber-scripts.git
+ciber_checkout_dir: "{{ ciber_home }}/.local/share/ciber-scripts"
+
+# Usuario dueno del escritorio. Por defecto el que ejecuta ansible-pull.
+ciber_user: "{{ lookup('env', 'USER') | default(ansible_facts.user_id, true) }}"
+ciber_home: "{{ lookup('env', 'HOME') }}"
+
+# Interfaz de red default, para la unidad wol@
+ciber_default_iface: "{{ ansible_facts.default_ipv4.interface | default('', true) }}"
+
+# --- Sistema ---
+ciber_timezone: America/Tijuana
+ciber_shell: /usr/bin/fish
+ciber_journal_retention: 1w
+ciber_extra_groups:
+  - vboxusers
+
+# Variables que van a /etc/environment (KEY=VALUE, sin 'export')
+ciber_environment:
+  QT_QPA_PLATFORMTHEME: qt5ct
+
+# --- pacman.conf ---
+pacman_color: true
+pacman_verbose_pkglists: true
+pacman_parallel_downloads: 20
+pacman_enable_multilib: true
+
+# --- makepkg.conf ---
+makepkg_builddir: /tmp/makepkg
+makepkg_pkgext: ".pkg.tar"
+makepkg_march_native: true
+makepkg_jobs: "{{ ansible_facts.processor_vcpus | default(2) | int - 1 }}"
+makepkg_options: "(docs !strip !libtool !staticlibs emptydirs zipman purge !debug lto)"
+makepkg_rustflags: "-C opt-level=2 -C target-cpu=native"
+
+# --- chaotic-aur ---
+chaotic_key_id: "3056513887B78AEB"
+chaotic_keyserver: keyserver.ubuntu.com
+
+# --- fish ---
+fish_editor: micro
+fish_plugins:
+  - IlanCosman/tide@v6
+  - oh-my-fish/plugin-bang-bang
+
+# --- AppImages / AM ---
+# APPSPATH de AM: donde instala las AppImages a nivel sistema
+appimage_install_path: /opt

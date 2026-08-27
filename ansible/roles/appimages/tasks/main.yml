@@ -1,0 +1,64 @@
+---
+# AppImages via AM (https://github.com/ivan-hc/AM)
+
+- name: Ver si AM ya esta instalado
+  ansible.builtin.command:
+    cmd: which am
+  register: am_check
+  changed_when: false
+  failed_when: false
+
+- name: Instalar AM
+  # En bash esto bajaba el INSTALL al directorio actual y lo dejaba de basura.
+  when: am_check.rc != 0
+  block:
+    - name: Descargar el instalador de AM
+      ansible.builtin.get_url:
+        url: https://raw.githubusercontent.com/ivan-hc/AM/main/INSTALL
+        dest: /tmp/ciber-am-install
+        mode: "0755"
+      become: false
+
+    - name: Ejecutar el instalador de AM
+      ansible.builtin.command:
+        cmd: /tmp/ciber-am-install
+      become: true
+      changed_when: true
+  always:
+    - name: Limpiar el instalador
+      ansible.builtin.file:
+        path: /tmp/ciber-am-install
+        state: absent
+      become: false
+
+- name: Ver que AppImages ya estan instaladas
+  # Se comprueba la ruta de instalacion en lugar de un flag de 'am', porque los
+  # flags de AM cambian entre versiones. /opt es el APPSPATH por default de AM:
+  # si lo configuraste distinto, ajusta appimage_install_path.
+  ansible.builtin.stat:
+    path: "{{ appimage_install_path }}/{{ item }}"
+  loop: "{{ appimage_packages }}"
+  register: am_installed
+
+- name: Instalar AppImages faltantes
+  # En bash era un solo 'am -i' con los 8: si uno fallaba se perdian los demas
+  # y no quedaba claro cual habia sido.
+  ansible.builtin.command:
+    cmd: "am -i {{ item.item }}"
+  become: true
+  loop: "{{ am_installed.results | rejectattr('stat.exists') | list }}"
+  loop_control:
+    label: "{{ item.item }}"
+  changed_when: true
+  register: am_result
+  failed_when: false
+
+- name: Reportar AppImages que fallaron
+  ansible.builtin.debug:
+    msg: >-
+      Fallaron: {{ am_result.results | default([])
+        | selectattr('rc', 'defined') | rejectattr('rc', 'equalto', 0)
+        | map(attribute='item.item') | list | join(', ') }}
+  when: >-
+    am_result.results | default([]) | selectattr('rc', 'defined')
+    | rejectattr('rc', 'equalto', 0) | list | length > 0

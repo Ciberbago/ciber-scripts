@@ -1,0 +1,107 @@
+---
+# pacman.conf y makepkg.conf
+#
+# En bash esto se hacia con sed y los argumentos estaban invertidos, asi que
+# nunca se aplicaba nada. lineinfile con regexp es idempotente por diseno: si la
+# linea ya esta como la queremos, reporta ok en lugar de changed.
+
+- name: pacman.conf - opciones simples
+  ansible.builtin.lineinfile:
+    path: /etc/pacman.conf
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    insertafter: '^\[options\]'
+    state: "{{ item.state | default('present') }}"
+  loop:
+    - regexp: '^#?Color$'
+      line: "Color"
+      state: "{{ 'present' if pacman_color else 'absent' }}"
+    - regexp: '^#?VerbosePkgLists$'
+      line: "VerbosePkgLists"
+      state: "{{ 'present' if pacman_verbose_pkglists else 'absent' }}"
+    - regexp: '^#?ParallelDownloads\s*=.*$'
+      line: "ParallelDownloads = {{ pacman_parallel_downloads }}"
+  become: true
+
+- name: pacman.conf - habilitar multilib
+  ansible.builtin.replace:
+    path: /etc/pacman.conf
+    # Descomenta la cabecera y su linea Include de una sola pasada. Es
+    # idempotente: una vez descomentado el patron ya no coincide.
+    regexp: '^#\[multilib\]\n#(Include\s*=\s*.*)$'
+    replace: '[multilib]\n\1'
+  become: true
+  when: pacman_enable_multilib
+
+- name: makepkg.conf - flags de compilacion
+  ansible.builtin.lineinfile:
+    path: /etc/makepkg.conf
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+  loop:
+    - regexp: '^#?BUILDDIR=.*$'
+      line: "BUILDDIR={{ makepkg_builddir }}"
+    - regexp: "^#?PKGEXT=.*$"
+      line: "PKGEXT='{{ makepkg_pkgext }}'"
+    - regexp: '^#?OPTIONS=.*$'
+      line: "OPTIONS={{ makepkg_options }}"
+    - regexp: '^#?RUSTFLAGS=.*$'
+      line: 'RUSTFLAGS="{{ makepkg_rustflags }}"'
+    - regexp: '^#?MAKEFLAGS=.*$'
+      line: 'MAKEFLAGS="-j{{ makepkg_jobs }}"'
+  become: true
+
+- name: makepkg.conf - compilar para este CPU
+  ansible.builtin.replace:
+    path: /etc/makepkg.conf
+    regexp: '-march=x86-64 -mtune=generic'
+    replace: '-march=native'
+  become: true
+  when: makepkg_march_native
+
+- name: Actualizar el sistema completo
+  # -Syu, nunca -Sy: un 'pacman -Sy' seguido de instalar paquetes es un partial
+  # upgrade, el escenario que Arch advierte que rompe el sistema.
+  community.general.pacman:
+    update_cache: true
+    upgrade: true
+  become: true
+
+- name: Zona horaria
+  community.general.timezone:
+    name: "{{ ciber_timezone }}"
+  become: true
+
+- name: Retencion del journal
+  ansible.builtin.lineinfile:
+    path: /etc/systemd/journald.conf
+    regexp: '^#?MaxRetentionSec=.*$'
+    line: "MaxRetentionSec={{ ciber_journal_retention }}"
+  become: true
+  notify: Reiniciar journald
+
+- name: Variables de /etc/environment
+  # En bash esto era 'tee' sin -a, que SOBRESCRIBIA el archivo entero, y ademas
+  # escribia 'export VAR=...', sintaxis invalida ahi (PAM solo parsea KEY=VALUE).
+  ansible.builtin.lineinfile:
+    path: /etc/environment
+    regexp: "^{{ item.key }}=.*$"
+    line: "{{ item.key }}={{ item.value }}"
+    create: true
+    mode: "0644"
+  loop: "{{ ciber_environment | dict2items }}"
+  become: true
+
+- name: Agregar el usuario a los grupos extra
+  ansible.builtin.user:
+    name: "{{ ciber_user }}"
+    groups: "{{ ciber_extra_groups }}"
+    append: true
+  become: true
+
+- name: Shell por defecto
+  # 'chsh' interactivo pedia password y bloqueaba el script de bash
+  ansible.builtin.user:
+    name: "{{ ciber_user }}"
+    shell: "{{ ciber_shell }}"
+  become: true

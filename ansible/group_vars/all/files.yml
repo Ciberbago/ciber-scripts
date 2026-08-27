@@ -1,0 +1,63 @@
+---
+# =============================================================================
+#  ARCHIVOS  -  dotfiles, config de /etc y scripts a /usr/local/bin
+# =============================================================================
+#
+#  Para agregar un archivo: ponlo en dotfiles/ o scripts/ del repo y agrega UNA
+#  linea aqui. Los archivos vienen del repo clonado, no de URLs, asi que un
+#  nombre mal escrito falla ruidosamente en vez de dejar un archivo de 0 bytes.
+#
+#  'mode' es opcional (default 0644 en archivos de sistema, 0644 en dotfiles).
+# =============================================================================
+
+# --- Dotfiles: van al $HOME del usuario ---
+# src es relativo a la raiz del repo. dest admite ~ y variables.
+user_files:
+  - { src: dotfiles/firefoxuser.js,                  dest: ~/.config/firefoxuser.js }
+  - { src: dotfiles/extensions/dashtopanel.conf,     dest: ~/.config/dashtopanel.conf }
+  - { src: dotfiles/extensions/executor.conf,        dest: ~/.config/executor.conf }
+  - { src: dotfiles/extensions/poweroffmenu.conf,    dest: ~/.config/poweroffmenu.conf }
+  - { src: dotfiles/terminatorconfig,                dest: ~/.config/terminator/config }
+  - { src: dotfiles/wallpaper.desktop,               dest: ~/.config/autostart/wallpaper.desktop }
+  - { src: dotfiles/flameshot.ini,                   dest: ~/.config/flameshot/flameshot.ini }
+  - { src: dotfiles/mpv.conf,                        dest: ~/.config/mpv/mpv.conf }
+  - { src: dotfiles/modern.lua,                      dest: ~/.config/mpv/scripts/modern.lua }
+  - { src: dotfiles/thumbfast.lua,                   dest: ~/.config/mpv/scripts/thumbfast.lua }
+  - { src: dotfiles/osc.conf,                        dest: ~/.config/mpv/script-opts/osc.conf }
+  - { src: dotfiles/Material-Design-Iconic-Font.ttf, dest: ~/.config/mpv/fonts/Material-Design-Iconic-Font.ttf }
+  - { src: dotfiles/obsprofile.ini,                  dest: ~/.config/obs-studio/basic/profiles/Untitled/basic.ini }
+  - { src: dotfiles/obsrecorder.json,                dest: ~/.config/obs-studio/basic/profiles/Untitled/recordEncoder.json }
+  - { src: dotfiles/obsglobal.ini,                   dest: ~/.config/obs-studio/global.ini }
+  - { src: dotfiles/yayconfig.json,                  dest: ~/.config/yay/config.json }
+  - { src: dotfiles/custom-keys.dconf,               dest: ~/gnome/custom-keys.dconf }
+  - { src: dotfiles/custom-values.dconf,             dest: ~/gnome/custom-values.dconf }
+  - { src: dotfiles/keybindings.dconf,               dest: ~/gnome/keybindings.dconf }
+
+# --- Carpetas extra a crear en $HOME (las de user_files se crean solas) ---
+user_dirs:
+  - ~/Screenshots/tmp
+  - ~/.local/share/nautilus/scripts
+
+# --- Archivos de sistema: /etc, /boot, /usr/lib ---
+system_files:
+  - { src: dotfiles/reflector.conf,           dest: /etc/xdg/reflector/reflector.conf }
+  - { src: dotfiles/virtualbox.conf,          dest: /etc/modules-load.d/virtualbox.conf }
+  - { src: systemd/80-gaming.conf,            dest: /etc/sysctl.d/80-gaming.conf }
+  - { src: systemd/99-cachyos-settings.conf,  dest: /etc/sysctl.d/99-cachyos-settings.conf }
+  - { src: systemd/00-timeout.conf,           dest: /etc/systemd/system.conf.d/00-timeout.conf }
+  - { src: systemd/zram-generator.conf,       dest: /usr/lib/systemd/zram-generator.conf }
+  - { src: systemd/30-zram.rules,             dest: /usr/lib/udev/rules.d/30-zram.rules }
+  # Entradas de systemd-boot. Son configuracion, no ejecutables: 0644, no 0755.
+  - { src: systemd/cachyos.conf,              dest: /boot/loader/entries/cachyos.conf }
+  - { src: systemd/lts.conf,                  dest: /boot/loader/entries/lts.conf }
+
+# --- Scripts que se instalan como comandos en /usr/local/bin ---
+cli_tools:
+  - { src: scripts/wallpaper.sh,    dest: /usr/local/bin/wallpaper }
+  - { src: scripts/archbootgen.sh,  dest: /usr/local/bin/archbootgen }
+  - { src: scripts/swapshot,        dest: /usr/local/bin/swapshot }
+  - { src: scripts/ufetch.sh,       dest: /usr/local/bin/ufetch }
+
+# --- Scripts de Nautilus (menu contextual del explorador) ---
+nautilus_scripts:
+  - { src: scripts/mediainfo.sh,  dest: ~/.local/share/nautilus/scripts/mediainfo.sh }

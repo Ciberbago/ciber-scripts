@@ -1,0 +1,21 @@
+---
+# Paquetes de los repos oficiales.
+#
+# En bash habia una clasificacion casera 200/202/301/404 que reimplementaba (mal)
+# la resolucion que pacman ya hace, y expandia un array asociativo de forma
+# impredecible. El modulo pacman resuelve todo y reporta exactamente que instalo.
+
+- name: Instalar paquetes de los repos oficiales
+  community.general.pacman:
+    name: "{{ pacman_packages }}"
+    state: present     # equivale a --needed: no reinstala lo que ya esta
+  become: true
+  register: pacman_result
+
+- name: Actualizar la base de pkgfile (comando no encontrado)
+  ansible.builtin.command:
+    cmd: pkgfile --update
+  become: true
+  changed_when: false
+  # pkgfile no tiene forma de consultar si su base esta al dia, asi que se
+  # ejecuta siempre pero no se reporta como cambio.

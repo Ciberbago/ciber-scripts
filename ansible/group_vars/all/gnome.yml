@@ -1,0 +1,89 @@
+---
+# =============================================================================
+#  GNOME  -  solo aplica en session.yml (necesita sesion grafica activa)
+# =============================================================================
+#
+#  Ojo con el formato de los valores: el modulo dconf usa sintaxis GVariant,
+#  no la de gsettings.
+#      texto     ->  "'prefer-dark'"     (comillas dobles Y simples)
+#      booleano  ->  "true" / "false"
+#      entero    ->  "1"
+#      uint32    ->  "uint32 0"
+#      lista     ->  "@as []"
+#
+#  Para saber el valor exacto de una tecla que ya configuraste a mano:
+#      dconf read /org/gnome/desktop/interface/color-scheme
+# =============================================================================
+
+gnome_dconf:
+  # --- apariencia ---
+  - { key: /org/gnome/desktop/interface/color-scheme,  value: "'prefer-dark'" }
+  - { key: /org/gnome/desktop/interface/gtk-theme,     value: "'adw-gtk3-dark'" }
+  - { key: /org/gnome/desktop/interface/icon-theme,    value: "'Papirus-Dark'" }
+  - { key: /org/gnome/desktop/interface/cursor-theme,  value: "'Bibata-Rainbow-Modern'" }
+  - { key: /org/gnome/desktop/wm/preferences/button-layout, value: "'appmenu:minimize,maximize,close'" }
+
+  # --- sesion: sin confirmacion al apagar, con boton de logout ---
+  - { key: /org/gnome/SessionManager/logout-prompt,    value: "false" }
+  - { key: /org/gnome/shell/always-show-log-out,       value: "true" }
+
+  # --- sin suspender pantalla (idle-delay es uint32) ---
+  - { key: /org/gnome/desktop/session/idle-delay,      value: "uint32 0" }
+
+  # --- un solo workspace ---
+  - { key: /org/gnome/mutter/dynamic-workspaces,       value: "false" }
+  - { key: /org/gnome/desktop/wm/preferences/num-workspaces, value: "1" }
+
+  # --- puntero y reloj ---
+  - { key: /org/gnome/desktop/interface/locate-pointer,     value: "true" }
+  - { key: /org/gnome/desktop/interface/clock-format,       value: "'12h'" }
+  - { key: /org/gnome/desktop/interface/clock-show-seconds, value: "true" }
+  - { key: /org/gnome/desktop/interface/clock-show-weekday, value: "true" }
+
+  # --- libera el atajo de emoji de ibus para usar la extension ---
+  - { key: /org/freedesktop/ibus/panel/emoji/hotkey,   value: "@as []" }
+
+# Volcados de dconf completos (configuracion de extensiones y atajos).
+# 'src' es relativo a la raiz del repo; si el archivo no existe se omite.
+gnome_dconf_loads:
+  - { path: /org/gnome/shell/extensions/dash-to-panel/, src: dotfiles/extensions/dashtopanel.conf }
+  - { path: /org/gnome/shell/extensions/executor/,      src: dotfiles/extensions/executor.conf }
+  - { path: /org/gnome/shell/extensions/bring-out-submenu-of-power-off-logout/, src: dotfiles/extensions/poweroffmenu.conf }
+  - { path: /org/gnome/desktop/wm/keybindings/,         src: dotfiles/keybindings.dconf }
+  - { path: /org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/, src: dotfiles/custom-values.dconf }
+
+# Los atajos personalizados necesitan ademas la LISTA de rutas activas, que es
+# una sola tecla y no un volcado. El archivo la trae ya en formato GVariant.
+gnome_custom_keybindings_list_src: dotfiles/custom-keys.dconf
+
+# Extensiones de GNOME Shell (id de extensions.gnome.org : nombre legible)
+gnome_extensions:
+  - { id: 4269, name: Alphabetical App Grid }
+  - { id: 615,  name: AppIndicator Support }
+  - { id: 3193, name: Blur my Shell }
+  - { id: 1160, name: Dash to Panel }
+  - { id: 5940, name: Emoji Copy }
+  - { id: 2917, name: Executor }
+  - { id: 2932, name: Sound Input and Output Chooser }
+  - { id: 6242, name: Bring Out Submenu Of Power Off }
+  - { id: 8834, name: Clipboard History }
+
+# Lanzadores a ocultar del menu de aplicaciones. Se copia el .desktop a
+# /usr/local/share/applications con Hidden=true, para no tocar /usr/share
+# (que pacman sobrescribe en cada actualizacion).
+gnome_hide_apps:
+  - assistant
+  - avahi-discover
+  - bssh
+  - btop
+  - bvnc
+  - cmake-gui
+  - designer
+  - fish
+  - linguist
+  - nnn
+  - qdbusviewer
+  - qv4l2
+  - qvidcap
+  - scrcpy
+  - scrcpy-console

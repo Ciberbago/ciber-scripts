@@ -1,0 +1,108 @@
+---
+# GNOME: dconf, volcados de configuracion y extensiones.
+#
+# Todo esto necesita la sesion DBus del usuario, que es la razon por la que vive
+# en session.yml y no en site.yml. En un Arch recien instalado no hay sesion, y
+# gsettings/dconf/gext fallan de formas confusas si se ejecutan ahi.
+
+- name: Aplicar ajustes de dconf
+  # El modulo dconf es idempotente: lee el valor actual y solo escribe si difiere,
+  # asi que un segundo run reporta 0 cambios. 'gsettings set' siempre escribia.
+  community.general.dconf:
+    key: "{{ item.key }}"
+    value: "{{ item.value }}"
+    state: present
+  loop: "{{ gnome_dconf }}"
+  loop_control:
+    label: "{{ item.key }}"
+  become: false
+
+- name: Comprobar que los volcados de dconf existen en el repo
+  ansible.builtin.stat:
+    path: "{{ ciber_repo_root }}/{{ item.src }}"
+  loop: "{{ gnome_dconf_loads }}"
+  loop_control:
+    label: "{{ item.src }}"
+  register: dumps_stat
+  become: false
+
+- name: Cargar volcados de dconf
+  # 'dconf load' no tiene forma de consultar el estado previo, asi que no se
+  # puede hacer idempotente de verdad: se marca changed_when: false para que no
+  # ensucie el resumen. El script viejo ademas fallaba cuando el archivo no
+  # existia (el caso de tilix, que ya no se instala); aqui se omite con aviso.
+  ansible.builtin.shell:
+    cmd: "dconf load {{ item.item.path }} < {{ ciber_repo_root }}/{{ item.item.src }}"
+  loop: "{{ dumps_stat.results | selectattr('stat.exists') | list }}"
+  loop_control:
+    label: "{{ item.item.path }}"
+  become: false
+  changed_when: false
+
+- name: Avisar de volcados que faltan
+  ansible.builtin.debug:
+    msg: >-
+      No existen, se omitieron:
+      {{ dumps_stat.results | rejectattr('stat.exists')
+         | map(attribute='item.src') | list | join(', ') }}
+  when: dumps_stat.results | rejectattr('stat.exists') | list | length > 0
+
+- name: Leer la lista de atajos personalizados
+  # Los atajos custom de GNOME son dos cosas: los valores (un volcado, arriba) y
+  # la LISTA de rutas activas, que es una sola tecla en formato GVariant.
+  # Si solo se carga el volcado, los atajos existen pero no estan activos.
+  ansible.builtin.slurp:
+    src: "{{ ciber_repo_root }}/{{ gnome_custom_keybindings_list_src }}"
+  register: custom_keys_raw
+  become: false
+
+- name: Activar la lista de atajos personalizados
+  community.general.dconf:
+    key: /org/gnome/settings-daemon/plugins/media-keys/custom-keybindings
+    value: "{{ custom_keys_raw.content | b64decode | trim }}"
+    state: present
+  become: false
+
+- name: Ver si gext esta disponible
+  ansible.builtin.command:
+    cmd: which gext
+  register: gext_check
+  changed_when: false
+  failed_when: false
+
+- name: Listar extensiones ya instaladas
+  ansible.builtin.command:
+    cmd: gext list
+  register: gext_list
+  changed_when: false
+  failed_when: false
+  when: gext_check.rc == 0
+
+- name: Instalar extensiones de GNOME Shell
+  ansible.builtin.command:
+    cmd: "gext --filesystem install {{ item.id }}"
+  loop: "{{ gnome_extensions }}"
+  loop_control:
+    label: "{{ item.id }} {{ item.name }}"
+  become: false
+  when: gext_check.rc == 0
+  register: gext_install
+  changed_when: true
+  failed_when: false
+
+- name: Reportar extensiones que fallaron
+  ansible.builtin.debug:
+    msg: >-
+      Fallaron: {{ gext_install.results | default([])
+        | selectattr('rc', 'defined') | rejectattr('rc', 'equalto', 0)
+        | map(attribute='item.name') | list | join(', ') }}
+  when: >-
+    gext_install.results | default([]) | selectattr('rc', 'defined')
+    | rejectattr('rc', 'equalto', 0) | list | length > 0
+
+- name: Avisar si gext no esta
+  ansible.builtin.debug:
+    msg: >-
+      gext no esta instalado (paquete AUR gnome-extensions-cli): se omitieron
+      las extensiones. Corre 'ciber-apply --tags aur' primero.
+  when: gext_check.rc != 0

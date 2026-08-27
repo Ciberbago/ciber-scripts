@@ -1,0 +1,51 @@
+---
+# Dotfiles del usuario.
+#
+# 'copy' crea el directorio padre solo, asi que desaparece la clase de bug de
+# "~/.config/flameshot/ nunca se creaba con mkdir y el wget fallaba".
+
+- name: Comprobar que los dotfiles existen en el repo
+  ansible.builtin.stat:
+    path: "{{ ciber_repo_root }}/{{ item.src }}"
+  loop: "{{ user_files + nautilus_scripts }}"
+  loop_control:
+    label: "{{ item.src }}"
+  register: dotfiles_stat
+  become: false
+
+- name: Fallar con la lista de dotfiles que faltan
+  ansible.builtin.assert:
+    that: dotfiles_stat.results | rejectattr('stat.exists') | list | length == 0
+    fail_msg: >-
+      Faltan estos archivos en el repo:
+      {{ dotfiles_stat.results | rejectattr('stat.exists')
+         | map(attribute='item.src') | list | join(', ') }}
+    quiet: true
+
+- name: Crear carpetas del usuario
+  ansible.builtin.file:
+    path: "{{ item | expanduser }}"
+    state: directory
+    mode: "0755"
+  loop: "{{ user_dirs }}"
+  become: false
+
+- name: Instalar dotfiles
+  ansible.builtin.copy:
+    src: "{{ ciber_repo_root }}/{{ item.src }}"
+    dest: "{{ item.dest | expanduser }}"
+    mode: "{{ item.mode | default('0644') }}"
+  loop: "{{ user_files }}"
+  loop_control:
+    label: "{{ item.dest }}"
+  become: false
+
+- name: Instalar scripts de Nautilus
+  ansible.builtin.copy:
+    src: "{{ ciber_repo_root }}/{{ item.src }}"
+    dest: "{{ item.dest | expanduser }}"
+    mode: "0755"
+  loop: "{{ nautilus_scripts }}"
+  loop_control:
+    label: "{{ item.dest }}"
+  become: false

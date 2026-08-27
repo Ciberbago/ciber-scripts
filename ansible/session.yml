@@ -1,0 +1,32 @@
+---
+# =============================================================================
+#  Playbook de sesion. Requiere estar dentro de GNOME.
+#
+#  Ejecutar con:  ciber-session
+#  (equivale a: ansible-pull ... ansible/session.yml)
+# =============================================================================
+- name: Configuracion de la sesion de GNOME
+  hosts: workstations_arch
+  gather_facts: true
+
+  pre_tasks:
+    - name: Comprobar que hay sesion DBus
+      ansible.builtin.assert:
+        that: lookup('env', 'DBUS_SESSION_BUS_ADDRESS') | length > 0
+        fail_msg: >-
+          Sin sesion DBus. Entra a GNOME y ejecuta 'ciber-session' desde una
+          terminal grafica (no por SSH ni desde una TTY).
+        quiet: true
+      tags: always
+
+  roles:
+    - { role: gnome_session, tags: [gnome] }
+    - { role: firefox,       tags: [firefox] }
+
+  post_tasks:
+    - name: Resumen
+      ansible.builtin.debug:
+        msg:
+          - "Sesion configurada."
+          - "Cierra sesion y vuelve a entrar para que apliquen las extensiones."
+      tags: always
