@@ -7,22 +7,51 @@
 #   ciber-apply --tags systemd       solo unidades de systemd
 #   ciber-apply --list-tags          ver todas las etiquetas
 #
+# Rama fijada cuando se genero este archivo: {{ ciber_branch }}
+#
+# NO usa 'ansible-pull'. ansible-pull lanza ansible-playbook como subproceso
+# conectado por un pipe, y ese hijo, al no ver una terminal, pasa a
+# block-buffering: la salida se acumula y aparece toda de golpe al final, sin
+# importar que haya del lado de afuera. Aqui se hace a mano lo unico que
+# ansible-pull aportaba (actualizar el checkout) y se llama a ansible-playbook
+# directo, que si imprime tarea por tarea.
+#
 # Generado por Ansible. No editar a mano: se sobrescribe en cada run.
 set -euo pipefail
 
-# Rama fijada cuando se genero este archivo: {{ ciber_branch }}
-# Se fija a proposito: sin --checkout, ansible-pull usa el default del remoto
-# (main), asi que un ciber-apply despues de instalar desde otra rama te
-# regresaria a main sin avisar.
+REPO="{{ ciber_git_repo }}"
+RAMA="{{ ciber_branch }}"
+DEST="{{ ciber_checkout_dir }}"
+LOGFILE="$HOME/ciber.log"
 
-# ansible-pull entra a la raiz del checkout, pero el ansible.cfg vive en ansible/
-export ANSIBLE_CONFIG="{{ ciber_checkout_dir }}/ansible/ansible.cfg"
+export ANSIBLE_CONFIG="${DEST}/ansible/ansible.cfg"
+export PYTHONUNBUFFERED=1
+export ANSIBLE_FORCE_COLOR=1
 
-exec ansible-pull \
-    --url "{{ ciber_git_repo }}" \
-    --checkout "{{ ciber_branch }}" \
-    --directory "{{ ciber_checkout_dir }}" \
-    --inventory ansible/inventory.ini \
-    --ask-become-pass \
-    --extra-vars "ciber_branch={{ ciber_branch }}" \
-    ansible/site.yml "$@"
+#<-------Actualizar el checkout------->
+# Igual que hacia ansible-pull: el repo remoto manda y lo local se descarta.
+# Si editas archivos dentro de ${DEST} los vas a perder aqui; edita en tu clon
+# de trabajo y haz push.
+echo "==> Actualizando ${DEST} (rama ${RAMA})"
+if [[ -d "${DEST}/.git" ]]; then
+    git -C "$DEST" fetch --prune origin
+    git -C "$DEST" checkout -qf -B "$RAMA" "origin/${RAMA}"
+else
+    git clone --branch "$RAMA" "$REPO" "$DEST"
+fi
+cd "$DEST"
+
+#<-------Aplicar------->
+CMD="ansible-playbook -i ansible/inventory.ini --ask-become-pass"
+CMD+=" --extra-vars 'ciber_branch=${RAMA}'"
+CMD+=" ansible/site.yml"
+for arg in "$@"; do
+    CMD+=" $(printf '%q' "$arg")"
+done
+
+# 'script' da un pseudo-terminal: la salida sale en vivo Y queda en el log.
+if command -v script &>/dev/null; then
+    script -q -a -e -c "$CMD" "$LOGFILE"
+else
+    eval "$CMD"
+fi

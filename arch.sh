@@ -22,8 +22,19 @@ RAMA="${CIBER_BRANCH:-main}"
 DEST="${CIBER_DIR:-$HOME/.local/share/ciber-scripts}"
 LOGFILE="$HOME/ciber.log"
 
-exec > >(tee -a "$LOGFILE") 2>&1
-echo "=== Bootstrap: $(date) ==="
+# OJO: aqui NO va 'exec > >(tee -a "$LOGFILE") 2>&1'.
+#
+# Eso mandaba stdout a un pipe en lugar de a la terminal, y Python (o sea
+# Ansible) al detectar que no habla con una TTY pasa de line-buffered a
+# block-buffered: acumula toda la salida y la suelta al final. El efecto era que
+# despues del prompt de BECOME la pantalla se quedaba muerta varios minutos y
+# luego aparecia todo de golpe.
+#
+# La parte del bootstrap si pasa por tee (son cuatro lineas, no importa), pero
+# ansible-pull corre bajo 'script', que le da un pseudo-terminal: Ansible cree
+# que habla con una terminal real, imprime tarea por tarea, conserva colores, y
+# el log queda completo igual.
+echo "=== Bootstrap: $(date) ===" | tee -a "$LOGFILE"
 
 #<-------Comprobaciones------->
 if [[ ! -f /etc/arch-release ]]; then
@@ -57,21 +68,49 @@ curl -fsSL "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/${RAMA}/an
 ansible-galaxy collection install -r "$tmp_req"
 rm -f "$tmp_req"
 
-#<-------Aplicar el playbook------->
-# ansible-pull clona el repo y ejecuta el playbook contra esta misma maquina.
-# Los archivos de configuracion salen del clon, no de URLs: eso elimina de raiz
-# la clase de bug donde un typo en una URL dejaba un archivo de 0 bytes.
-export ANSIBLE_CONFIG="${DEST}/ansible/ansible.cfg"
+#<-------Clonar el repo------->
+# Antes esto lo hacia 'ansible-pull', pero ansible-pull lanza ansible-playbook
+# como subproceso conectado por un PIPE, y ese hijo, al no ver una terminal,
+# pasa a block-buffering: la salida se acumulaba y aparecia toda de golpe al
+# final, varios minutos despues del prompt de BECOME. Daba igual lo que hubiera
+# del lado de afuera, porque el bufferado ocurria entre ansible-pull y su hijo.
+#
+# Lo unico que ansible-pull aportaba era esto: clonar o actualizar el checkout.
+# Son tres lineas de git, y llamando a ansible-playbook directo la salida sale
+# tarea por tarea.
+#
+# Los archivos de configuracion salen de este clon, no de URLs: eso elimina de
+# raiz la clase de bug donde un typo en una URL dejaba un archivo de 0 bytes.
+echo "==> Clonando el repo en ${DEST} (rama ${RAMA})"
+if [[ -d "${DEST}/.git" ]]; then
+    git -C "$DEST" fetch --prune origin
+    git -C "$DEST" checkout -qf -B "$RAMA" "origin/${RAMA}"
+else
+    git clone --branch "$RAMA" "$REPO" "$DEST"
+fi
+cd "$DEST"
 
-echo "==> Aplicando el playbook (te va a pedir el password de sudo)"
-ansible-pull \
-    --url "$REPO" \
-    --checkout "$RAMA" \
-    --directory "$DEST" \
-    --inventory ansible/inventory.ini \
-    --ask-become-pass \
-    --extra-vars "ciber_branch=${RAMA}" \
-    ansible/site.yml "$@"
+#<-------Aplicar el playbook------->
+export ANSIBLE_CONFIG="${DEST}/ansible/ansible.cfg"
+export PYTHONUNBUFFERED=1
+export ANSIBLE_FORCE_COLOR=1
+
+echo "==> Aplicando el playbook (te va a pedir el password de sudo)" | tee -a "$LOGFILE"
+
+CMD="ansible-playbook -i ansible/inventory.ini --ask-become-pass"
+CMD+=" --extra-vars 'ciber_branch=${RAMA}'"
+CMD+=" ansible/site.yml"
+for arg in "$@"; do
+    CMD+=" $(printf '%q' "$arg")"
+done
+
+if command -v script &>/dev/null; then
+    # 'script' da un pseudo-terminal: la salida sale en vivo Y queda en el log.
+    # -q sin banners, -a append, -e devuelve el codigo de salida del hijo.
+    script -q -a -e -c "$CMD" "$LOGFILE"
+else
+    eval "$CMD"
+fi
 
 cat <<'FIN'
 
@@ -97,4 +136,8 @@ Para cambiar algo, edita el repo y vuelve a aplicar:
   ansible/group_vars/all/shell.yml       aliases de fish
 
 FIN
-echo "Log completo en: ${LOGFILE}"
+echo "Logs:"
+echo "  ${LOGFILE}          la corrida del playbook (via script, con pty)"
+echo "  /var/log/pacman.log  cada paquete instalado, con fecha"
+echo
+echo "Para ver el progreso en vivo, en otra terminal (Ctrl+Alt+F2):  ciber-watch"

@@ -8,18 +8,40 @@
 #   ciber-session --check --diff     simulacro
 #   ciber-session --tags gnome       solo GNOME, sin tocar el perfil de Firefox
 #
+# Rama fijada cuando se genero este archivo: {{ ciber_branch }}
+#
+# Ver ciber-apply para por que no se usa ansible-pull.
+#
 # Generado por Ansible. No editar a mano: se sobrescribe en cada run.
 set -euo pipefail
 
-# Rama fijada cuando se genero este archivo: {{ ciber_branch }}
+REPO="{{ ciber_git_repo }}"
+RAMA="{{ ciber_branch }}"
+DEST="{{ ciber_checkout_dir }}"
+LOGFILE="$HOME/ciber.log"
 
-export ANSIBLE_CONFIG="{{ ciber_checkout_dir }}/ansible/ansible.cfg"
+export ANSIBLE_CONFIG="${DEST}/ansible/ansible.cfg"
+export PYTHONUNBUFFERED=1
+export ANSIBLE_FORCE_COLOR=1
 
-exec ansible-pull \
-    --url "{{ ciber_git_repo }}" \
-    --checkout "{{ ciber_branch }}" \
-    --directory "{{ ciber_checkout_dir }}" \
-    --inventory ansible/inventory.ini \
-    --ask-become-pass \
-    --extra-vars "ciber_branch={{ ciber_branch }}" \
-    ansible/session.yml "$@"
+echo "==> Actualizando ${DEST} (rama ${RAMA})"
+if [[ -d "${DEST}/.git" ]]; then
+    git -C "$DEST" fetch --prune origin
+    git -C "$DEST" checkout -qf -B "$RAMA" "origin/${RAMA}"
+else
+    git clone --branch "$RAMA" "$REPO" "$DEST"
+fi
+cd "$DEST"
+
+CMD="ansible-playbook -i ansible/inventory.ini --ask-become-pass"
+CMD+=" --extra-vars 'ciber_branch=${RAMA}'"
+CMD+=" ansible/session.yml"
+for arg in "$@"; do
+    CMD+=" $(printf '%q' "$arg")"
+done
+
+if command -v script &>/dev/null; then
+    script -q -a -e -c "$CMD" "$LOGFILE"
+else
+    eval "$CMD"
+fi

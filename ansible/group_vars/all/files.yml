@@ -66,6 +66,8 @@ cli_tools:
   - { src: scripts/archbootgen.sh,  dest: /usr/local/bin/archbootgen }
   - { src: scripts/swapshot,        dest: /usr/local/bin/swapshot }
   - { src: scripts/ufetch.sh,       dest: /usr/local/bin/ufetch }
+  # Progreso en vivo del playbook, para correr en otra terminal
+  - { src: scripts/ciber-watch.sh,  dest: /usr/local/bin/ciber-watch }
 
 # --- Scripts de Nautilus (menu contextual del explorador) ---
 nautilus_scripts:

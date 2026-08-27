@@ -63,6 +63,53 @@ ciber-session                   # config de GNOME (dentro de la sesión)
 `--check --diff` es el que más vas a usar: te muestra el diff exacto de cada
 archivo que cambiaría antes de tocar nada.
 
+## Ver el progreso mientras corre
+
+Ansible captura el stdout de cada módulo y lo imprime **cuando la tarea
+termina**. En las tareas largas (pacman bajando paquetes, `makepkg` compilando
+del AUR) eso son minutos sin una sola línea. No hay opción de configuración que
+lo cambie: es cómo funciona el motor.
+
+### Por qué no se usa `ansible-pull`
+
+`ansible-pull` lanza `ansible-playbook` como subproceso conectado por un
+**pipe** y va reenviando lo que lee. Ese hijo, al no ver una terminal, pasa de
+line-buffering a block-buffering: la salida se acumula y aparece toda de golpe
+al final. Daba igual qué hubiera del lado de afuera, porque el bufferado ocurría
+entre `ansible-pull` y su hijo.
+
+Lo único que `ansible-pull` aportaba era clonar o actualizar el checkout, que
+son tres líneas de `git`. Tanto `arch.sh` como `ciber-apply` y `ciber-session`
+hacen eso a mano y llaman a `ansible-playbook` directo, que sí imprime tarea por
+tarea. Van envueltos en `script`, que da un pseudo-terminal: así la salida sale
+en vivo **y** queda en `~/ciber.log`.
+
+Ojo con una consecuencia: igual que hacía `ansible-pull`, el checkout se
+sincroniza con `git checkout -qf`, o sea que **lo que edites dentro de
+`~/.local/share/ciber-scripts` se pierde.** Edita en tu clon de trabajo y haz
+push.
+
+### Granularidad dentro de las tareas
+
+Lo que sí ayuda, en orden de utilidad:
+
+1. **`ciber-watch` en otra terminal.** Lee el log de pacman y los procesos de
+   compilación en vivo. Es lo único que te dice qué está pasando *dentro* de una
+   tarea. En la consola: Ctrl+Alt+F2 para otra TTY, Ctrl+Alt+F1 para volver.
+2. **El callback `profile_tasks`** (ya activo en `ansible.cfg`): imprime la
+   duración de cada tarea y el acumulado, y al final el ranking de las más
+   lentas. Te da el ritmo, no el detalle.
+3. **Tareas con `loop` en vez de una llamada con la lista completa.** Cada
+   elemento imprime su resultado al completarse. Por eso el rol `aur` instala
+   los paquetes de chaotic uno por uno: en una sola llamada eran dos minutos
+   mudos.
+
+Si quieres las dos cosas en la misma pantalla, con `tmux`:
+
+```bash
+tmux new-session 'ciber-apply' \; split-window -v -p 25 'ciber-watch' \; attach
+```
+
 ## Etiquetas
 
 | Tag | Qué hace |

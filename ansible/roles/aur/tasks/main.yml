@@ -88,13 +88,21 @@
 
 - name: Instalar binarios de chaotic-aur
   # Son paquetes de un repo normal: los instala pacman sin compilar nada.
+  #
+  # Va UNO POR UNO a proposito, no en una sola llamada con la lista completa.
+  # En una sola llamada esta tarea tardaba mas de dos minutos sin imprimir una
+  # linea: Ansible bufferea el stdout del modulo y lo suelta al terminar. Con el
+  # loop, cada paquete imprime su resultado al completarse y ves el avance.
+  # El costo es que pacman hace una transaccion por paquete en lugar de una sola;
+  # como son binarios y lo que domina es la descarga, la diferencia es chica.
+  #
   # Se pasan los nombres SIN el prefijo "chaotic-aur/": el modulo interpreta un
   # nombre con "/" como ruta a un archivo y usa -U en lugar de -S.
   community.general.pacman:
-    name: "{{ chaotic_check.results | selectattr('rc', 'equalto', 0) | map(attribute='item') | list }}"
+    name: "{{ item }}"
     state: present
+  loop: "{{ chaotic_check.results | selectattr('rc', 'equalto', 0) | map(attribute='item') | list }}"
   become: true
-  when: chaotic_check.results | selectattr('rc', 'equalto', 0) | list | length > 0
 
 - name: Avisar de paquetes que no estan en chaotic-aur
   ansible.builtin.debug:
@@ -154,6 +162,9 @@
       changed_when: true
 
     - name: Instalar paquetes del AUR con yay
+      # No aborta el play si uno falla. Compilar el AUR toma minutos, y perder
+      # una corrida entera (y las tareas que faltaban despues) por UN nombre de
+      # paquete muerto no tiene sentido. Lo que falle se reporta abajo.
       ansible.builtin.command:
         cmd: "yay -S --needed --noconfirm --answerclean None --answerdiff None {{ item.item }}"
       become: false
@@ -161,6 +172,19 @@
       loop_control:
         label: "{{ item.item }}"
       changed_when: true
+      failed_when: false
+      register: yay_result
+
+    - name: Reportar paquetes del AUR que fallaron
+      ansible.builtin.debug:
+        msg:
+          fallaron: >-
+            {{ yay_result.results | rejectattr('rc', 'equalto', 0)
+               | map(attribute='item.item') | list }}
+          que_hacer: >-
+            Busca el nombre correcto con 'yay -Ss <termino>'. Si el paquete ya no
+            existe, quitalo de aur_packages en packages.yml.
+      when: yay_result.results | rejectattr('rc', 'equalto', 0) | list | length > 0
 
   always:
     - name: Retirar el permiso NOPASSWD

@@ -152,10 +152,10 @@ chaotic_packages:
 # AUR de verdad: hay que compilar
 aur_packages:
   - clicker-git
-  # No esta en chaotic-aur (ahi fallaba con "could not find or read package"),
-  # asi que se compila del AUR. Es el driver de wifi USB: sin el, un arranque
-  # con el kernel LTS se queda sin red inalambrica.
-  - rtl88xxau-aircrack-dkms-git
+  # rtl88xxau-aircrack-dkms-git: quitado. No existe ni en chaotic-aur ni en el
+  # AUR con ese nombre (fue renombrado o retirado), y el adaptador USB que lo
+  # necesitaba ya no se usa. Si vuelve a hacer falta, busca el nombre actual con
+  # 'yay -Ss 8812au' antes de agregarlo.
   - flameshot-git
   - gnome-extensions-cli
   - headsetcontrol-git
