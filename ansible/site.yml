@@ -40,6 +40,9 @@
     - { role: dotfiles,         tags: [files, dotfiles] }
     - { role: shell_fish,       tags: [shell, fish] }
     - { role: aur,              tags: [aur] }
+    # Despues de 'aur': genera una entrada por kernel de /boot, y linux-cachyos
+    # lo instala 'aur' desde chaotic. Antes de aur, ese kernel no existe todavia.
+    - { role: boot_entries,     tags: [boot, system] }
     - { role: pkg_cleanup,      tags: [cleanup] }
     # appimages y hide_apps NO van aqui: viven en session.yml porque tocan la
     # rejilla de aplicaciones de GNOME y necesitan la sesion abierta. En el

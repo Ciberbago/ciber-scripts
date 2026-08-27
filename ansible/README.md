@@ -126,6 +126,7 @@ tmux new-session 'ciber-apply' \; split-window -v -p 25 'ciber-watch' \; attach
 | `files` | dotfiles + config de /etc + comandos de /usr/local/bin |
 | `system`, `dotfiles`, `tools` | subconjuntos de `files` |
 | `systemd` | unidades |
+| `boot` | entradas de systemd-boot (corre después de `aur`) |
 | `shell`, `fish` | aliases y plugins de fish |
 | `aur` | chaotic-aur, yay y paquetes del AUR |
 | `cleanup` | quitar paquetes y huérfanos (site) / ocultar lanzadores (session) |
@@ -162,8 +163,10 @@ principio con la lista completa de lo que falta.
 
 ## Entradas de systemd-boot
 
-El playbook genera **una entrada por kernel instalado**, descubriéndolos de
-`/boot/vmlinuz-*`. No hay lista ni plantilla que mantener: agregas un kernel a
+El rol `boot_entries` genera **una entrada por kernel instalado**,
+descubriéndolos de `/boot/vmlinuz-*`. Corre **después de `aur`** a propósito:
+`linux-cachyos` lo instala ese rol desde chaotic, así que antes de él ese kernel
+no existe y su entrada no se generaría hasta una segunda corrida. No hay lista ni plantilla que mantener: agregas un kernel a
 `packages.yml` y su entrada aparece sola en la siguiente corrida; lo quitas y su
 entrada se borra.
 
