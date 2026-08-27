@@ -7,6 +7,21 @@
 # vuelta: sin ella, un solo nombre mal escrito o un paquete renombrado hace
 # fallar la instalacion de los otros cien.
 
+# Quitar ANTES de instalar. La eliminacion vivia en pkg_cleanup, que corre al
+# final del playbook, y eso rompia el caso de reemplazar un paquete por otro:
+# al declarar 'headsetcontrol' del repo oficial teniendo 'headsetcontrol-git' del
+# AUR instalado, pacman aborta con "unresolvable package conflicts detected"
+# mucho antes de llegar a la limpieza. Primero se quita lo que no se quiere,
+# luego se instala. La limpieza de huerfanos si tiene sentido al final.
+
+- name: Quitar paquetes no deseados
+  # El modulo maneja solo los que no estan instalados: no hace falta filtrar.
+  community.general.pacman:
+    name: "{{ pacman_remove }}"
+    state: absent
+    extra_args: --recursive --unneeded
+  become: true
+
 - name: Ver que paquetes ya estan instalados
   # Una sola consulta a la base local. Preguntar 'pacman -Qq <pkg>' uno por uno
   # serian 100 invocaciones y ~30 s solo para averiguar que hay que hacer.

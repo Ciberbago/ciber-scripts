@@ -133,7 +133,7 @@ tmux new-session 'ciber-apply' \; split-window -v -p 25 'ciber-watch' \; attach
 | `boot` | entradas de systemd-boot (corre después de `aur`) |
 | `shell`, `fish` | aliases y plugins de fish |
 | `aur` | chaotic-aur, yay y paquetes del AUR |
-| `cleanup` | quitar paquetes y huérfanos (site) / ocultar lanzadores (session) |
+| `cleanup` | huérfanos (site) / ocultar lanzadores (session) |
 | `gnome` | (solo en `session.yml`) dconf y extensiones |
 | `appimages` | (solo en `session.yml`) AM y AppImages |
 | `hide` | (solo en `session.yml`) ocultar lanzadores |
@@ -227,6 +227,22 @@ en lugar de romper las apps instaladas.
 
 Sólo aplican al usuario que corre `ciber-session`. Si alguna app tiene que estar
 disponible para todos los usuarios, ésa va aparte con instalación de sistema.
+
+## Orden de instalación y desinstalación
+
+`pacman_remove` se aplica **al principio** del rol `packages`, antes de instalar
+nada. No es un detalle: al reemplazar un paquete del AUR por su equivalente
+oficial (`headsetcontrol-git` → `headsetcontrol`), pacman aborta la transacción
+entera con `unresolvable package conflicts detected`. Si la desinstalación
+corriera al final —como estaba— nunca se llegaría a ella.
+
+La limpieza de **huérfanos** sí va al final, en `pkg_cleanup`: sólo entonces se
+sabe qué quedó realmente sin usar.
+
+Y antes de instalar, el rol compara la lista declarada contra `pacman -Slq` y
+reporta los nombres que no existen en ningún repo configurado, instalando el
+resto. Sin eso, un solo nombre mal escrito o renombrado hace fallar la
+instalación de los cien restantes.
 
 ## Notas sobre partes delicadas
 

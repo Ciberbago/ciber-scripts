@@ -199,5 +199,8 @@ pacman_remove:
   # hace que tambien se quite de las maquinas que ya lo tenian.
   - flameshot-git
   - flameshot
+  # Reemplazado por 'headsetcontrol' del repo extra oficial. Los dos entran en
+  # conflicto, asi que hay que quitar el del AUR antes de instalar el oficial.
+  - headsetcontrol-git
   - python-pip
   - python-poetry
