@@ -8,12 +8,32 @@
 # y a este usuario, que se retira siempre al final (bloque always) incluso si
 # algo falla.
 
-- name: Importar la llave de chaotic-aur
-  community.general.pacman_key:
-    id: "{{ chaotic_key_id }}"
-    keyserver: "{{ chaotic_keyserver }}"
-    state: present
+- name: Ver si la llave de chaotic ya esta en el keyring de pacman
+  ansible.builtin.command:
+    cmd: "pacman-key --list-keys {{ chaotic_key_id }}"
+  register: chaotic_key_check
+  changed_when: false
+  failed_when: false
   become: true
+
+- name: Importar y firmar la llave de chaotic-aur
+  # No se usa community.general.pacman_key porque exige la huella COMPLETA de 40
+  # caracteres y rechaza el ID corto de 16 que publica chaotic
+  # ("key ID is not full-length"). El modulo tiene razon: los IDs cortos son
+  # susceptibles a colisiones. Aqui se usan los dos comandos que documenta
+  # chaotic, con guarda de idempotencia.
+  #
+  # MEJORA PENDIENTE: pinear la huella completa. Se obtiene con
+  #   pacman-key --finger 3056513887B78AEB
+  # y luego se puede volver a pacman_key con esa huella, que es mas seguro.
+  ansible.builtin.command:
+    cmd: "{{ item }}"
+  loop:
+    - "pacman-key --recv-key {{ chaotic_key_id }} --keyserver {{ chaotic_keyserver }}"
+    - "pacman-key --lsign-key {{ chaotic_key_id }}"
+  become: true
+  when: chaotic_key_check.rc != 0
+  changed_when: true
 
 - name: Ver si el keyring y el mirrorlist de chaotic ya estan
   ansible.builtin.command:
