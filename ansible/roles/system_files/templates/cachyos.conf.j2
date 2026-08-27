@@ -1,0 +1,7 @@
+# Generado por Ansible. No editar a mano.
+# El PARTUUID se detecta de la particion root real en cada corrida.
+title   Arch Linux (cachyos)
+linux   /vmlinuz-linux-cachyos
+initrd  /amd-ucode.img
+initrd  /initramfs-linux-cachyos.img
+options root=PARTUUID={{ ciber_root_partuuid }} {{ boot_kernel_options }} rootfstype={{ ciber_root_fstype }}

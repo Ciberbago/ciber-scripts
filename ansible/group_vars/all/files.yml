@@ -47,9 +47,18 @@ system_files:
   - { src: systemd/00-timeout.conf,           dest: /etc/systemd/system.conf.d/00-timeout.conf }
   - { src: systemd/zram-generator.conf,       dest: /usr/lib/systemd/zram-generator.conf }
   - { src: systemd/30-zram.rules,             dest: /usr/lib/udev/rules.d/30-zram.rules }
-  # Entradas de systemd-boot. Son configuracion, no ejecutables: 0644, no 0755.
-  - { src: systemd/cachyos.conf,              dest: /boot/loader/entries/cachyos.conf }
-  - { src: systemd/lts.conf,                  dest: /boot/loader/entries/lts.conf }
+
+# --- Archivos de sistema generados con plantilla (llevan variables) ---
+# Las entradas de systemd-boot van aqui y no en system_files porque el PARTUUID
+# de root se detecta en cada maquina. Los archivos originales del repo tenian
+# "root=PARTUUID=[UUIDDISCODELKERNELBUENO sudo blkid]" como recordatorio para
+# editarlos a mano: si systemd-boot tomaba esa entrada como default, la maquina
+# no arrancaba. Ahora se rellena solo.
+#
+# Solo se escriben si /boot/loader/entries existe (o sea, si usas systemd-boot).
+system_templates:
+  - { src: cachyos.conf.j2, dest: /boot/loader/entries/cachyos.conf, requires_dir: /boot/loader/entries }
+  - { src: lts.conf.j2,     dest: /boot/loader/entries/lts.conf,     requires_dir: /boot/loader/entries }
 
 # --- Scripts que se instalan como comandos en /usr/local/bin ---
 cli_tools:

@@ -10,6 +10,11 @@ ciber_repo_root: "{{ playbook_dir }}/.."
 # ciber-apply / ciber-session y tambien el bootstrap (arch.sh).
 ciber_git_repo: https://github.com/Ciberbago/ciber-scripts.git
 ciber_checkout_dir: "{{ ciber_home }}/.local/share/ciber-scripts"
+# Rama que se aplica. El bootstrap la pasa con -e ciber_branch=... para que los
+# envoltorios ciber-apply / ciber-session queden fijados a la MISMA rama desde la
+# que instalaste. Sin esto, ansible-pull usaria el default del remoto (main) y un
+# ciber-apply despues de instalar desde dev te regresaria a main sin avisar.
+ciber_branch: main
 
 # Usuario dueno del escritorio. Por defecto el que ejecuta ansible-pull.
 ciber_user: "{{ lookup('env', 'USER') | default(ansible_facts.user_id, true) }}"
@@ -56,3 +61,8 @@ fish_plugins:
 # --- AppImages / AM ---
 # APPSPATH de AM: donde instala las AppImages a nivel sistema
 appimage_install_path: /opt
+
+# --- Entradas de systemd-boot ---
+# Opciones del kernel comunes a todas las entradas. El root= y el rootfstype se
+# detectan solos de la particion montada en /.
+boot_kernel_options: "zswap.enabled=0 rw"

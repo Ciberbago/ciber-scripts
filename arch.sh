@@ -70,6 +70,7 @@ ansible-pull \
     --directory "$DEST" \
     --inventory ansible/inventory.ini \
     --ask-become-pass \
+    --extra-vars "ciber_branch=${RAMA}" \
     ansible/site.yml "$@"
 
 cat <<'FIN'

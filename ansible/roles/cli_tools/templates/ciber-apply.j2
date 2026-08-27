@@ -10,12 +10,19 @@
 # Generado por Ansible. No editar a mano: se sobrescribe en cada run.
 set -euo pipefail
 
+# Rama fijada cuando se genero este archivo: {{ ciber_branch }}
+# Se fija a proposito: sin --checkout, ansible-pull usa el default del remoto
+# (main), asi que un ciber-apply despues de instalar desde otra rama te
+# regresaria a main sin avisar.
+
 # ansible-pull entra a la raiz del checkout, pero el ansible.cfg vive en ansible/
 export ANSIBLE_CONFIG="{{ ciber_checkout_dir }}/ansible/ansible.cfg"
 
 exec ansible-pull \
     --url "{{ ciber_git_repo }}" \
+    --checkout "{{ ciber_branch }}" \
     --directory "{{ ciber_checkout_dir }}" \
     --inventory ansible/inventory.ini \
     --ask-become-pass \
+    --extra-vars "ciber_branch={{ ciber_branch }}" \
     ansible/site.yml "$@"

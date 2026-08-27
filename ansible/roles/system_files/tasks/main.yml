@@ -42,3 +42,79 @@
     label: "{{ item.dest }}"
   become: true
   notify: Recargar sysctl
+
+# --- Entradas de systemd-boot (llevan el PARTUUID de esta maquina) ---
+
+- name: Detectar el dispositivo de la particion root
+  ansible.builtin.command:
+    cmd: findmnt --noheadings --output SOURCE --target /
+  register: root_source
+  changed_when: false
+
+- name: Detectar el PARTUUID de root
+  ansible.builtin.command:
+    cmd: "blkid -s PARTUUID -o value {{ root_source.stdout | trim }}"
+  register: root_partuuid
+  changed_when: false
+  become: true
+
+- name: Detectar el sistema de archivos de root
+  ansible.builtin.command:
+    cmd: findmnt --noheadings --output FSTYPE --target /
+  register: root_fstype
+  changed_when: false
+
+- name: Guardar los datos de root
+  ansible.builtin.set_fact:
+    ciber_root_partuuid: "{{ root_partuuid.stdout | trim }}"
+    ciber_root_fstype: "{{ root_fstype.stdout | trim }}"
+
+- name: Comprobar que se detecto el PARTUUID
+  # Sin esto la entrada de boot quedaria con "root=PARTUUID=" vacio, que es
+  # exactamente el problema que veniamos a arreglar pero mas silencioso.
+  ansible.builtin.assert:
+    that:
+      - ciber_root_partuuid | length > 0
+      - ciber_root_fstype | length > 0
+    fail_msg: >-
+      No se pudo detectar el PARTUUID o el fstype de la particion root
+      ({{ root_source.stdout | trim }}). Si tu root esta en LVM o LUKS, las
+      entradas de systemd-boot hay que escribirlas a mano: quita
+      system_templates de files.yml.
+    quiet: true
+
+- name: Mostrar los datos detectados de root
+  ansible.builtin.debug:
+    msg:
+      dispositivo: "{{ root_source.stdout | trim }}"
+      partuuid: "{{ ciber_root_partuuid }}"
+      fstype: "{{ ciber_root_fstype }}"
+
+- name: Ver si se usa systemd-boot
+  ansible.builtin.stat:
+    path: "{{ item.requires_dir }}"
+  loop: "{{ system_templates }}"
+  loop_control:
+    label: "{{ item.requires_dir }}"
+  register: boot_dirs
+  become: true
+
+- name: Escribir las entradas de systemd-boot
+  ansible.builtin.template:
+    src: "{{ item.item.src }}"
+    dest: "{{ item.item.dest }}"
+    owner: root
+    group: root
+    mode: "0644"
+  loop: "{{ boot_dirs.results | selectattr('stat.exists') | list }}"
+  loop_control:
+    label: "{{ item.item.dest }}"
+  become: true
+
+- name: Avisar si no se uso systemd-boot
+  ansible.builtin.debug:
+    msg: >-
+      No existe {{ boot_dirs.results | rejectattr('stat.exists')
+        | map(attribute='item.requires_dir') | unique | join(', ') }}:
+      se omitieron las entradas de boot (no usas systemd-boot).
+  when: boot_dirs.results | rejectattr('stat.exists') | list | length > 0

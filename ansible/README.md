@@ -26,6 +26,7 @@ mantenimiento normal.
 | Agregar un paquete del AUR | `packages.yml` → `aur_packages` | 1 línea |
 | Agregar un dotfile | pongo el archivo en `dotfiles/` + `files.yml` | 1 línea |
 | Agregar config a `/etc` | pongo el archivo en el repo + `files.yml` | 1 línea |
+| Agregar config a `/etc` con variables | plantilla en `roles/system_files/templates/` + `files.yml` → `system_templates` | 1 línea |
 | Agregar una unidad de systemd | dejo el `.service` en `systemd/` | **0 líneas** |
 | Habilitar una unidad en boot | `systemd.yml` | 1 línea |
 | Agregar un comando a `/usr/local/bin` | pongo el script en `scripts/` + `files.yml` | 1 línea |
@@ -103,6 +104,22 @@ destino antes de saber si la descarga había servido, así que un typo en una UR
 dejaba un archivo de 0 bytes y algo se rompía 40 líneas después sin decir por
 qué. Ahora, si un archivo referenciado no existe en el repo, los roles fallan al
 principio con la lista completa de lo que falta.
+
+## Entradas de systemd-boot
+
+Los archivos `systemd/cachyos.conf` y `systemd/lts.conf` del repo tienen
+`root=PARTUUID=[UUIDDISCODELKERNELBUENO sudo blkid]`: eran recordatorios para
+editarlos a mano. El script de bash los copiaba tal cual a
+`/boot/loader/entries/`, y si systemd-boot tomaba una de esas entradas como
+default, la máquina no arrancaba.
+
+El playbook ya no los copia: usa las plantillas de
+`roles/system_files/templates/` y rellena el PARTUUID y el fstype detectados de
+la partición montada en `/`. Si no existe `/boot/loader/entries` (o sea, no usas
+systemd-boot), las omite con un aviso.
+
+Si tu root está en LVM o LUKS la detección no aplica: quita `system_templates`
+de `files.yml` y escribe las entradas a mano.
 
 ## Notas sobre partes delicadas
 
