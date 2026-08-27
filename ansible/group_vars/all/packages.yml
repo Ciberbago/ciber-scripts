@@ -148,11 +148,14 @@ chaotic_packages:
   - linux-cachyos-headers
   - protonplus
   - protontricks-git
-  - rtl88xxau-aircrack-dkms-git
 
 # AUR de verdad: hay que compilar
 aur_packages:
   - clicker-git
+  # No esta en chaotic-aur (ahi fallaba con "could not find or read package"),
+  # asi que se compila del AUR. Es el driver de wifi USB: sin el, un arranque
+  # con el kernel LTS se queda sin red inalambrica.
+  - rtl88xxau-aircrack-dkms-git
   - flameshot-git
   - gnome-extensions-cli
   - headsetcontrol-git

@@ -74,12 +74,36 @@
   become: true
   when: chaotic_repo is changed
 
+- name: Ver que paquetes de chaotic existen realmente
+  # Sin esta comprobacion, UN nombre que ya no este en el repo tumba la
+  # instalacion de los otros nueve. Ademas el error del modulo es enganoso:
+  # cuando no resuelve el nombre en los repos cae a tratarlo como archivo local
+  # (pacman --upgrade) y reporta "could not find or read package".
+  ansible.builtin.command:
+    cmd: "pacman -Si chaotic-aur/{{ item }}"
+  loop: "{{ chaotic_packages }}"
+  register: chaotic_check
+  changed_when: false
+  failed_when: false
+
 - name: Instalar binarios de chaotic-aur
   # Son paquetes de un repo normal: los instala pacman sin compilar nada.
+  # Se pasan los nombres SIN el prefijo "chaotic-aur/": el modulo interpreta un
+  # nombre con "/" como ruta a un archivo y usa -U en lugar de -S.
   community.general.pacman:
-    name: "{{ chaotic_packages | map('regex_replace', '^', 'chaotic-aur/') | list }}"
+    name: "{{ chaotic_check.results | selectattr('rc', 'equalto', 0) | map(attribute='item') | list }}"
     state: present
   become: true
+  when: chaotic_check.results | selectattr('rc', 'equalto', 0) | list | length > 0
+
+- name: Avisar de paquetes que no estan en chaotic-aur
+  ansible.builtin.debug:
+    msg: >-
+      No estan en chaotic-aur, se omitieron:
+      {{ chaotic_check.results | rejectattr('rc', 'equalto', 0)
+         | map(attribute='item') | list | join(', ') }}.
+      Si los necesitas, muevelos a aur_packages para que yay los compile.
+  when: chaotic_check.results | rejectattr('rc', 'equalto', 0) | list | length > 0
 
 # --- A partir de aqui, compilacion del AUR ---
 
