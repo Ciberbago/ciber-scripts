@@ -28,6 +28,18 @@
          | map(attribute='item.src') | list | join(', ') }}
     quiet: true
 
+- name: Crear los directorios destino
+  # 'copy' NO crea el directorio padre: falla con "Destination directory ... does
+  # not exist". Varios de estos (/etc/systemd/system.conf.d) no existen en un
+  # Arch recien instalado; otros los crea el paquete que los usa.
+  # Sin 'mode' a proposito: asi no se altera el modo de directorios de sistema
+  # que ya existen.
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+  loop: "{{ system_files | map(attribute='dest') | map('dirname') | unique | sort }}"
+  become: true
+
 - name: Instalar archivos de configuracion de sistema
   ansible.builtin.copy:
     src: "{{ ciber_repo_root }}/{{ item.src }}"

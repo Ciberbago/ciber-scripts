@@ -23,6 +23,13 @@
          | map(attribute='item.src') | list | join(', ') }}
     quiet: true
 
+- name: Crear los directorios destino de los comandos
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+  loop: "{{ cli_tools | map(attribute='dest') | map('dirname') | unique | sort }}"
+  become: true
+
 - name: Instalar comandos en /usr/local/bin
   ansible.builtin.copy:
     src: "{{ ciber_repo_root }}/{{ item.src }}"

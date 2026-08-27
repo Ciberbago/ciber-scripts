@@ -62,6 +62,13 @@
   register: unidades_usuario
   when: dir_user_units.stat.exists
 
+- name: Crear el directorio de unidades de usuario
+  ansible.builtin.file:
+    path: "{{ ciber_home }}/.config/systemd/user"
+    state: directory
+    mode: "0755"
+  become: false
+
 - name: Instalar unidades de usuario
   ansible.builtin.copy:
     src: "{{ item }}"

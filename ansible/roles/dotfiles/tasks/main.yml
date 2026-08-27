@@ -1,8 +1,9 @@
 ---
 # Dotfiles del usuario.
 #
-# 'copy' crea el directorio padre solo, asi que desaparece la clase de bug de
-# "~/.config/flameshot/ nunca se creaba con mkdir y el wget fallaba".
+# Cuidado: 'copy' NO crea el directorio padre, hay que crearlo aparte (tarea de
+# abajo). En bash el bug era que ~/.config/flameshot nunca se creaba con mkdir y
+# el wget fallaba; aqui el equivalente seria olvidar esa tarea.
 
 - name: Comprobar que los dotfiles existen en el repo
   ansible.builtin.stat:
@@ -28,6 +29,18 @@
     state: directory
     mode: "0755"
   loop: "{{ user_dirs }}"
+  become: false
+
+- name: Crear los directorios destino de los dotfiles
+  # Misma razon que en system_files: 'copy' no crea el directorio padre. En un
+  # $HOME nuevo casi ninguno de estos existe.
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+  loop: >-
+    {{ (user_files + nautilus_scripts) | map(attribute='dest')
+       | map('expanduser') | map('dirname') | unique | sort }}
   become: false
 
 - name: Instalar dotfiles
