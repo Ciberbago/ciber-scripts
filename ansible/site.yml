@@ -31,6 +31,9 @@
   roles:
     - { role: pacman_setup,     tags: [pacman, base] }
     - { role: packages,         tags: [packages] }
+    # Despues de packages: necesita que existan el grupo vboxusers y el binario
+    # de fish, que los crean sus paquetes.
+    - { role: user_setup,       tags: [user, base] }
     - { role: system_files,     tags: [files, system] }
     - { role: systemd_units,    tags: [systemd] }
     - { role: cli_tools,        tags: [files, tools] }

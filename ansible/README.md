@@ -69,6 +69,7 @@ archivo que cambiaría antes de tocar nada.
 |---|---|
 | `pacman`, `base` | pacman.conf, makepkg.conf, timezone, shell, grupos |
 | `packages` | paquetes de repos oficiales |
+| `user` | grupos extra y shell del usuario |
 | `files` | dotfiles + config de /etc + comandos de /usr/local/bin |
 | `system`, `dotfiles`, `tools` | subconjuntos de `files` |
 | `systemd` | unidades |

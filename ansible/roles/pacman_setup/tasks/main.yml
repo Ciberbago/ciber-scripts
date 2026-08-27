@@ -92,16 +92,7 @@
   loop: "{{ ciber_environment | dict2items }}"
   become: true
 
-- name: Agregar el usuario a los grupos extra
-  ansible.builtin.user:
-    name: "{{ ciber_user }}"
-    groups: "{{ ciber_extra_groups }}"
-    append: true
-  become: true
-
-- name: Shell por defecto
-  # 'chsh' interactivo pedia password y bloqueaba el script de bash
-  ansible.builtin.user:
-    name: "{{ ciber_user }}"
-    shell: "{{ ciber_shell }}"
-  become: true
+# Los grupos extra y el shell se configuran en el rol user_setup, que corre
+# despues de 'packages': el grupo vboxusers lo crea el paquete virtualbox, y
+# poner /usr/bin/fish como shell antes de instalar fish deja al usuario sin
+# poder abrir sesion si la corrida se interrumpe ahi.
