@@ -109,7 +109,6 @@ pacman_packages:
 
   # --- multimedia ---
   - amberol
-  - parabolic
   - pinta
   - decibels
   - ffmpegthumbnailer
@@ -174,6 +173,9 @@ chaotic_packages:
 # AUR de verdad: hay que compilar
 aur_packages:
   - clicker-git
+  # No esta en los repos oficiales ni en chaotic: el filtro de existencia del rol
+  # 'packages' lo reportaba y lo omitia, y la app no se instalaba.
+  - parabolic
   # Si algun dia aparece en chaotic-aur, muevelo alla: se instala en segundos en
   # lugar de compilarse. Compruebalo con 'pacman -Si chaotic-aur/obs-cmd'.
   - obs-cmd
