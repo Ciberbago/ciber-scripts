@@ -1,0 +1,71 @@
+---
+# =============================================================================
+#  FISH  -  aliases y funciones
+# =============================================================================
+#
+#  Esto se renderiza a ~/.config/fish/conf.d/ciber.fish
+#
+#  Por que conf.d y no funcsave: funcsave escribe un archivo por funcion en
+#  ~/.config/fish/functions/, que despues NO se sincroniza con el repo. Si
+#  cambias un alias aqui y borras otro, funcsave dejaria el borrado vivo en el
+#  disco para siempre. Con un solo archivo generado, el repo es la verdad: lo
+#  que quitas de aqui desaparece de la maquina en el siguiente run.
+#
+#  Ademas asi el bug original es imposible de repetir: cada alias es una entrada
+#  de lista, no texto pegado en una linea de 3185 caracteres.
+# =============================================================================
+
+# Directorios que se agregan al PATH de fish (con fish_add_path, idempotente).
+# ~/.local/bin lo necesita AM: ahi deja los enlaces de las AppImages locales, y
+# el propio instalador avisa "is not in PATH, local apps may not run".
+fish_paths:
+  - ~/.local/bin
+
+fish_aliases:
+  - { name: limpiar,    body: "paccache -rk1 && paccache -ruk0 && yay -Sc && sudo pacman -Qdtq | sudo pacman -Runs -" }
+  - { name: historial,  body: "history | fzf" }
+  - { name: cat,        body: "bat" }
+  - { name: cc,         body: "cd && clear" }
+  # Era 'exa' en el script viejo, pero el paquete que se instala es 'eza'.
+  # El '=auto' no es opcional: en las versiones nuevas de eza '--icons' exige un
+  # valor, y sin el se come el siguiente argumento. Con "--icons" pelado,
+  # cualquier 'ls <directorio>' fallaba con
+  # "invalid value '<ruta>' for '--icons [<WHEN>]'".
+  - { name: ls,         body: "eza -lha --icons=auto" }
+  - { name: mkdir,      body: "mkdir -pv" }
+  - { name: espacio,    body: "gdu /" }
+  - { name: f34,        body: "firefox -P 'Cyb_R34' -no-remote" }
+  - { name: orphans,    body: "sudo pacman -Qdtq | sudo pacman -Runs -" }
+  - { name: rebootuefi, body: "sudo systemctl reboot --firmware-setup" }
+  - { name: sss,        body: "sudo systemctl status" }
+  - { name: ssa,        body: "sudo systemctl start" }
+  - { name: sso,        body: "sudo systemctl stop" }
+  - { name: sse,        body: "sudo systemctl enable" }
+  - { name: ssd,        body: "sudo systemctl daemon-reload" }
+
+# Funciones de fish. 'body' es el cuerpo tal cual, en sintaxis fish.
+fish_functions:
+  - name: buscar
+    body: '/usr/bin/find . -type f -iname "*$argv*"'
+  - name: cheat
+    body: 'curl cheat.sh/$argv'
+  - name: convimg
+    body: 'magick mogrify -path $argv[2] -strip -interlace Plane -quality 80% -format jpg -verbose $argv[1]/*'
+  - name: subir
+    body: "curl -F 'file=@-' 0x0.st < $argv[1]"
+  - name: img2mp4
+    body: |
+      for file in *.gif
+          ffmpeg -i $file "$file.mp4"
+      end
+  - name: tts
+    body: |
+      set ts (date "+%Y%m%d_%H%M%S")
+      set f "tts_$ts.mp3"
+      curl -s --get \
+          --data-urlencode "ie=UTF-8" \
+          --data-urlencode "client=tw-ob" \
+          --data-urlencode "tl=es-mx" \
+          --data-urlencode "q=$argv" \
+          "https://translate.google.com/translate_tts" > $f
+      echo "Guardado: $f"

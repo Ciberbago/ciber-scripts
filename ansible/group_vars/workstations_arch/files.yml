@@ -1,0 +1,58 @@
+---
+# =============================================================================
+#  ARCHIVOS  -  dotfiles, config de /etc y scripts a /usr/local/bin
+# =============================================================================
+#
+#  Para agregar un archivo: ponlo en dotfiles/ o scripts/ del repo y agrega UNA
+#  linea aqui. Los archivos vienen del repo clonado, no de URLs, asi que un
+#  nombre mal escrito falla ruidosamente en vez de dejar un archivo de 0 bytes.
+#
+#  'mode' es opcional (default 0644 en archivos de sistema, 0644 en dotfiles).
+# =============================================================================
+
+# --- Dotfiles: van al $HOME del usuario ---
+# src es relativo a la raiz del repo. dest admite ~ y variables.
+user_files:
+  - { src: dotfiles/arch/firefoxuser.js,                  dest: ~/.config/firefoxuser.js }
+  - { src: dotfiles/arch/extensions/dashtopanel.conf,     dest: ~/.config/dashtopanel.conf }
+  - { src: dotfiles/arch/extensions/executor.conf,        dest: ~/.config/executor.conf }
+  - { src: dotfiles/arch/extensions/poweroffmenu.conf,    dest: ~/.config/poweroffmenu.conf }
+  - { src: dotfiles/arch/terminatorconfig,                dest: ~/.config/terminator/config }
+  - { src: dotfiles/arch/wallpaper.desktop,               dest: ~/.config/autostart/wallpaper.desktop }
+  - { src: dotfiles/arch/mpv.conf,                        dest: ~/.config/mpv/mpv.conf }
+  - { src: dotfiles/arch/modern.lua,                      dest: ~/.config/mpv/scripts/modern.lua }
+  - { src: dotfiles/arch/thumbfast.lua,                   dest: ~/.config/mpv/scripts/thumbfast.lua }
+  - { src: dotfiles/arch/osc.conf,                        dest: ~/.config/mpv/script-opts/osc.conf }
+  - { src: dotfiles/arch/Material-Design-Iconic-Font.ttf, dest: ~/.config/mpv/fonts/Material-Design-Iconic-Font.ttf }
+  - { src: dotfiles/arch/obsprofile.ini,                  dest: ~/.config/obs-studio/basic/profiles/Untitled/basic.ini }
+  - { src: dotfiles/arch/obsrecorder.json,                dest: ~/.config/obs-studio/basic/profiles/Untitled/recordEncoder.json }
+  - { src: dotfiles/arch/obsglobal.ini,                   dest: ~/.config/obs-studio/global.ini }
+  - { src: dotfiles/arch/yayconfig.json,                  dest: ~/.config/yay/config.json }
+  - { src: dotfiles/arch/custom-keys.dconf,               dest: ~/gnome/custom-keys.dconf }
+  - { src: dotfiles/arch/custom-values.dconf,             dest: ~/gnome/custom-values.dconf }
+  - { src: dotfiles/arch/keybindings.dconf,               dest: ~/gnome/keybindings.dconf }
+
+# --- Carpetas extra a crear en $HOME (las de user_files se crean solas) ---
+user_dirs:
+  - ~/.local/share/nautilus/scripts
+
+# --- Archivos de sistema: /etc, /boot, /usr/lib ---
+system_files:
+  - { src: dotfiles/arch/reflector.conf,           dest: /etc/xdg/reflector/reflector.conf }
+  - { src: dotfiles/arch/virtualbox.conf,          dest: /etc/modules-load.d/virtualbox.conf }
+  - { src: systemd/arch/80-gaming.conf,            dest: /etc/sysctl.d/80-gaming.conf }
+  - { src: systemd/arch/99-cachyos-settings.conf,  dest: /etc/sysctl.d/99-cachyos-settings.conf }
+  - { src: systemd/arch/00-timeout.conf,           dest: /etc/systemd/system.conf.d/00-timeout.conf }
+  - { src: systemd/arch/zram-generator.conf,       dest: /usr/lib/systemd/arch/zram-generator.conf }
+  - { src: systemd/arch/30-zram.rules,             dest: /usr/lib/udev/rules.d/30-zram.rules }
+
+# --- Scripts que se instalan como comandos en /usr/local/bin ---
+cli_tools:
+  - { src: scripts/arch/wallpaper.sh,    dest: /usr/local/bin/wallpaper }
+  - { src: scripts/arch/archbootgen.sh,  dest: /usr/local/bin/archbootgen }
+  # Progreso en vivo del playbook, para correr en otra terminal
+  - { src: scripts/common/ciber-watch.sh,  dest: /usr/local/bin/ciber-watch }
+
+# --- Scripts de Nautilus (menu contextual del explorador) ---
+nautilus_scripts:
+  - { src: scripts/arch/mediainfo.sh,  dest: ~/.local/share/nautilus/scripts/arch/mediainfo.sh }

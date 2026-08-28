@@ -11,7 +11,7 @@
 
 - name: Descubrir unidades en el repo
   ansible.builtin.find:
-    paths: "{{ ciber_repo_root }}/systemd"
+    paths: "{{ ciber_repo_root }}/{{ systemd_units_dir }}"
     patterns:
       - "*.service"
       - "*.timer"
@@ -24,21 +24,25 @@
     recurse: false
   register: unidades_encontradas
 
-- name: Quitar las unidades que no son de esta maquina
+- name: Ordenar las unidades encontradas
+  # Ya no hace falta una lista de exclusiones: las unidades de cada distro viven
+  # en su propia carpeta (systemd/arch, systemd/debian), asi que el glob solo ve
+  # las que corresponden. Antes convivian todas en systemd/ y habia que excluir
+  # a mano las de Debian para que no se instalaran en el Arch.
   ansible.builtin.set_fact:
     unidades: >-
       {{ unidades_encontradas.files | map(attribute='path') | map('basename')
-         | difference(systemd_units_exclude) | sort | list }}
+         | sort | list }}
 
 - name: Mostrar el resultado del descubrimiento
   ansible.builtin.debug:
     msg:
+      carpeta: "{{ systemd_units_dir }}"
       instalar: "{{ unidades }}"
-      excluidas: "{{ systemd_units_exclude | sort }}"
 
 - name: Instalar unidades en /etc/systemd/system
   ansible.builtin.copy:
-    src: "{{ ciber_repo_root }}/systemd/{{ item }}"
+    src: "{{ ciber_repo_root }}/{{ systemd_units_dir }}/{{ item }}"
     dest: "/etc/systemd/system/{{ item }}"
     owner: root
     group: root
@@ -51,12 +55,12 @@
 
 - name: Ver si hay carpeta de unidades de usuario
   ansible.builtin.stat:
-    path: "{{ ciber_repo_root }}/systemd/user"
+    path: "{{ ciber_repo_root }}/{{ systemd_units_dir }}/user"
   register: dir_user_units
 
 - name: Descubrir unidades de usuario
   ansible.builtin.find:
-    paths: "{{ ciber_repo_root }}/systemd/user"
+    paths: "{{ ciber_repo_root }}/{{ systemd_units_dir }}/user"
     patterns: ["*.service", "*.timer", "*.socket", "*.path", "*.target"]
     file_type: file
   register: unidades_usuario

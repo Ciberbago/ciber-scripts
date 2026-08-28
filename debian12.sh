@@ -16,9 +16,12 @@ trap 'rc=$?; FALLOS+=("linea ${LINENO}: ${BASH_COMMAND} (rc=${rc})")' ERR
 
 #<-------Variables------->
 repo='https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main'
-dotfiles="${repo}/dotfiles"
-scriptsv="${repo}/scripts"
-sdconfig="${repo}/systemd"
+# Los dotfiles, scripts y unidades estan separados por distro en el repo, para
+# que el playbook de Ansible de cada una vea solo lo suyo.
+dotfiles="${repo}/dotfiles/debian"
+comun="${repo}/dotfiles/common"
+scriptsv="${repo}/scripts/debian"
+sdconfig="${repo}/systemd/debian"
 interfaz=$(ip route show default 2>/dev/null | awk '{print $5; exit}')
 SOURCE_LIST="/etc/apt/sources.list"
 

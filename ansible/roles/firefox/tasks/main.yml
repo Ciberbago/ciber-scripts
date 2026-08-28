@@ -56,7 +56,7 @@
 
 - name: Instalar user.js
   ansible.builtin.copy:
-    src: "{{ ciber_repo_root }}/dotfiles/firefoxuser.js"
+    src: "{{ ciber_repo_root }}/dotfiles/arch/firefoxuser.js"
     dest: "{{ ff_profile_path }}/user.js"
     mode: "0644"
   become: false

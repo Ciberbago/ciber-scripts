@@ -23,8 +23,8 @@ primer login; ponerlas en el playbook de sistema fue una regresión.
 
 ## Cómo cambiar cosas
 
-Todo se edita en `group_vars/all/`. Nunca hace falta tocar un rol para el
-mantenimiento normal.
+Todo se edita en `group_vars/workstations_arch/`. Nunca hace falta tocar un rol
+para el mantenimiento normal.
 
 | Quiero… | Edito | Cuánto es |
 |---|---|---|
@@ -173,15 +173,37 @@ ansible/
 ├── inventory.ini       localhost, conexión local
 ├── requirements.yml    colecciones de Ansible
 ├── ansible.cfg
-├── group_vars/all/     >>> AQUÍ SE EDITA TODO <<<
-│   ├── main.yml        ajustes generales
-│   ├── packages.yml    paquetes
-│   ├── files.yml       dotfiles, /etc, /usr/local/bin
-│   ├── systemd.yml     unidades a habilitar y excluir
-│   ├── gnome.yml       dconf, extensiones, apps a ocultar
-│   └── shell.yml       aliases y funciones de fish
+├── group_vars/
+│   ├── all/            común a cualquier distro (repo, rama, usuario, TZ)
+│   └── workstations_arch/     >>> AQUÍ SE EDITA TODO <<<
+│       ├── arch.yml     pacman, makepkg, chaotic, boot, AppImages
+│       ├── packages.yml paquetes
+│       ├── files.yml    dotfiles, /etc, /usr/local/bin
+│       ├── systemd.yml  unidades a habilitar
+│       ├── gnome.yml    dconf, extensiones, apps a ocultar
+│       └── shell.yml    aliases y funciones de fish
 └── roles/              lógica; casi nunca hay que tocarla
 ```
+
+## Separación por distro
+
+El repo aloja Arch y Debian, así que los archivos están separados:
+
+```
+dotfiles/{arch,debian,common}
+scripts/{arch,debian,common,windows}
+systemd/{arch,debian}
+```
+
+Y las variables, por grupo del inventario: `group_vars/all/` es lo común a
+cualquier distro (de dónde se clona, la rama, el usuario, la zona horaria) y
+`group_vars/workstations_arch/` es todo lo que sólo aplica a Arch. Cuando se
+porte Debian, será añadir `group_vars/servers_debian/` sin tocar nada de esto.
+
+Eso eliminó un parche: el rol `systemd_units` tenía una lista
+`systemd_units_exclude` para que las unidades de Debian (`backup`, `todoist`) no
+se instalaran en el Arch, porque todas convivían en `systemd/`. Ahora el glob
+apunta a `systemd_units_dir` — `systemd/arch` aquí — y sólo ve lo que le toca.
 
 Los archivos de configuración salen del repo clonado, no de URLs. Eso elimina la
 causa raíz de la mitad de los bugs de la versión en bash: `wget -O` truncaba el

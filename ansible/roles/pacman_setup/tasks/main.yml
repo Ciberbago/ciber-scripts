@@ -59,6 +59,54 @@
   become: true
   when: makepkg_march_native
 
+# --- El keyring va PRIMERO, antes de cualquier otra cosa de pacman ---
+#
+# Si archlinux-keyring esta viejo, pacman rechaza los paquetes nuevos por firma
+# invalida y TODO lo demas falla en cascada, con errores que no dicen que el
+# problema es el keyring. Por eso Arch documenta actualizarlo aparte y antes:
+#
+#     pacman -Sy archlinux-keyring && pacman -Su
+#
+# El 'pacman -Sy' suelto seria un partial upgrade, pero aqui es la excepcion
+# documentada y va seguido inmediatamente del -Syu completo de abajo.
+
+- name: Asegurar el keyring de Arch
+  block:
+    - name: Actualizar archlinux-keyring
+      community.general.pacman:
+        name: archlinux-keyring
+        state: latest
+        update_cache: true
+      become: true
+
+  rescue:
+    # Si el keyring esta tan viejo o corrupto que ni siquiera se puede validar
+    # su propia actualizacion, hay que reconstruirlo desde cero.
+    - name: Avisar que se va a reconstruir el keyring
+      ansible.builtin.debug:
+        msg: >-
+          No se pudo actualizar archlinux-keyring con pacman. Se reinicializa el
+          keyring desde cero, que es el procedimiento documentado por Arch para
+          cuando las firmas dejan de validar.
+
+    - name: Reinicializar el keyring de pacman
+      ansible.builtin.command:
+        cmd: "{{ item }}"
+      loop:
+        - pacman-key --init
+        - pacman-key --populate archlinux
+      become: true
+      changed_when: true
+
+    - name: Reintentar la actualizacion del keyring
+      # Si esto tambien falla, la corrida se detiene aqui, que es lo correcto:
+      # sin keyring valido nada de lo que sigue tiene sentido.
+      community.general.pacman:
+        name: archlinux-keyring
+        state: latest
+        update_cache: true
+      become: true
+
 - name: Actualizar el sistema completo
   # -Syu, nunca -Sy: un 'pacman -Sy' seguido de instalar paquetes es un partial
   # upgrade, el escenario que Arch advierte que rompe el sistema.

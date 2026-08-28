@@ -17,7 +17,7 @@
 
 - name: Instalar config.fish base
   ansible.builtin.copy:
-    src: "{{ ciber_repo_root }}/dotfiles/config.fish"
+    src: "{{ ciber_repo_root }}/dotfiles/common/config.fish"
     dest: "{{ ciber_home }}/.config/fish/config.fish"
     mode: "0644"
   become: false

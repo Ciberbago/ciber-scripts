@@ -1,0 +1,207 @@
+---
+# =============================================================================
+#  PAQUETES  -  para agregar o quitar algo, edita SOLO este archivo
+# =============================================================================
+#
+#  pacman_packages    repos oficiales (core/extra/multilib)
+#  chaotic_packages   chaotic-aur, son binarios: los instala pacman, no compila
+#  aur_packages       AUR de verdad, hay que compilar (lento)
+#  appimage_packages  AppImages via AM
+#  pacman_remove      paquetes a desinstalar
+#
+#  Antes de agregar algo al AUR, revisa si esta en chaotic-aur: es el mismo
+#  paquete ya compilado y se instala en segundos en lugar de minutos.
+# =============================================================================
+
+pacman_packages:
+  # --- base y desarrollo ---
+  - base-devel
+  - dkms
+  - git
+  - headsetcontrol      # antes headsetcontrol-git del AUR; ya esta en extra
+  - linux-headers
+  - linux-lts
+  # Sin estos, dkms no compila virtualbox ni el driver de wifi para el kernel
+  # LTS, que es justo el que usarias como respaldo si el principal falla.
+  - linux-lts-headers
+  - rust
+
+  # --- dependencias que necesita este propio playbook ---
+  - python-psutil          # requerido por el modulo community.general.dconf
+
+  # --- terminal y CLI ---
+  - bat
+  - tmux
+  - btop
+  - eza
+  - fastfetch
+  - fish
+  - fisher
+  - fzf
+  - gdu
+  - jq
+  - less
+  - micro
+  - nnn
+  - pacman-contrib
+  - pkgfile
+  - opencode
+  - python-tqdm
+  - reflector
+  - terminator
+  - wget
+  # 'pacman -Qi zram-generator' en la maquina real: Required By = None,
+  # Install Reason = Explicitly installed. O sea que NO llega por dependencia:
+  # sin declararlo, el playbook desplegaria /usr/lib/systemd/zram-generator.conf
+  # y la regla de udev sin el programa que los lee, y el zram no se activaria
+  # nunca, sin dar ningun error.
+  #
+  # (mpv en cambio si es dependencia, de ani-cli y mpv-mpris, por eso no esta.)
+  - zram-generator
+
+  # --- contenedores ---
+  - docker
+  - docker-compose
+
+  # --- red ---
+  - ethtool
+  - localsend
+  - iperf3
+  - net-tools
+  - smbclient
+  - tailscale
+  - traceroute
+
+  # --- GNOME ---
+  - gdm
+  - gnome-bluetooth-3.0
+  - gnome-calculator
+  - gnome-characters
+  - gnome-clocks
+  - gnome-control-center
+  - gnome-disk-utility
+  - gnome-font-viewer
+  - gnome-keyring
+  - gnome-remote-desktop
+  - gnome-shell
+  - gnome-text-editor
+  - gnome-tweaks
+  - nautilus
+  - xdg-desktop-portal-gnome
+
+  # --- temas y apariencia ---
+  - adw-gtk-theme
+  - noto-fonts-cjk
+  - papirus-icon-theme
+  - qt5ct
+  - qt6-base
+  - ttf-firacode-nerd
+
+  # --- archivos y almacenamiento ---
+  - 7zip
+  - baobab
+  - file-roller
+  - gvfs
+  - gvfs-smb
+  - minizip
+  - ntfs-3g
+  - unrar
+
+  # --- multimedia ---
+  - amberol
+  - parabolic
+  - pinta
+  - decibels
+  - ffmpegthumbnailer
+  - handbrake
+  - imagemagick
+  - libmad
+  - loupe
+  - mpv-mpris
+  - obs-studio
+  - papers
+  - tumbler
+  - video-trimmer
+  - webp-pixbuf-loader
+
+  # --- graficos / AMD / juegos ---
+  - mangohud
+  - mesa
+  - prismlauncher      # antes AppImage via AM; ahora del repo extra
+  - radeontop
+  - rocm-smi-lib
+  - steam
+  - vulkan-radeon
+
+  # --- escritorio y utilidades ---
+  - bluez
+  - bluez-utils
+  - extension-manager
+  - eyedropper
+  - firefox
+  - fragments
+  - resources
+  - uget
+  - wl-clipboard
+
+  # --- remoto y virtualizacion ---
+  - android-tools
+  - freerdp
+  - remmina
+  - scrcpy
+  - usbutils
+  - virtualbox
+  - virtualbox-guest-iso
+
+  # --- java ---
+  - java-runtime-common
+  - jre8-openjdk
+  - jre17-openjdk
+  - jre21-openjdk
+
+# Binarios de chaotic-aur (se instalan con pacman, sin compilar)
+chaotic_packages:
+  - ani-cli
+  - bibata-rainbow-cursor-theme
+  - fresh-editor
+  - fsearch
+  - insync
+  - linux-cachyos
+  - linux-cachyos-headers
+  - protonplus
+  - protontricks-git
+
+# AUR de verdad: hay que compilar
+aur_packages:
+  - clicker-git
+  # Si algun dia aparece en chaotic-aur, muevelo alla: se instala en segundos en
+  # lugar de compilarse. Compruebalo con 'pacman -Si chaotic-aur/obs-cmd'.
+  - obs-cmd
+  # rtl88xxau-aircrack-dkms-git: quitado. No existe ni en chaotic-aur ni en el
+  # AUR con ese nombre (fue renombrado o retirado), y el adaptador USB que lo
+  # necesitaba ya no se usa. Si vuelve a hacer falta, busca el nombre actual con
+  # 'yay -Ss 8812au' antes de agregarlo.
+  - gnome-extensions-cli
+
+# AppImages via AM
+appimage_packages:
+  - blender
+  - czkawka
+  - google-chrome
+  - heroic-games-launcher
+  - suyu
+  - teamviewer
+  - ventoy
+
+# Paquetes a quitar si estan instalados
+pacman_remove:
+  - vlc
+  # Se retiro del setup: ya no se instala flameshot ni su config. Declararlo aqui
+  # hace que tambien se quite de las maquinas que ya lo tenian.
+  - flameshot-git
+  - flameshot
+  # Reemplazado por 'headsetcontrol' del repo extra oficial. Los dos entran en
+  # conflicto, asi que hay que quitar el del AUR antes de instalar el oficial.
+  - headsetcontrol-git
+  - python-pip
+  - python-poetry

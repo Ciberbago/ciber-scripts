@@ -51,6 +51,20 @@ if ! sudo -v; then
     exit 1
 fi
 
+#<-------Keyring primero------->
+# Si archlinux-keyring esta viejo, pacman rechaza los paquetes nuevos por firma
+# invalida y todo lo que sigue falla en cascada, con errores que no dicen que el
+# problema es el keyring. Arch documenta actualizarlo aparte y antes que nada.
+# El 'pacman -Sy' suelto seria un partial upgrade, pero es la excepcion
+# documentada y va seguido del -Syu completo de abajo.
+echo "==> Actualizando archlinux-keyring"
+if ! sudo pacman -Sy --needed --noconfirm archlinux-keyring; then
+    echo "!!! Fallo la actualizacion del keyring, se reconstruye desde cero" >&2
+    sudo pacman-key --init
+    sudo pacman-key --populate archlinux
+    sudo pacman -Sy --needed --noconfirm archlinux-keyring
+fi
+
 #<-------Dependencias minimas------->
 # -Syu y no -Sy: un 'pacman -Sy' seguido de instalar paquetes es un partial
 # upgrade, el escenario que Arch advierte que rompe el sistema.
@@ -129,11 +143,11 @@ Comandos disponibles de aqui en adelante:
 
 Para cambiar algo, edita el repo y vuelve a aplicar:
 
-  ansible/group_vars/all/packages.yml    paquetes
-  ansible/group_vars/all/files.yml       dotfiles y config de /etc
-  ansible/group_vars/all/systemd.yml     unidades a habilitar
-  ansible/group_vars/all/gnome.yml       ajustes de GNOME
-  ansible/group_vars/all/shell.yml       aliases de fish
+  ansible/group_vars/workstations_arch/packages.yml   paquetes
+  ansible/group_vars/workstations_arch/files.yml      dotfiles y config de /etc
+  ansible/group_vars/workstations_arch/systemd.yml    unidades a habilitar
+  ansible/group_vars/workstations_arch/gnome.yml      ajustes de GNOME
+  ansible/group_vars/workstations_arch/shell.yml      aliases de fish
 
 FIN
 echo "Logs:"

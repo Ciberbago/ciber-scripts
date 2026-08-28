@@ -1,0 +1,89 @@
+---
+# =============================================================================
+#  AJUSTES ESPECIFICOS DE ARCH
+# =============================================================================
+#
+#  Todo lo de este directorio aplica SOLO a los hosts del grupo
+#  workstations_arch del inventario. Lo que es comun a cualquier distro vive en
+#  group_vars/all/main.yml.
+# =============================================================================
+
+# --- Carpeta de unidades de systemd de esta distro ---
+# Cada distro tiene la suya. Antes convivian todas en systemd/ y habia que
+# excluir a mano las que no eran de esta maquina (systemd_units_exclude).
+systemd_units_dir: systemd/arch
+
+# Grupos extra del usuario. vboxusers lo crea el paquete virtualbox.
+ciber_extra_groups:
+  - vboxusers
+
+# Variables que van a /etc/environment (KEY=VALUE, sin 'export').
+# qt5ct solo aplica aqui: es el paquete que instala el playbook de Arch.
+ciber_environment:
+  QT_QPA_PLATFORMTHEME: qt5ct
+
+# --- pacman.conf ---
+pacman_color: true
+pacman_verbose_pkglists: true
+pacman_parallel_downloads: 20
+pacman_enable_multilib: true
+
+# --- makepkg.conf ---
+makepkg_builddir: /tmp/makepkg
+makepkg_pkgext: ".pkg.tar"
+makepkg_march_native: true
+makepkg_jobs: "{{ ansible_facts.processor_vcpus | default(2) | int - 1 }}"
+makepkg_options: "(docs !strip !libtool !staticlibs emptydirs zipman purge !debug lto)"
+makepkg_rustflags: "-C opt-level=2 -C target-cpu=native"
+
+# --- chaotic-aur ---
+chaotic_key_id: "3056513887B78AEB"
+chaotic_keyserver: keyserver.ubuntu.com
+
+# --- fish ---
+fish_editor: micro
+fish_plugins:
+  - IlanCosman/tide@v6
+  - oh-my-fish/plugin-bang-bang
+
+# --- AppImages / AM ---
+# Donde instala AM en modo local ("AppMan Mode"): un directorio por app aqui,
+# mas un symlink en ~/.local/bin. Es el default de AM y el playbook lo escribe
+# en ~/.config/appman/appman-config para que su asistente interactivo no aparezca.
+#
+# Si lo cambias en una maquina que ya tiene apps instaladas, AM exige
+# desinstalarlas primero: el rol no sobrescribe una config existente, solo avisa.
+appimage_install_path: ~/Applications
+
+# --- Entradas de systemd-boot ---
+#
+# El playbook genera UNA ENTRADA POR KERNEL INSTALADO, descubriendolos de
+# /boot/vmlinuz-*. No hay lista ni plantilla que mantener: instala un kernel
+# nuevo desde packages.yml y su entrada aparece sola en la siguiente corrida;
+# quitalo y su entrada se borra.
+#
+# Solo se generan entradas para kernels que tengan initramfs-<nombre>.img. Un
+# kernel sin initramfs clasico esta empaquetado como UKI, y systemd-boot ya lo
+# encuentra solo como entrada Type #2: escribirle una Type #1 lo duplicaria.
+#
+# Las entradas propias se llaman ciber-<kernel>.conf, para no tocar nunca las
+# que puso archinstall ni las de nadie mas.
+boot_entries_enabled: true
+
+# Entrada que systemd-boot arranca por default. Sin esta linea en loader.conf,
+# systemd-boot elige por orden de sorteo, y agregar entradas cambiaria en
+# silencio con que kernel arrancas. Ve los ids con 'bootctl list'.
+# El id de una entrada Type #1 es su nombre de archivo, con .conf incluido.
+# Veelos con 'bootctl list'. "arch-linux.efi" es el UKI que dejo archinstall.
+boot_default_entry: "ciber-linux-cachyos.conf"
+
+# Opciones del kernel comunes a todas las entradas. El root= y el rootfstype se
+# detectan de la particion montada en /.
+boot_kernel_options: "zswap.enabled=0 rw"
+
+# Titulos legibles. Si un kernel no esta aqui, se usa "Arch Linux (<kernel>)".
+boot_entry_titles:
+  linux: "Arch Linux"
+  linux-lts: "Arch Linux LTS"
+  linux-cachyos: "Arch Linux (CachyOS)"
+  linux-zen: "Arch Linux (Zen)"
