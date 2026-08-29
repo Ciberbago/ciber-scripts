@@ -68,6 +68,12 @@ Para debian 12:
 wget -O - url.jaimelopez.top/debian | bash
 ```
 
+Ese comando ya no es el script gigante de antes: ahora sólo instala Ansible,
+clona el repo y aplica el playbook. La configuración vive en
+`ansible/group_vars/workstations_debian/` y se documenta en
+[ansible/README-debian.md](ansible/README-debian.md). El script viejo en bash
+puro quedó en `legacy/debian-bash.sh`.
+
 
 Incluye cosas como:
 - Monitoreo

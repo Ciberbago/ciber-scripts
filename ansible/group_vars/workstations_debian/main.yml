@@ -1,0 +1,57 @@
+---
+# =============================================================================
+#  DEBIAN 12  -  ajustes generales
+# =============================================================================
+#
+#  Lo comun a las dos distros (ciber_user, ciber_home, ciber_git_repo,
+#  ciber_branch, ciber_shell, ciber_timezone) vive en group_vars/all/main.yml y
+#  no se repite aqui. Este archivo solo lleva lo que es propio de Debian.
+# =============================================================================
+
+# Playbook que reaplica el comando 'ciber-apply' de esta maquina. En Arch es
+# site.yml; aqui apunta al de Debian. Lo lee la plantilla ciber-apply.j2 del rol
+# cli_tools_debian.
+ciber_playbook: ansible/site-debian.yml
+
+# Nombre en clave del release (bookworm, trixie...). Se detecta solo en vez de
+# escribirlo a mano: los repos de Docker y Tailscale piden el codename en la
+# linea del sources.list, y hardcodear 'bookworm' romperia el dia que esto se
+# corra en un Debian 13.
+ciber_debian_codename: "{{ ansible_facts.distribution_release }}"
+
+# Componentes que se agregan a /etc/apt/sources.list.
+# non-free-firmware existe a partir de Debian 12: antes el firmware vivia en
+# non-free. Se declaran los tres porque el driver de video de Intel que instala
+# packages.yml (intel-media-va-driver-non-free) esta en non-free.
+apt_components:
+  - main
+  - contrib
+  - non-free
+  - non-free-firmware
+
+# Donde se guardan las llaves de los repos de terceros. /etc/apt/keyrings es la
+# ruta que Debian documenta desde bookworm; apt-key esta obsoleto y eliminado.
+apt_keyrings_dir: /etc/apt/keyrings
+
+# Grupos extra del usuario. El rol 'user_setup' omite con aviso los que no
+# existan todavia en /etc/group, asi que esto no revienta si docker aun no esta
+# instalado (aunque en site-debian.yml el rol corre despues de instalarlo).
+#
+# BUG ORIGINAL: el script hacia 'usermod -aG docker $USER' y despues
+# 'newgrp docker'. newgrp REEMPLAZA el shell actual, asi que todo lo que seguia
+# en el script -- el clone de ciber-docker, los plugins de neovim, el chsh a
+# fish, los timers y los 15 aliases -- nunca se ejecutaba. El grupo aplica en el
+# proximo login y punto.
+ciber_extra_groups:
+  - docker
+
+# Etiquetas que 'ciber-help' anuncia como recetas de ciber-apply. No hace falta
+# listarlas todas ('ciber-apply --list-tags' las saca del playbook): estas son
+# las que se usan a diario.
+ciber_tags:
+  - { tag: packages, desc: "Solo instalar y quitar paquetes" }
+  - { tag: docker,   desc: "Solo Docker y el repo de stacks de /opt/docker" }
+  - { tag: systemd,  desc: "Solo unidades: copiarlas, recargar y habilitarlas" }
+  - { tag: secrets,  desc: "Solo crear los .env vacios. Util al migrar: no toca los scripts" }
+  - { tag: dotfiles, desc: "Solo los archivos de configuracion del HOME" }
+  - { tag: fish,     desc: "Solo aliases, funciones y plugins de fish" }

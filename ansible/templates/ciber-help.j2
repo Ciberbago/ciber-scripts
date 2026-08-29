@@ -1,0 +1,173 @@
+#!/usr/bin/env bash
+#
+# ciber-help - chuleta de todo lo que el playbook instala en esta maquina.
+#
+# GENERADO POR ANSIBLE. No editar a mano: se sobrescribe en cada ciber-apply.
+#
+# El contenido NO esta escrito a mano: sale de group_vars (cli_tools,
+# fish_aliases, fish_functions, ciber_tags). Un alias nuevo en shell.yml aparece
+# aqui solo. Una chuleta escrita a mano habria durado hasta el primer cambio, y
+# una ayuda que miente es peor que no tener ayuda.
+#
+# Ademas, antes de anunciar un comando comprueba que EXISTE en el PATH: si algo
+# se declaro pero no llego a instalarse, no aparece.
+#
+#   ciber-help              todo
+#   ciber-help docker       solo lo que mencione "docker"
+#
+set -uo pipefail
+
+#<-------Colores------->
+# Solo si la salida es una terminal: con 'ciber-help | less' o redirigido a un
+# archivo no se emiten secuencias de escape. NO_COLOR es la convencion de
+# https://no-color.org
+if [[ -t 1 && -z "${NO_COLOR:-}" ]] \
+    && command -v tput &>/dev/null \
+    && [[ $(tput colors 2>/dev/null || echo 0) -ge 8 ]]; then
+    B=$(tput bold); R=$(tput sgr0)
+    ROJO=$(tput setaf 1); VERDE=$(tput setaf 2); AMAR=$(tput setaf 3)
+    AZUL=$(tput setaf 4); CIAN=$(tput setaf 6); GRIS=$(tput setaf 8)
+else
+    B=""; R=""; ROJO=""; VERDE=""; AMAR=""; AZUL=""; CIAN=""; GRIS=""
+fi
+
+FILTRO="${1:-}"
+ANCHO=$(tput cols 2>/dev/null || echo 80)
+[[ $ANCHO -gt 100 ]] && ANCHO=100
+[[ $ANCHO -lt 60 ]] && ANCHO=60
+COL=22                  # ancho de la columna del nombre
+HUBO=0                  # si el filtro encontro algo
+
+#<-------Motor de secciones------->
+#
+# Las filas se acumulan en un buffer y la cabecera se imprime solo si el buffer
+# trae algo. Sin esto, filtrar por "docker" pintaria seis titulos vacios; y una
+# seccion cuyos comandos no estan instalados se anunciaria igual.
+SEC=""
+BUF=""
+
+regla() { printf "${GRIS}%${ANCHO}s${R}\n" "" | tr ' ' '-'; }
+
+volcar() {
+    if [[ -n "$SEC" && -n "$BUF" ]]; then
+        printf "\n${B}${AMAR}%s${R}\n" "$SEC"
+        regla
+        printf '%s' "$BUF"
+    fi
+    BUF=""
+}
+
+titulo() { volcar; SEC="$1"; }
+
+# fila <nombre> <descripcion> [color]
+fila() {
+    local nombre="$1" desc="$2" color="${3:-$VERDE}" sangria envuelto
+    if [[ -n "$FILTRO" ]] && ! grep -qi -- "$FILTRO" <<< "$nombre $desc"; then
+        return
+    fi
+    HUBO=1
+    sangria=$(printf "%${COL}s" "")
+    # fold -s parte por espacios; el sed sangra de la segunda linea en adelante
+    # para que la descripcion quede alineada bajo si misma.
+    envuelto=$(printf '%s' "$desc" | fold -s -w $((ANCHO - COL)) | sed "2,\$s/^/${sangria}/")
+    BUF+=$(printf "  ${B}${color}%-$((COL - 2))s${R}%s" "$nombre" "$envuelto")
+    BUF+=$'\n'
+}
+
+existe() { command -v "$1" &>/dev/null; }
+
+#<-------Encabezado------->
+if [[ -z "$FILTRO" ]]; then
+    printf "\n${B}${CIAN}  ciber-scripts${R}  ${GRIS}%s${R}\n" \
+        "$(. /etc/os-release 2>/dev/null && printf '%s' "${PRETTY_NAME:-}")"
+    printf "  ${GRIS}rama {{ ciber_branch }}  -  {{ ciber_checkout_dir }}${R}\n"
+else
+    printf "\n${B}${CIAN}  ciber-help${R} ${GRIS}filtrando por${R} ${B}%s${R}\n" "$FILTRO"
+fi
+
+#<-------Gestion del playbook------->
+titulo 'GESTION DEL PLAYBOOK'
+
+existe ciber-apply && fila 'ciber-apply' \
+    'Vuelve a aplicar toda la configuracion. Antes actualiza el clon del repo desde git, asi que descarta cualquier cambio local que hayas hecho dentro del checkout.'
+existe ciber-session && fila 'ciber-session' \
+    'Aplica la parte de GNOME. Solo en Arch, y hay que ejecutarlo DENTRO de la sesion grafica: dconf y gsettings hablan por DBus con tu sesion, y por SSH o en una TTY no existe.'
+existe ciber-watch && fila 'ciber-watch' \
+    'Progreso en vivo mientras corre el playbook. Se ejecuta en OTRA terminal, porque Ansible captura la salida de pacman/apt y no la suelta hasta que termina la tarea.'
+existe ciber-secrets && fila 'ciber-secrets' \
+    'Dice que credenciales faltan por poner en los archivos .env de la maquina. Con sudo revisa tambien los de root. Sale con codigo 1 si falta algo.'
+existe ciber-help && fila 'ciber-help' \
+    'Esta chuleta. Acepta un filtro: ciber-help docker'
+
+#<-------Recetas------->
+titulo 'RECETAS DE ciber-apply'
+
+fila '--check --diff' \
+    'Simulacro: dice exactamente que cambiaria, sin tocar nada. Es la forma de ver en que se ha desviado la maquina del repo.' "$AZUL"
+fila '--list-tags' \
+    'Lista todas las etiquetas disponibles, sacadas del playbook.' "$AZUL"
+fila '--start-at-task X' \
+    'Retoma desde una tarea concreta, por su nombre exacto.' "$AZUL"
+{% for t in ciber_tags | default([]) %}
+fila '--tags {{ t.tag }}' '{{ t.desc | replace("'", "'\\''") }}' "$AZUL"
+{% endfor %}
+
+#<-------Comandos------->
+titulo 'COMANDOS INSTALADOS'
+
+{% for t in cli_tools | sort(attribute='dest') %}
+existe '{{ t.dest | basename }}' && fila '{{ t.dest | basename }}' '{{ t.desc | default('(sin descripcion: ponle un campo desc en files.yml)') | replace("'", "'\\''") }}'
+{% endfor %}
+
+#<-------Aliases------->
+{% if fish_aliases is defined and fish_aliases %}
+titulo 'ALIASES DE FISH'
+
+{% for a in fish_aliases | sort(attribute='name') %}
+fila '{{ a.name }}' '{{ a.body | truncate(130, true, ' ...') | replace("'", "'\\''") }}' "$CIAN"
+{% endfor %}
+{% endif %}
+
+#<-------Funciones------->
+{% if fish_functions is defined and fish_functions %}
+titulo 'FUNCIONES DE FISH'
+
+{% for f in fish_functions | sort(attribute='name') %}
+fila '{{ f.name }}' '{{ f.body | trim | replace("\n", " ; ") | truncate(130, true, ' ...') | replace("'", "'\\''") }}' "$CIAN"
+{% endfor %}
+{% endif %}
+
+#<-------Donde se edita que------->
+titulo 'DONDE SE CAMBIA CADA COSA'
+
+fila 'packages.yml' 'Agregar o quitar un paquete' "$AMAR"
+fila 'files.yml'    'Dotfiles, config de /etc y comandos de /usr/local/bin' "$AMAR"
+fila 'systemd.yml'  'Que unidades arrancan en boot' "$AMAR"
+fila 'shell.yml'    'Aliases y funciones de fish (y esta ayuda sale de ahi)' "$AMAR"
+{% if env_files_system is defined %}
+fila 'secrets.yml'  'Que archivos .env existen. Los VALORES nunca van al repo' "$AMAR"
+{% endif %}
+{% if ciber_debian_codename is defined %}
+fila 'services.yml' 'Docker, Tailscale y neovim' "$AMAR"
+{% endif %}
+{% if gnome_dconf is defined %}
+fila 'gnome.yml'    'Ajustes de GNOME, atajos de teclado y extensiones' "$AMAR"
+{% endif %}
+{% if makepkg_options is defined %}
+fila 'arch.yml'     'pacman, makepkg, grupos del usuario y entradas de boot' "$AMAR"
+{% endif %}
+fila 'all/main.yml' 'Zona horaria, shell por defecto, rama del repo' "$AMAR"
+
+volcar
+
+#<-------Cierre------->
+if [[ -n "$FILTRO" && "$HUBO" -eq 0 ]]; then
+    printf "\n  ${ROJO}Nada coincide con '%s'.${R}  Prueba ${B}ciber-help${R} sin argumentos.\n\n" "$FILTRO"
+    exit 1
+fi
+
+if [[ -z "$FILTRO" ]]; then
+    printf "\n  ${GRIS}Se edita en {{ ciber_checkout_dir }}/ansible/group_vars/${R}\n"
+    printf "  ${GRIS}Hazlo en tu clon de trabajo y haz push: ciber-apply descarta lo local.${R}\n"
+fi
+printf "\n"

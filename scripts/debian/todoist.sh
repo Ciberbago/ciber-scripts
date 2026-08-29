@@ -1,11 +1,31 @@
 #!/bin/bash
+#
+# Notificador de tareas de Todoist a Telegram. Lo dispara todoist-precise.timer
+# cada minuto, como unidad de USUARIO (systemctl --user).
+#
+# SECRETOS: los tres tokens NO estan en este archivo. Se leen de
+# ~/.config/ciber/todoist.env, que Ansible crea vacio con permisos 0600 y que
+# nunca entra al repositorio.
+#
+# El archivo va en el HOME y no en /etc como el de backup.sh porque esta unidad
+# corre como usuario, no como root: no podria leer un archivo 0600 de root.
+#
+# Antes el repo guardaba "todotoken" / "telegramtoken" / "chatidtelegram" como
+# marcadores y los valores reales se escribian a mano en la maquina. Eso
+# funcionaba hasta que algo volviera a copiar el script del repo encima: el
+# notificador se quedaba con los marcadores y dejaba de avisar en silencio.
+set -u
 
-# --- CONFIGURACIÓN ---
-TODOIST_TOKEN="todotoken"
-TELEGRAM_TOKEN="telegramtoken"
-CHAT_ID="chatidtelegram"
+# Bajo systemd los inyecta 'EnvironmentFile=' de todoist-precise.service. El
+# source es para cuando se ejecuta a mano desde una shell.
+[ -r "$HOME/.config/ciber/todoist.env" ] && . "$HOME/.config/ciber/todoist.env"
+
+: "${TODOIST_TOKEN:?falta TODOIST_TOKEN en ~/.config/ciber/todoist.env}"
+: "${TELEGRAM_TOKEN:?falta TELEGRAM_TOKEN en ~/.config/ciber/todoist.env}"
+: "${TELEGRAM_CHAT_ID:?falta TELEGRAM_CHAT_ID en ~/.config/ciber/todoist.env}"
+
+CHAT_ID="$TELEGRAM_CHAT_ID"
 FILE_NOTIFIED="/tmp/todoist_notified.txt"
-# ---------------------
 
 # Obtener proyectos
 projects_json=$(curl -s -X GET "https://api.todoist.com/api/v1/projects" \

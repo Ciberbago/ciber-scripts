@@ -87,3 +87,15 @@ boot_entry_titles:
   linux-lts: "Arch Linux LTS"
   linux-cachyos: "Arch Linux (CachyOS)"
   linux-zen: "Arch Linux (Zen)"
+
+# Etiquetas que 'ciber-help' anuncia como recetas. No hace falta listarlas todas
+# ('ciber-apply --list-tags' las saca del playbook): estas son las de diario.
+# Las de session.yml se usan con 'ciber-session --tags ...', no con ciber-apply.
+ciber_tags:
+  - { tag: packages, desc: "Solo instalar y quitar paquetes de los repos oficiales" }
+  - { tag: aur,      desc: "Solo chaotic-aur y los paquetes que se compilan" }
+  - { tag: dotfiles, desc: "Solo los archivos de configuracion del HOME" }
+  - { tag: systemd,  desc: "Solo unidades: copiarlas, recargar y habilitarlas" }
+  - { tag: fish,     desc: "Solo aliases, funciones y plugins de fish" }
+  - { tag: boot,     desc: "Solo las entradas de systemd-boot" }
+  - { tag: gnome,    desc: "Solo GNOME. OJO: es de ciber-session, no de ciber-apply" }

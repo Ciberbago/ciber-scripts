@@ -1,0 +1,66 @@
+---
+# =============================================================================
+#  PAQUETES  -  agregar o quitar uno es 1 linea
+# =============================================================================
+#
+#  El rol 'packages_apt' consulta que nombres existen realmente en los repos
+#  (apt-cache) ANTES de instalar. Un nombre mal escrito o un paquete que
+#  desaparecio entre releases se reporta y se omite, en vez de tumbar la
+#  instalacion de los otros veinte. Es la misma idea que el rol 'packages' de
+#  Arch, portada a apt.
+#
+#  Nota sobre nala: el script viejo instalaba nala y luego hacia
+#  'sudo nala install <lista>'. Aqui la instalacion la hace el modulo apt de
+#  Ansible (que es idempotente y sabe reportar cambios); nala se sigue
+#  instalando porque los aliases de fish lo usan a diario, pero ya no es el que
+#  aprovisiona la maquina.
+# =============================================================================
+
+apt_packages:
+  # --- Base ---
+  - curl
+  - git
+  - nala
+  - fish
+  - tmux
+  - micro
+
+  # --- Reemplazos modernos de coreutils (los usan los aliases de fish) ---
+  # OJO: en Debian el binario de 'bat' se llama 'batcat' (choca con el paquete
+  # 'bacula-console-qt'), por eso el alias de shell.yml apunta a batcat y no a
+  # bat. En Arch no pasa: ahi el binario si es 'bat'.
+  - bat
+  - duf
+  - exa
+  - fzf
+  - gdu
+
+  # --- Diagnostico ---
+  - htop
+  - lm-sensors
+  - lshw
+  - nload
+  - powertop
+  - radeontop
+  - time
+
+  # --- Hardware / video ---
+  - intel-media-va-driver-non-free
+  # AppImage necesita FUSE para montarse. Sin esto el nvim que instala el rol
+  # 'neovim' arranca con "Cannot mount AppImage, please check your FUSE setup".
+  - fuse
+
+  # --- Red y respaldo ---
+  - rclone
+  - wakeonlan
+
+  # --- Mantenimiento ---
+  - unattended-upgrades
+
+# Paquetes a desinstalar. Se quitan ANTES de instalar, por la misma razon que en
+# Arch: si un paquete nuevo entra en conflicto con uno viejo, apt aborta la
+# transaccion completa antes de llegar a cualquier limpieza posterior.
+apt_remove: []
+
+# Correr 'apt autoremove' al final para quitar dependencias huerfanas.
+apt_autoremove: true

@@ -1,14 +1,52 @@
 [Unit]
 Description=Script de Backup Diario
-After=network.target # Opcional: Asegura que la red esté disponible si tu script lo necesita
+# La linea original decia:
+#     After=network.target # Opcional: Asegura que la red este disponible
+# systemd NO admite comentarios al final de una directiva: todo lo que sigue al
+# '=' es el valor. Interpretaba "#", "Opcional:", "Asegura", ... como nombres de
+# unidad y llenaba el journal de warnings de dependencia.
+#
+# Se conserva network.target tal cual estaba. NO se cambia a
+# network-online.target: eso arrastra un servicio wait-online y puede retrasar
+# el boot, y para un timer que dispara a las 18:00 no aporta nada.
+After=network.target
 
 [Service]
-Type=oneshot # El script se ejecuta una vez y luego el servicio se detiene
+# La linea original decia:
+#     Type=oneshot # El script se ejecuta una vez y luego el servicio se detiene
+# Con ese comentario pegado, el valor quedaba como "oneshot # El script ..." y
+# systemd lo descartaba con un warning ("Failed to parse service type,
+# ignoring"). La unidad SI cargaba y el backup SI corria: al ignorarse Type=,
+# aplicaba el default, que con ExecStart presente es Type=simple.
+Type=oneshot
+
+# ESTA LINEA NO ES COSMETICA. Con Type=simple (lo que habia de facto) systemd
+# da por arrancado el servicio en cuanto el proceso existe, y no le aplica
+# ningun limite de tiempo. Con Type=oneshot la unidad se queda "activando"
+# mientras el script corre, y ahi SI aplica TimeoutStartSec, que por defecto son
+# 90 segundos: pasados esos, systemd mata el backup.
+#
+# MEDIDO EN EL SERVIDOR REAL (2026-08-27): el backup arranco a las 18:00:01 y
+# termino a las 19:01:16. Son 3675 segundos contra un limite de 90. Sin este
+# infinity, escribir "Type=oneshot correctamente" habria matado el respaldo a
+# los 90 segundos, todas las noches, sin que nada lo anunciara.
+#
+# Nota de uso: con Type=oneshot un 'systemctl start backup.service' a mano
+# BLOQUEA la terminal hasta que termine (una hora). Para lanzarlo y soltar:
+#   systemctl start --no-block backup.service
+#
+# Si prefieres cero cambios de comportamiento respecto a lo que corre hoy,
+# borra la linea 'Type=oneshot' y esta de TimeoutStartSec: sin Type= el default
+# es 'simple', que es exactamente como ha estado corriendo.
+TimeoutStartSec=infinity
+
+# El token del bot de Telegram y el chat ID salen de aqui, no del script. El
+# guion inicial ('-') hace que systemd NO falle la unidad si el archivo no
+# existe: en ese caso el script muere con un mensaje claro diciendo que falta la
+# variable, en vez de un error cripcico de systemd sobre un archivo ausente.
+EnvironmentFile=-/etc/ciber/backup.env
+
 ExecStart=/usr/local/bin/backup.sh
-# Si tu script requiere alguna variable de entorno específica, puedes añadirla aquí
-# Environment="RUTA_BACKUP=/mnt/backups"
-# User=root # Por defecto, los servicios de sistema se ejecutan como root, pero puedes especificarlo explícitamente.
-# Group=root
 
 [Install]
 WantedBy=multi-user.target

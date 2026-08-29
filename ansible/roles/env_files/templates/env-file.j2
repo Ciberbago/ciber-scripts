@@ -1,0 +1,17 @@
+# {{ item.descripcion }}
+#
+# ARCHIVO DE SECRETOS. No copiar al repositorio, no pegarlo en un chat, no
+# incluirlo en un respaldo sin cifrar.
+#
+# Ansible lo genero VACIO y no lo vuelve a tocar: la tarea usa force: false, asi
+# que un 'ciber-apply' posterior respeta lo que escribas aqui. Rellena los
+# valores a la derecha del '=' y guarda.
+#
+# Formato: KEY=valor, una por linea, sin comillas y sin 'export'. Lo lee tanto
+# systemd (EnvironmentFile=) como el propio script (source), y systemd no
+# interpreta comillas igual que la shell: dejarlas sin comillas evita sorpresas.
+#
+# Lo consume: {{ item.consumido_por }}
+{% for k in item.claves %}
+{{ k }}=
+{% endfor %}

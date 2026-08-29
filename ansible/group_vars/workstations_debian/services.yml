@@ -1,0 +1,54 @@
+---
+# =============================================================================
+#  SERVICIOS  -  Docker, Tailscale y Neovim
+# =============================================================================
+#
+#  El script de bash instalaba Docker y Tailscale con 'curl | sh'. Aqui se usan
+#  sus repos APT oficiales. La diferencia practica:
+#
+#    - 'apt upgrade' los actualiza junto con el resto del sistema. Con el script
+#      de conveniencia se quedaban congelados hasta que alguien volviera a
+#      correr el curl a mano.
+#    - Es idempotente y verificable: 'ciber-apply --check --diff' dice si falta
+#      algo sin ejecutar nada.
+#    - No se ejecuta un script remoto arbitrario con sudo en cada corrida.
+# =============================================================================
+
+# --- Docker ---
+docker_enabled: true
+docker_gpg_url: https://download.docker.com/linux/debian/gpg
+docker_repo_url: https://download.docker.com/linux/debian
+docker_packages:
+  - docker-ce
+  - docker-ce-cli
+  - containerd.io
+  - docker-buildx-plugin
+  # El script viejo no instalaba compose. Los stacks de ciber-docker son
+  # docker-compose.yml, asi que sin este plugin no se pueden levantar.
+  - docker-compose-plugin
+
+# Repo de stacks que se clona en /opt/docker
+docker_stacks_repo: https://github.com/Ciberbago/ciber-docker.git
+docker_stacks_dir: /opt/docker
+
+# --- Tailscale ---
+tailscale_enabled: true
+# La ruta del keyring de Tailscale es /usr/share/keyrings y no /etc/apt/keyrings
+# a proposito: es la que usa el .list que publica Tailscale, y si se cambia,
+# 'apt update' falla con NO_PUBKEY.
+tailscale_keyring: /usr/share/keyrings/tailscale-archive-keyring.gpg
+tailscale_gpg_url: "https://pkgs.tailscale.com/stable/debian/{{ ciber_debian_codename }}.noarmor.gpg"
+tailscale_repo_url: https://pkgs.tailscale.com/stable/debian
+
+# 'tailscale up' pide autenticacion interactiva en el navegador, asi que el
+# playbook NO lo ejecuta: instala el paquete, habilita tailscaled y te deja el
+# comando en el resumen final. Automatizarlo requeriria guardar una auth key
+# dentro del repo, o sea una credencial en texto plano.
+
+# --- Neovim ---
+# Debian 12 trae neovim 0.7, demasiado viejo para los plugins de plugins.vim.
+# Por eso se usa el AppImage oficial (de ahi la dependencia de 'fuse' en
+# packages.yml).
+neovim_appimage_url: https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.appimage
+neovim_bin: /usr/local/bin/nvim
+vim_plug_url: https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim

@@ -1,0 +1,68 @@
+---
+# =============================================================================
+#  FISH  -  aliases, funciones y plugins
+# =============================================================================
+#
+#  Esto se renderiza a ~/.config/fish/conf.d/ciber.fish desde una lista, no con
+#  'funcsave'. En el script de bash habia DOS bugs por culpa de funcsave:
+#
+#    1. 'funcsave subirrtl88xxau-aircrack-dkms-git' -> un copy/paste dejo pegado
+#       un nombre de paquete de Arch al nombre de la funcion, asi que 'subir'
+#       nunca se guardaba.
+#    2. funcsave escribe en ~/.config/fish/functions/, que despues NO se
+#       sincroniza con el repo: un alias que borras del repo seguia vivo en la
+#       maquina para siempre.
+#
+#  Con un solo archivo generado, el repo es la unica verdad: lo que quitas de
+#  aqui desaparece de la maquina en el siguiente 'ciber-apply'.
+# =============================================================================
+
+fish_editor: nvim
+
+fish_paths:
+  - ~/.local/bin
+
+fish_aliases:
+  # --- Paquetes (nala, no pacman: esto es Debian) ---
+  - { name: sin,        body: "sudo nala install" }
+  - { name: sup,        body: "sudo nala update" }
+
+  # --- Reemplazos modernos ---
+  # 'batcat' y no 'bat': en Debian el binario de bat se llama batcat porque el
+  # nombre 'bat' ya lo ocupa bacula-console-qt. En Arch si es 'bat'.
+  - { name: cat,        body: "batcat" }
+  - { name: ls,         body: "exa -lha --icons" }
+  - { name: vim,        body: "nvim" }
+
+  # --- Atajos ---
+  - { name: cc,         body: "cd && clear" }
+  - { name: mkdir,      body: "mkdir -pv" }
+  - { name: espacio,    body: "gdu /" }
+  - { name: historial,  body: "history | fzf" }
+  - { name: rebootuefi, body: "sudo systemctl reboot --firmware-setup" }
+
+  # --- systemctl ---
+  - { name: sss,        body: "sudo systemctl status" }
+  - { name: ssa,        body: "sudo systemctl start" }
+  - { name: sso,        body: "sudo systemctl stop" }
+  - { name: sse,        body: "sudo systemctl enable" }
+  - { name: ssd,        body: "sudo systemctl daemon-reload" }
+
+  # --- ffmpeg dentro de un contenedor, con aceleracion por hardware ---
+  # Se define como alias y no como funcion porque fish expande (pwd) al
+  # ejecutarlo, no al definirlo, que es justo lo que se quiere.
+  - name: ffmpeg
+    body: "docker run -v (pwd):(pwd) -w (pwd) --device /dev/dri:/dev/dri linuxserver/ffmpeg"
+
+fish_functions:
+  - name: cheat
+    body: 'curl cheat.sh/$argv'
+  # Esta es la que el bug de funcsave se comia. Sube un archivo a 0x0.st y
+  # devuelve la URL.
+  - name: subir
+    body: 'curl -F "file=@-" 0x0.st < $argv[1]'
+
+fish_plugins:
+  - jorgebucaran/fisher
+  - IlanCosman/tide@v6
+  - oh-my-fish/plugin-bang-bang

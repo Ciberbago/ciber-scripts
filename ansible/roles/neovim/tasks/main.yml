@@ -1,0 +1,97 @@
+---
+# Neovim (AppImage) y sus plugins.
+#
+# Debian 12 trae neovim 0.7 en los repos, demasiado viejo para lo que pide
+# plugins.vim. Por eso se usa el AppImage oficial, igual que hacia el script de
+# bash -- pero con dos diferencias:
+#
+#   - La descarga se verifica. El script usaba la funcion 'dl' con curl, que ya
+#     estaba bien; lo que faltaba era comprobar que el binario ARRANCA. Un
+#     AppImage sin FUSE se instala perfecto y falla al ejecutarse.
+#   - init.vim, plugins.vim y plug.vim ya no se bajan aqui: los dos primeros
+#     salen del repo (files.yml -> user_files) y solo plug.vim, que es de
+#     terceros, se descarga.
+
+- name: Descargar el AppImage de Neovim
+  ansible.builtin.get_url:
+    url: "{{ neovim_appimage_url }}"
+    dest: "{{ neovim_bin }}"
+    owner: root
+    group: root
+    mode: "0755"
+  become: true
+  register: nvim_dl
+  # 'latest' redirige a la release del dia: la URL es estable pero el contenido
+  # cambia. get_url no vuelve a descargar si el archivo ya existe y el servidor
+  # responde 304, asi que esto no baja 100 MB en cada corrida.
+
+- name: Comprobar que nvim arranca
+  # Aqui es donde se ve si falta FUSE. El AppImage se instala igual de bien sin
+  # el, y el fallo aparece despues, al abrir un archivo.
+  ansible.builtin.command:
+    cmd: "{{ neovim_bin }} --version"
+  register: nvim_version
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Avisar si el AppImage no arranca
+  ansible.builtin.debug:
+    msg:
+      problema: "{{ neovim_bin }} no se pudo ejecutar (rc={{ nvim_version.rc }})"
+      salida: "{{ nvim_version.stderr | default('') | truncate(200) }}"
+      causa_probable: >-
+        Casi siempre es FUSE: un AppImage necesita montarse. Comprueba que el
+        paquete 'fuse' este en packages.yml y que el modulo este cargado
+        ('modprobe fuse'). En un contenedor o LXC sin /dev/fuse hay que extraer
+        el AppImage con '--appimage-extract' en vez de ejecutarlo.
+  when: nvim_version.rc != 0
+
+- name: Mostrar la version de neovim
+  ansible.builtin.debug:
+    msg: "{{ nvim_version.stdout_lines[0] | default('desconocida') }}"
+  when: nvim_version.rc == 0
+
+- name: Crear el directorio de autoload de vim-plug
+  ansible.builtin.file:
+    path: "{{ ciber_home }}/.config/nvim/autoload"
+    state: directory
+    mode: "0755"
+  become: false
+
+- name: Instalar vim-plug
+  # Es el unico archivo de neovim que sigue viniendo de una URL: es de terceros
+  # y no tiene sentido versionarlo en el repo. init.vim y plugins.vim si salen
+  # del repo (files.yml).
+  ansible.builtin.get_url:
+    url: "{{ vim_plug_url }}"
+    dest: "{{ ciber_home }}/.config/nvim/autoload/plug.vim"
+    mode: "0644"
+  become: false
+
+- name: Que sigue - plugins de neovim
+  ansible.builtin.debug:
+    msg:
+      sigue: "Instalar los plugins declarados en plugins.vim"
+      tarda: "~30-60 s la primera vez (clona un repo por plugin)"
+
+- name: Instalar los plugins de neovim
+  # -es = modo Ex silencioso, -i NONE = sin archivo de viminfo. Sin esto nvim
+  # intenta dibujar una interfaz y se queda colgado esperando una terminal que
+  # Ansible no le da.
+  ansible.builtin.command:
+    cmd: "{{ neovim_bin }} -es -u {{ ciber_home }}/.config/nvim/init.vim -i NONE -c PlugInstall -c qa"
+  become: false
+  register: plug_install
+  changed_when: false
+  failed_when: false
+  when: nvim_version.rc == 0
+
+- name: Avisar si fallo la instalacion de plugins
+  ansible.builtin.debug:
+    msg: >-
+      'PlugInstall' devolvio rc={{ plug_install.rc }}. Abre nvim y ejecuta
+      :PlugInstall a mano para ver el error completo.
+  when:
+    - nvim_version.rc == 0
+    - plug_install.rc | default(0) != 0

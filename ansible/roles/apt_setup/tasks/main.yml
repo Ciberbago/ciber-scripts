@@ -1,0 +1,100 @@
+---
+# Repositorios base de Debian.
+#
+# El script de bash hacia esto con un sed sobre /etc/apt/sources.list:
+#
+#   sed -i -E 's|^(deb(-src)?\s+\S+\s+\S+)\s+.*|\1 main non-free non-free-firmware|'
+#
+# Funcionaba, pero tenia tres problemas: reescribia el archivo en CADA corrida
+# (nunca sabias si habia cambiado algo), PERDIA 'contrib' porque no estaba en la
+# lista de reemplazo -- y contrib es donde vive medio driver propietario --, y
+# no distinguia una linea de repo real de una comentada mal formada.
+#
+# Aqui se hace lo mismo pero declarativo: el modulo 'replace' reporta cambio
+# solo cuando de verdad modifico algo, asi que la segunda corrida sale verde.
+
+- name: Ver si existe sources.list
+  # Una instalacion hecha con el instalador grafico de Debian 12 trae el
+  # sources.list clasico, pero una imagen cloud o un debootstrap reciente puede
+  # traer solo /etc/apt/sources.list.d/*.sources (formato deb822). En ese caso
+  # este rol no tiene nada que reescribir y se salta la parte de componentes en
+  # vez de fallar.
+  ansible.builtin.stat:
+    path: /etc/apt/sources.list
+  register: sources_list
+
+- name: Respaldar sources.list la primera vez
+  # Solo si no existe el .bak: en una segunda corrida el "original" ya seria el
+  # archivo que nosotros mismos modificamos, y el respaldo dejaria de servir.
+  # Esta guarda ya estaba bien en el script de bash y se conserva tal cual.
+  ansible.builtin.copy:
+    src: /etc/apt/sources.list
+    dest: /etc/apt/sources.list.bak
+    remote_src: true
+    force: false
+    owner: root
+    group: root
+    mode: "0644"
+  become: true
+  when: sources_list.stat.exists
+
+- name: Reescribir los componentes de cada repo
+  # Toma cada linea 'deb'/'deb-src' activa y le deja exactamente los componentes
+  # de apt_components, conservando la URL y la suite. Las lineas comentadas y
+  # las vacias pasan intactas porque el ancla ^ exige que la linea empiece en
+  # 'deb'.
+  ansible.builtin.replace:
+    path: /etc/apt/sources.list
+    regexp: '^(deb(?:-src)?(?:\s+\[[^\]]*\])?\s+\S+\s+\S+)\s+.*$'
+    replace: '\1 {{ apt_components | join(" ") }}'
+  become: true
+  when: sources_list.stat.exists
+  notify: Actualizar el indice de apt
+
+- name: Avisar si no hay sources.list clasico
+  ansible.builtin.debug:
+    msg: >-
+      No existe /etc/apt/sources.list: esta maquina usa el formato deb822 en
+      /etc/apt/sources.list.d/. Revisa a mano que los componentes
+      ({{ apt_components | join(', ') }}) esten declarados ahi, o
+      intel-media-va-driver-non-free no se va a encontrar.
+  when: not sources_list.stat.exists
+
+# Los handlers corren al final del play, y las tareas de abajo necesitan el
+# indice ya actualizado. Por eso aqui se fuerza el flush en vez de esperar.
+- name: Aplicar los cambios de repos pendientes
+  ansible.builtin.meta: flush_handlers
+
+- name: Actualizar el indice de apt
+  # cache_valid_time evita repetir el update si ya se hizo hace menos de una
+  # hora. En una corrida completa el indice se toca varias veces (aqui, en
+  # docker y en tailscale) y cada 'apt update' son ~15 s.
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+
+- name: Instalar las dependencias para repos de terceros
+  # Necesarias antes de agregar los repos de Docker y Tailscale: sin
+  # ca-certificates el https de download.docker.com falla, y sin gnupg no se
+  # puede desarmar la llave binaria.
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - curl
+      - gnupg
+      - apt-transport-https
+    state: present
+  become: true
+
+- name: Crear el directorio de keyrings
+  # apt-key esta obsoleto y eliminado en Debian 12: las llaves de terceros van
+  # como archivo en /etc/apt/keyrings y se referencian con signed-by= en la
+  # linea del repo.
+  ansible.builtin.file:
+    path: "{{ apt_keyrings_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  become: true

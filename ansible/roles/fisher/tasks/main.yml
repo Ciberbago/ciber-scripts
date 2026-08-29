@@ -1,0 +1,38 @@
+---
+# fisher, el gestor de plugins de fish.
+#
+# En Arch esto no hace falta: 'fisher' es un paquete de los repos y lo instala
+# el rol packages. Debian no lo empaqueta, asi que hay que dejar la funcion en
+# su sitio a mano, igual que hacia el script de bash.
+#
+# BUG ORIGINAL: el script llamaba a 'fisher install ...' SIN haber instalado
+# fisher primero. Los tres plugins (fisher, tide, bang-bang) fallaban siempre
+# con "Unknown command: fisher". La descarga de fisher.fish se agrego despues,
+# pero el rol shell_fish, que es el que corre 'fisher install', se salta los
+# plugins con un aviso si fisher no esta: por eso este rol va ANTES.
+
+- name: Crear el directorio de funciones de fish
+  # shell_fish tambien lo crea, pero corre despues: si no se crea aqui, el
+  # get_url falla con "Destination directory does not exist".
+  ansible.builtin.file:
+    path: "{{ ciber_home }}/.config/fish/functions"
+    state: directory
+    mode: "0755"
+  become: false
+
+- name: Instalar fisher
+  ansible.builtin.get_url:
+    url: "{{ fisher_url }}"
+    dest: "{{ ciber_home }}/.config/fish/functions/fisher.fish"
+    mode: "0644"
+  become: false
+  register: fisher_dl
+  failed_when: false
+
+- name: Avisar si no se pudo instalar fisher
+  ansible.builtin.debug:
+    msg: >-
+      No se pudo descargar fisher desde {{ fisher_url }}. El rol shell_fish va a
+      omitir los plugins ({{ fish_plugins | join(', ') }}) con un aviso. Vuelve a
+      correr 'ciber-apply --tags fish' cuando haya red.
+  when: fisher_dl.failed | default(false)

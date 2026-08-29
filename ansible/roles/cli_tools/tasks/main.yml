@@ -42,6 +42,23 @@
     label: "{{ item.dest }}"
   become: true
 
+- name: Instalar el comando ciber-help
+  # Unico anadido de la tanda de Debian que toca este rol. La plantilla vive en
+  # ansible/templates/ (fuera de los roles) porque es comun a las dos distros:
+  # el mismo archivo lo renderiza tambien cli_tools_debian, sin duplicarlo.
+  #
+  # El listado NO esta escrito a mano: la plantilla recorre cli_tools,
+  # fish_aliases, fish_functions y ciber_tags de group_vars. Un alias nuevo en
+  # shell.yml aparece solo en la ayuda, y antes de anunciar un comando comprueba
+  # que exista en el PATH.
+  ansible.builtin.template:
+    src: "{{ ciber_repo_root }}/ansible/templates/ciber-help.j2"
+    dest: /usr/local/bin/ciber-help
+    owner: root
+    group: root
+    mode: "0755"
+  become: true
+
 - name: Instalar el comando ciber-session
   # Envoltorio para volver a aplicar solo la parte de sesion grafica
   ansible.builtin.template:

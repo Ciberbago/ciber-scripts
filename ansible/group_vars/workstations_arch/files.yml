@@ -47,11 +47,26 @@ system_files:
   - { src: systemd/arch/30-zram.rules,             dest: /usr/lib/udev/rules.d/30-zram.rules }
 
 # --- Scripts que se instalan como comandos en /usr/local/bin ---
+#
+#  El campo 'desc' no es decoracion: de ahi sale el listado de 'ciber-help'.
+#  Si agregas un comando y no le pones desc, saldra como "(sin descripcion)".
 cli_tools:
-  - { src: scripts/arch/wallpaper.sh,    dest: /usr/local/bin/wallpaper }
-  - { src: scripts/arch/archbootgen.sh,  dest: /usr/local/bin/archbootgen }
-  # Progreso en vivo del playbook, para correr en otra terminal
-  - { src: scripts/common/ciber-watch.sh,  dest: /usr/local/bin/ciber-watch }
+  - src: scripts/arch/wallpaper.sh
+    dest: /usr/local/bin/wallpaper
+    desc: >-
+      Pone un fondo de pantalla al azar de la carpeta Wallpapers del NAS. Lo
+      llama tambien wallpaper.desktop al iniciar sesion.
+  - src: scripts/arch/archbootgen.sh
+    dest: /usr/local/bin/archbootgen
+    desc: >-
+      Regenera las entradas de systemd-boot detectando los kernels instalados.
+      Hay que correrlo con sudo. Util despues de instalar o quitar un kernel.
+  - src: scripts/common/ciber-watch.sh
+    dest: /usr/local/bin/ciber-watch
+    desc: >-
+      Progreso en vivo del playbook: cada paquete de pacman y las compilaciones
+      del AUR en curso. Se ejecuta en otra terminal (Ctrl+Alt+F2) mientras
+      ciber-apply trabaja.
 
 # --- Scripts de Nautilus (menu contextual del explorador) ---
 nautilus_scripts:

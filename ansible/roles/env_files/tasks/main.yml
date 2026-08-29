@@ -1,0 +1,123 @@
+---
+# Archivos de entorno con secretos.
+#
+# El problema que resuelve: el token del bot de Telegram estaba escrito dentro
+# de scripts/debian/backupdebian.sh, en un repositorio PUBLICO de GitHub. Y en
+# todoist.sh estaban los marcadores "todotoken" / "telegramtoken", con los
+# valores reales puestos a mano en la maquina.
+#
+# Lo segundo parece mas seguro pero traia su propia trampa: el repo dejaba de
+# reflejar lo que corria de verdad, y en cuanto algo copiara el script del repo
+# encima -- que es justo lo que hace el rol cli_tools_debian -- el notificador se
+# quedaba con los marcadores y dejaba de avisar, sin error visible.
+#
+# La solucion es sacar el secreto del repo, no esconderlo dentro:
+#
+#   - Unidades de SISTEMA  -> /etc/ciber/*.env         root:root 0600
+#   - Unidades de USUARIO  -> ~/.config/ciber/*.env    usuario   0600
+#
+# La separacion no es cosmetica: todoist-precise.service corre como el usuario,
+# y no podria leer un 0600 propiedad de root.
+#
+# Ansible crea los archivos VACIOS una sola vez (force: false) y no los vuelve a
+# tocar. Nunca conoce los valores, asi que no hay nada que filtrar ni que
+# cifrar, y no hace falta escribir una contrasena de vault en cada ciber-apply.
+
+# --- Archivos de sistema ---
+
+- name: Crear los directorios de secretos del sistema
+  ansible.builtin.file:
+    path: "{{ item.path | dirname }}"
+    state: directory
+    owner: root
+    group: root
+    # 0750 y no 0755: el contenido son nombres de archivos de secretos. No hay
+    # razon para que cualquier usuario pueda listarlos.
+    mode: "0750"
+  loop: "{{ env_files_system }}"
+  loop_control:
+    label: "{{ item.path | dirname }}"
+  become: true
+
+- name: Crear los archivos de entorno del sistema (solo si no existen)
+  # force: false es LA linea importante de este rol. Sin ella, cada ciber-apply
+  # borraria el token que escribiste a mano y el respaldo dejaria de notificar
+  # esa misma noche.
+  ansible.builtin.template:
+    src: env-file.j2
+    dest: "{{ item.path }}"
+    owner: root
+    group: root
+    mode: "0600"
+    force: false
+  loop: "{{ env_files_system }}"
+  loop_control:
+    label: "{{ item.path }}"
+  become: true
+
+# --- Archivos de usuario ---
+
+- name: Crear los directorios de secretos del usuario
+  ansible.builtin.file:
+    path: "{{ item.path | expanduser | dirname }}"
+    state: directory
+    mode: "0700"
+  loop: "{{ env_files_user }}"
+  loop_control:
+    label: "{{ item.path | dirname }}"
+  become: false
+
+- name: Crear los archivos de entorno del usuario (solo si no existen)
+  ansible.builtin.template:
+    src: env-file.j2
+    dest: "{{ item.path | expanduser }}"
+    mode: "0600"
+    force: false
+  loop: "{{ env_files_user }}"
+  loop_control:
+    label: "{{ item.path }}"
+  become: false
+
+# --- Comprobacion: avisar de claves sin rellenar ---
+#
+# Los scripts usan la forma ${VAR:?mensaje}, que aborta si la variable esta
+# vacia (no solo si falta): con el .env recien creado, backup.service y
+# todoist-precise.service FALLAN al arrancar. Eso es lo deseable -- un fallo
+# visible en 'systemctl --failed' es mejor que un respaldo mudo -- pero
+# significa que entre el primer ciber-apply y el momento de rellenar el archivo
+# NO hay respaldo. Este aviso existe para que ese hueco dure minutos y no dias.
+
+- name: Buscar claves sin valor en los archivos de entorno
+  ansible.builtin.shell:
+    cmd: "grep -cE '^[A-Za-z_][A-Za-z0-9_]*=[[:space:]]*$' '{{ item.path | expanduser }}' || true"
+  loop: "{{ env_files_system + env_files_user }}"
+  loop_control:
+    label: "{{ item.path }}"
+  register: env_vacias
+  changed_when: false
+  check_mode: false
+  become: true
+
+- name: Recordar que archivos quedaron sin rellenar
+  # Se guarda como fact para que site-debian.yml pueda repetir el aviso en el
+  # resumen final. Un debug a mitad del playbook se pierde entre otras cien
+  # tareas; el ultimo bloque de la pantalla no.
+  ansible.builtin.set_fact:
+    ciber_secrets_pendientes: >-
+      {{ env_vacias.results | selectattr('stdout', 'match', '[1-9]')
+         | map(attribute='item.path') | list }}
+
+- name: Avisar de los archivos de entorno sin rellenar
+  ansible.builtin.debug:
+    msg:
+      archivo: "{{ item.item.path }}"
+      claves_vacias: "{{ item.stdout | trim }}"
+      que_hacer: >-
+        Edita {{ item.item.path }} y pon los valores. Sin ellos,
+        {{ item.item.consumido_por }} ABORTA al arrancar con un mensaje claro
+        en el journal ("falta TELEGRAM_TOKEN en ...") y la unidad queda en
+        estado failed. Comprueba con 'sudo ciber-secrets'.
+  loop: "{{ env_vacias.results }}"
+  loop_control:
+    label: "{{ item.item.path }}"
+  when: (item.stdout | default('0') | trim | int) > 0

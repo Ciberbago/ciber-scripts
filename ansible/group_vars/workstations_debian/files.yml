@@ -1,0 +1,75 @@
+---
+# =============================================================================
+#  ARCHIVOS  -  dotfiles, config de /etc y scripts a /usr/local/bin
+# =============================================================================
+#
+#  Todo sale del repo clonado, no de URLs. Esa es la diferencia de fondo con el
+#  script de bash: alli cada archivo era un 'curl' a raw.githubusercontent, y un
+#  typo en la variable de la URL dejaba un archivo de 0 bytes que reventaba algo
+#  cuarenta lineas mas abajo. Aqui, si el archivo no esta en el repo, la tarea
+#  falla en el acto y dice cual falta.
+# =============================================================================
+
+# --- Dotfiles: van al $HOME del usuario ---
+user_files:
+  - { src: dotfiles/debian/init.vim,           dest: ~/.config/nvim/init.vim }
+  - { src: dotfiles/debian/plugins.vim,        dest: ~/.config/nvim/vim-plug/plugins.vim }
+  # El script hacia:  echo '{ "clipboard": "terminal" }' > settings.json
+  # Ahora es un archivo versionado: se ve en el diff y 'ciber-apply --check'
+  # avisa si alguien lo edito a mano en la maquina.
+  - { src: dotfiles/debian/micro-settings.json, dest: ~/.config/micro/settings.json }
+
+# --- Carpetas extra a crear en $HOME (las de user_files se crean solas) ---
+user_dirs:
+  # La crea vim-plug al instalar los plugins, pero si no existe antes,
+  # 'nvim -c PlugInstall' falla en el primer arranque.
+  - ~/.config/nvim/autoload/plugged
+
+# --- Scripts de Nautilus: no aplica en un servidor sin escritorio ---
+# La lista tiene que existir aunque este vacia: el rol 'dotfiles' la concatena
+# con user_files y un 'undefined' rompe el loop.
+nautilus_scripts: []
+
+# --- Archivos de sistema: /etc ---
+system_files: []
+  # El repo trae dotfiles/debian/sshd y dotfiles/debian/sshd_config, pero el
+  # script de bash NUNCA los instalaba: estaban ahi sin usarse. No los activo
+  # por mi cuenta porque tocar la config de SSH en un servidor remoto es la
+  # forma clasica de quedarse fuera de la maquina. Si los quieres, descomenta,
+  # revisa el contenido primero y aplica con --check --diff:
+  #
+  # - { src: dotfiles/debian/sshd_config, dest: /etc/ssh/sshd_config }
+  # - { src: dotfiles/debian/sshd,        dest: /etc/pam.d/sshd }
+
+# --- Scripts que se instalan como comandos en /usr/local/bin ---
+#
+#  El campo 'desc' no es decoracion: de ahi sale el listado de 'ciber-help'.
+#  Si agregas un comando y no le pones desc, saldra como "(sin descripcion)".
+cli_tools:
+  # BUG ORIGINAL: estos dos se descargaban a /usr/local/bin SIN sudo, asi que
+  # siempre fallaban con "permiso denegado" y el backup nunca se instalaba.
+  # Aqui el rol usa become: true para todo /usr/local/bin.
+  - src: scripts/debian/backupdebian.sh
+    dest: /usr/local/bin/backup.sh
+    desc: >-
+      Respaldo diario: tarball de /opt/docker a Google Drive y sync de la
+      musica. Lo dispara backup.timer a las 18:00. A mano, con
+      'systemctl start --no-block backup.service'.
+  - src: scripts/debian/todoist.sh
+    dest: /usr/local/bin/todoist.sh
+    desc: >-
+      Avisa por Telegram de las tareas de Todoist que vencen en los proximos
+      2 minutos. Lo dispara todoist-precise.timer cada minuto.
+  - src: scripts/debian/ufetch.sh
+    dest: /usr/local/bin/ufetch
+    desc: Resumen del sistema al estilo neofetch, minimo y rapido.
+  - src: scripts/common/ciber-watch.sh
+    dest: /usr/local/bin/ciber-watch
+    desc: >-
+      Progreso en vivo del playbook. Se ejecuta en otra terminal o en otra
+      sesion SSH mientras ciber-apply trabaja.
+  - src: scripts/debian/ciber-secrets.sh
+    dest: /usr/local/bin/ciber-secrets
+    desc: >-
+      Dice que credenciales faltan por poner en los .env. Con sudo revisa
+      tambien los de root. Sale con codigo 1 si falta algo.

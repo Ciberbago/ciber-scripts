@@ -1,0 +1,78 @@
+---
+# Scripts del repo que se instalan como comandos en /usr/local/bin.
+#
+# Es el gemelo del rol cli_tools de Arch, con dos diferencias:
+#
+#   - NO instala 'ciber-session'. Ese comando aplica la configuracion de GNOME,
+#     y un servidor Debian no tiene sesion grafica: seria un comando que solo
+#     sabe fallar.
+#   - 'ciber-apply' apunta a site-debian.yml (via la variable ciber_playbook).
+#
+# En bash esto era 'chmod +x /usr/local/bin/*', que aplicaba a TODO el
+# directorio, incluidos binarios que no eran nuestros. Aqui el modo se pone
+# archivo por archivo.
+
+- name: Comprobar que los scripts existen en el repo
+  ansible.builtin.stat:
+    path: "{{ ciber_repo_root }}/{{ item.src }}"
+  loop: "{{ cli_tools }}"
+  loop_control:
+    label: "{{ item.src }}"
+  register: clitools_stat
+  become: false
+
+- name: Fallar con la lista de scripts que faltan
+  ansible.builtin.assert:
+    that: clitools_stat.results | rejectattr('stat.exists') | list | length == 0
+    fail_msg: >-
+      Faltan estos scripts en el repo:
+      {{ clitools_stat.results | rejectattr('stat.exists')
+         | map(attribute='item.src') | list | join(', ') }}
+    quiet: true
+
+- name: Crear los directorios destino de los comandos
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+  loop: "{{ cli_tools | map(attribute='dest') | map('dirname') | unique | sort }}"
+  become: true
+
+- name: Instalar comandos en /usr/local/bin
+  # BUG ORIGINAL: backup.sh y todoist.sh se descargaban con 'dl' (sin sudo) a
+  # /usr/local/bin, asi que fallaban con permiso denegado en cada corrida. El
+  # servicio backup.service apuntaba a un archivo que nunca llego a existir.
+  ansible.builtin.copy:
+    src: "{{ ciber_repo_root }}/{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: root
+    group: root
+    mode: "0755"
+  loop: "{{ cli_tools }}"
+  loop_control:
+    label: "{{ item.dest }}"
+  become: true
+
+- name: Instalar el comando ciber-help
+  # La plantilla vive en ansible/templates/ y no en las del rol a proposito: es
+  # comun a las dos distros. El dia que se quiera en Arch, basta con copiar esta
+  # tarea al rol cli_tools de alla; no hay que duplicar el archivo.
+  #
+  # El listado NO esta escrito a mano: la plantilla recorre cli_tools,
+  # fish_aliases y fish_functions. Un alias nuevo en shell.yml aparece solo en
+  # la ayuda. Una chuleta escrita a mano habria durado hasta el primer cambio.
+  ansible.builtin.template:
+    src: "{{ ciber_repo_root }}/ansible/templates/ciber-help.j2"
+    dest: /usr/local/bin/ciber-help
+    owner: root
+    group: root
+    mode: "0755"
+  become: true
+
+- name: Instalar el comando ciber-apply
+  ansible.builtin.template:
+    src: ciber-apply.j2
+    dest: /usr/local/bin/ciber-apply
+    owner: root
+    group: root
+    mode: "0755"
+  become: true

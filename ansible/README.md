@@ -56,6 +56,21 @@ son unidades y el glob no los toca: esos van en `files.yml` → `system_files`.
 
 ## Comandos
 
+No hace falta memorizar esta lista:
+
+```bash
+ciber-help          # todo lo instalado, con colores y descripciones
+ciber-help aur      # filtrado por un termino
+```
+
+`ciber-help` se genera en cada `ciber-apply` recorriendo `cli_tools`,
+`fish_aliases`, `fish_functions` y `ciber_tags` de los `group_vars`, así que un
+alias nuevo aparece solo. Es el mismo comando en Arch y en Debian: una sola
+plantilla, `ansible/templates/ciber-help.j2`, que cada playbook renderiza con
+sus propias variables.
+
+El resto:
+
 ```bash
 ciber-apply                     # reaplica todo el sistema
 ciber-apply --check --diff      # simulacro: dice qué cambiaría, sin tocar nada
