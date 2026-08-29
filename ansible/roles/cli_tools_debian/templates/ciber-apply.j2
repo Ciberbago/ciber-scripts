@@ -9,7 +9,8 @@
 #   ciber-apply --list-tags          ver todas las etiquetas
 #
 # Rama fijada cuando se genero este archivo: {{ ciber_branch }}
-# Playbook: {{ ciber_playbook }}
+# Playbook:   {{ ciber_playbook }}
+# Inventario: {{ ciber_inventory }}  (propio de Debian, ver el comentario del archivo)
 #
 # NO usa 'ansible-pull'. ansible-pull lanza ansible-playbook como subproceso
 # conectado por un pipe, y ese hijo, al no ver una terminal, pasa a
@@ -25,6 +26,7 @@ REPO="{{ ciber_git_repo }}"
 RAMA="{{ ciber_branch }}"
 DEST="{{ ciber_checkout_dir }}"
 PLAYBOOK="{{ ciber_playbook }}"
+INVENTARIO="{{ ciber_inventory }}"
 LOGFILE="$HOME/ciber.log"
 
 export ANSIBLE_CONFIG="${DEST}/ansible/ansible.cfg"
@@ -45,7 +47,7 @@ fi
 cd "$DEST"
 
 #<-------Aplicar------->
-CMD="ansible-playbook -i ansible/inventory.ini --ask-become-pass"
+CMD="ansible-playbook -i ${INVENTARIO} --ask-become-pass"
 CMD+=" --extra-vars 'ciber_branch=${RAMA}'"
 CMD+=" ${PLAYBOOK}"
 for arg in "$@"; do

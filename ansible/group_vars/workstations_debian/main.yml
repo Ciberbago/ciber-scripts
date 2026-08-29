@@ -13,6 +13,12 @@
 # cli_tools_debian.
 ciber_playbook: ansible/site-debian.yml
 
+# Inventario propio. NO se comparte con el de Arch: si los dos grupos vivieran
+# en el mismo archivo, 'localhost' pertenceria a ambos y heredaria las variables
+# de las dos distros a la vez, ganando las de Debian por orden alfabetico. Eso
+# ya rompio una VM de Arch (habilito backup.timer y docker.service en ella).
+ciber_inventory: ansible/inventory-debian.ini
+
 # Nombre en clave del release (bookworm, trixie...). Se detecta solo en vez de
 # escribirlo a mano: los repos de Docker y Tailscale piden el codename en la
 # linea del sources.list, y hardcodear 'bookworm' romperia el dia que esto se

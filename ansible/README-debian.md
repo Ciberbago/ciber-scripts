@@ -81,6 +81,36 @@ ciber-apply --list-tags         # ver todas las etiquetas
 ciber-watch                     # progreso en vivo, desde otra sesión SSH
 ```
 
+## Por qué hay dos inventarios
+
+`ansible/inventory.ini` (Arch) e `ansible/inventory-debian.ini` (Debian) están
+separados **a propósito**, y la razón costó romper una VM.
+
+Al principio los dos grupos convivían en `inventory.ini`. Parece inofensivo,
+porque cada playbook declara `hosts: workstations_arch` o
+`hosts: workstations_debian`. Pero **Ansible no fusiona las variables por play,
+sino por host**: con `localhost` en los dos grupos, heredaba
+`group_vars/workstations_arch/` *y* `group_vars/workstations_debian/` a la vez.
+Y cuando dos grupos del mismo nivel definen la misma variable, gana el último por
+orden alfabético — `workstations_debian`.
+
+Los dos grupos comparten **16 nombres de variable**, y 15 con valores distintos:
+
+`cli_tools`, `user_files`, `user_dirs`, `system_files`, `systemd_units_dir`,
+`systemd_units_enabled`, `systemd_units_started`, `systemd_user_units_enabled`,
+`fish_aliases`, `fish_functions`, `fish_plugins`, `fish_editor`,
+`ciber_extra_groups`, `ciber_tags`, `nautilus_scripts`.
+
+En una VM de Arch eso significó que el rol `systemd_units` leyera la lista de
+Debian y habilitara `backup.timer`, `docker.service` y `containerd.service`, y
+que `systemd_units_dir` apuntara a `systemd/debian`, copiando las unidades de
+Debian a `/etc/systemd/system`. La corrida murió al intentar arrancar
+`docker.service`.
+
+Con dos archivos, cada `localhost` pertenece a un solo grupo y no hay nada que
+cruzar. Por eso el bootstrap y el `ciber-apply` de Debian pasan
+`-i ansible/inventory-debian.ini`, vía la variable `ciber_inventory`.
+
 ## Qué comparte con Arch y qué no
 
 Se **reutilizan sin modificar** los roles que ya eran agnósticos de distro:

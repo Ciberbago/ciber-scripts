@@ -102,7 +102,8 @@ export ANSIBLE_FORCE_COLOR=1
 
 echo "==> Aplicando el playbook (te va a pedir el password de sudo)" | tee -a "$LOGFILE"
 
-CMD="ansible-playbook -i ansible/inventory.ini --ask-become-pass"
+# Inventario propio de Debian, no el de Arch: ver ansible/inventory-debian.ini
+CMD="ansible-playbook -i ansible/inventory-debian.ini --ask-become-pass"
 CMD+=" --extra-vars 'ciber_branch=${RAMA}'"
 CMD+=" ansible/site-debian.yml"
 for arg in "$@"; do
