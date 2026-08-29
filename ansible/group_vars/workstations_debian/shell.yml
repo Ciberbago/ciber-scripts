@@ -62,6 +62,24 @@ fish_functions:
   - name: subir
     body: 'curl -F "file=@-" 0x0.st < $argv[1]'
 
+# Variables UNIVERSALES de fish (set -U) que declara el repo.
+#
+# Apunta al MISMO archivo que Arch: tide guarda su config en variables
+# universales, no en un dotfile, y el prompt debe verse igual en las dos
+# distros. Por eso el archivo vive en dotfiles/common/.
+#
+# Se deja SIN 'patron' a proposito. El script y el playbook usan entonces los
+# mismos patrones por defecto (tide_* y _tide_*, menos el cache _tide_prompt_*),
+# asi que el archivo que generas a mano y el volcado con el que el rol lo compara
+# salen identicos. Si aqui se pusiera un patron y al generarlo a mano usaras
+# otro, la tarea quedaria marcada como 'changed' en cada corrida.
+#
+# Para regenerarlo desde una maquina que ya tiene la config deseada:
+#   fish scripts/common/fish-dump-universals.fish > dotfiles/common/tide.fish
+fish_universal_files:
+  - src: dotfiles/common/tide.fish
+    nombre: "tema tide"
+
 fish_plugins:
   - jorgebucaran/fisher
   - IlanCosman/tide@v6

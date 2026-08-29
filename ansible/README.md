@@ -39,6 +39,7 @@ para el mantenimiento normal.
 | Cambiar un ajuste de GNOME | `gnome.yml` | 1 línea |
 | Agregar una extensión de GNOME | `gnome.yml` | 1 línea |
 | Agregar un alias de fish | `shell.yml` | 1 línea |
+| Guardar la config de un plugin de fish | volcar con `fish-dump-universals.fish` + `shell.yml` | 1 línea |
 | Cambiar zona horaria, shell, timeouts | `main.yml` | 1 línea |
 
 Después de editar, aplicas con `ciber-apply`. Si el cambio ya está en GitHub,
@@ -199,6 +200,45 @@ ansible/
 │       └── shell.yml    aliases y funciones de fish
 └── roles/              lógica; casi nunca hay que tocarla
 ```
+
+## Config de plugins de fish (tide)
+
+Plugins como **tide** no guardan su configuración en un archivo propio: la
+escriben como **variables universales de fish** (`tide_*` y `_tide_*`), que viven en
+`~/.config/fish/fish_variables`. Ese archivo no se puede versionar tal cual —
+mezcla las de tide con `fish_color_*`, `EDITOR`, la lista de plugins de fisher
+y demás.
+
+Para capturar la config desde una máquina que ya la tiene como quieres:
+
+```bash
+fish scripts/common/fish-dump-universals.fish > dotfiles/common/tide.fish
+```
+
+Sin argumentos captura tide. Se excluye `_tide_prompt_*`: ahí tide cachea el
+prompt **ya renderizado**, con el hostname y la hora de la máquina donde se
+generó, y lo regenera solo. Para otro plugin se le pasan patrones (glob de
+`string match`; los que empiezan con `!` excluyen).
+
+Eso genera un archivo de líneas `set -U` reaplicables. Se declara en
+`shell.yml`:
+
+```yaml
+fish_universal_files:
+  - { src: dotfiles/common/tide.fish, nombre: "tema tide" }
+```
+
+Para tide se omite `patron` a propósito, para que el archivo que generas a mano
+y el volcado con el que el rol lo compara usen los mismos patrones por defecto.
+Con patrones distintos a cada lado, la tarea quedaría marcada como `changed` en
+todas las corridas.
+
+El rol `shell_fish` lo aplica **después** de instalar los plugins (si fuera
+antes, la instalación de tide sobrescribiría sus propias variables con los
+defaults), y sólo cuando el estado actual difiere del declarado: usa el mismo
+script para leer la máquina, así que la comparación es exacta.
+
+Sirve para cualquier plugin que use variables universales, cambiando el patrón.
 
 ## Separación por distro
 

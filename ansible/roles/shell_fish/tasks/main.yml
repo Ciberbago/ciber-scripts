@@ -74,3 +74,57 @@
   ansible.builtin.debug:
     msg: "fisher no esta disponible: se omitieron los plugins {{ fish_plugins | join(', ') }}"
   when: fisher_check.rc != 0
+
+# --- Variables universales de plugins (tide y compania) ---
+#
+# Van DESPUES de instalar los plugins: si se aplicaran antes, la instalacion de
+# tide podria sobrescribir sus propias variables con los defaults.
+
+- name: Ver que archivos de variables universales existen
+  ansible.builtin.stat:
+    path: "{{ ciber_repo_root }}/{{ item.src }}"
+  loop: "{{ fish_universal_files | default([]) }}"
+  loop_control:
+    label: "{{ item.src }}"
+  register: fishuni_stat
+
+- name: Avisar de archivos de variables que faltan
+  ansible.builtin.debug:
+    msg: >-
+      No existen y se omiten:
+      {{ fishuni_stat.results | rejectattr('stat.exists')
+         | map(attribute='item.src') | list | join(', ') }}.
+      Generalos desde una maquina ya configurada con
+      'fish scripts/common/fish-dump-universals.fish > <archivo>'.
+  when: fishuni_stat.results | rejectattr('stat.exists') | list | length > 0
+
+- name: Volcar las variables universales actuales
+  # El mismo script que genera el archivo sirve para leer el estado actual, asi
+  # que la comparacion es exacta: mismo formato y mismo orden en los dos lados.
+  ansible.builtin.command:
+    cmd: >-
+      fish {{ ciber_repo_root }}/scripts/common/fish-dump-universals.fish
+      {{ item.item.patron | default('') }}
+  loop: "{{ fishuni_stat.results | selectattr('stat.exists') | list }}"
+  loop_control:
+    label: "{{ item.item.nombre }}"
+  become: false
+  register: fishuni_actual
+  changed_when: false
+  check_mode: false
+  failed_when: false
+
+- name: Aplicar las variables universales declaradas
+  # Solo si difieren: 'set -U' escribe en ~/.config/fish/fish_variables, y
+  # reaplicarlo cuando ya coincide seria ruido en el reporte de cambios.
+  ansible.builtin.command:
+    cmd: "fish {{ ciber_repo_root }}/{{ item.item.item.src }}"
+  loop: "{{ fishuni_actual.results | default([]) }}"
+  loop_control:
+    label: "{{ item.item.item.nombre }}"
+  become: false
+  when: >-
+    item.stdout | default('') | trim
+    != lookup('file', ciber_repo_root ~ '/' ~ item.item.item.src) | trim
+  changed_when: true
+

@@ -18,6 +18,25 @@
 # Directorios que se agregan al PATH de fish (con fish_add_path, idempotente).
 # ~/.local/bin lo necesita AM: ahi deja los enlaces de las AppImages locales, y
 # el propio instalador avisa "is not in PATH, local apps may not run".
+# Variables UNIVERSALES de fish (set -U) que declara el repo.
+#
+# Plugins como tide guardan su configuracion ahi, no en un archivo propio, asi
+# que no basta con copiar un dotfile. Cada entrada apunta a un archivo generado
+# con scripts/common/fish-dump-universals.fish, y el rol lo reaplica solo si el
+# estado actual de la maquina difiere.
+#
+# Se deja SIN 'patron' a proposito. El script y el playbook usan entonces los
+# mismos patrones por defecto (tide_* y _tide_*, menos el cache _tide_prompt_*),
+# asi que el archivo que generas a mano y el volcado con el que el rol lo compara
+# salen identicos. Si aqui se pusiera un patron y al generarlo a mano usaras
+# otro, la tarea quedaria marcada como 'changed' en cada corrida.
+#
+# Para regenerarlo desde una maquina que ya tiene la config deseada:
+#   fish scripts/common/fish-dump-universals.fish > dotfiles/common/tide.fish
+fish_universal_files:
+  - src: dotfiles/common/tide.fish
+    nombre: "tema tide"
+
 fish_paths:
   - ~/.local/bin
 
