@@ -22,6 +22,27 @@
 # Generado por Ansible. No editar a mano: se sobrescribe en cada run.
 set -euo pipefail
 
+#<-------No como root------->
+# El bootstrap ya se negaba a correr como root, pero este envoltorio no, y esa
+# omision costo una VM rota.
+#
+# El motivo no es purismo: la ruta del checkout se calcula con
+# lookup('env','HOME') AL GENERAR este archivo. Un 'sudo ciber-apply' hace que
+# el rol cli_tools se regenere a si mismo con DEST=/root/... incrustado, y a
+# partir de ahi el comando ya no funciona para el usuario normal:
+#
+#   fatal: could not create leading directories of '/root/.local/share/...'
+#
+# Ademas ciber_user pasa a ser 'root', asi que los dotfiles, el shell y los
+# grupos se aplican a root en vez de a ti.
+if [[ $EUID -eq 0 ]]; then
+    echo "!!! No corras ciber-apply con sudo." >&2
+    echo "    Ansible pide la contrasena de sudo cuando la necesita." >&2
+    echo "    Corriendolo como root, el checkout y los dotfiles acaban en /root" >&2
+    echo "    y este mismo comando se regenera apuntando ahi." >&2
+    exit 1
+fi
+
 REPO="{{ ciber_git_repo }}"
 RAMA="{{ ciber_branch }}"
 DEST="{{ ciber_checkout_dir }}"
