@@ -1,6 +1,9 @@
 # Bienvenida de ciber-scripts para Fish en Termux.
 
 if status is-interactive
+    # Suprime el saludo por defecto de Fish ("Welcome to fish...").
+    set -g fish_greeting ""
+
     set -l bold
     set -l cyan
     set -l green
