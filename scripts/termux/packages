@@ -11,6 +11,8 @@ unzip
 tar
 eza
 fzf
+bat
+fresh-editor
 ffmpeg
 python-yt-dlp
 yt-dlp-ejs

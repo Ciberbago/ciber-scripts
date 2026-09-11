@@ -135,9 +135,10 @@ El bootstrap y `ciber-update` crean `~/.hushlogin` para ocultar el mensaje
 inicial por defecto de Termux y dejar visible solo la bienvenida de
 ciber-scripts.
 
-El bootstrap también instala `eza` y `fzf`, más aliases de Fish
-(`ls`, `ll`, `la`, `lt` con eza) en `~/.config/fish/conf.d/` sin sobrescribir
-tu configuración. `fzf` queda instalado para usarlo después.
+El bootstrap también instala `eza`, `fzf`, `bat` y `fresh-editor`, más
+aliases de Fish en `~/.config/fish/conf.d/` sin sobrescribir tu configuración:
+`ls`, `ll`, `la`, `lt` con eza y `cat` con bat. `fzf` queda instalado para
+usarlo después.
 
 Para ver la ayuda de estos comandos:
 

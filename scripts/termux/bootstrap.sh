@@ -54,7 +54,7 @@ install_packages() {
         printf 'Lista de paquetes tomada del repositorio.\n'
     else
         warn 'Sin acceso a la lista del repo; usando lista de respaldo.'
-        pkgs=$(printf '%s\n' fish openssh git curl wget nano unzip tar eza fzf ffmpeg python-yt-dlp yt-dlp-ejs)
+        pkgs=$(printf '%s\n' fish openssh git curl wget nano unzip tar eza fzf bat fresh-editor ffmpeg python-yt-dlp yt-dlp-ejs)
     fi
     rm -f "$packages_file"
     # shellcheck disable=SC2086

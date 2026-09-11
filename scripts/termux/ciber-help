@@ -92,6 +92,8 @@ item 'ls' \
     'eza con iconos, permisos, lista y ocultos: eza --icons=auto -l -a.'
 item 'll / la / lt' \
     'Variantes eza: ll compacto, la todo, lt árbol de 2 niveles.'
+item 'cat' \
+    'bat con colores y números de línea; sin paginador cuando va a un pipe.'
 item 'fzf' \
     'Buscador difuso instalado por el bootstrap, listo para usarlo después.'
 

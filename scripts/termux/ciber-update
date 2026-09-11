@@ -41,12 +41,14 @@ die() {
 }
 
 # ¿Está cubierto un paquete? Algunos paquetes proveen otro comando:
-# openssh -> ssh, python-yt-dlp -> yt-dlp, yt-dlp-ejs -> deno o node.
+# openssh -> ssh, python-yt-dlp -> yt-dlp, yt-dlp-ejs -> deno o node,
+# fresh-editor -> fresh.
 package_covered() {
     case "$1" in
         openssh) command -v ssh >/dev/null 2>&1 ;;
         python-yt-dlp) command -v yt-dlp >/dev/null 2>&1 ;;
         yt-dlp-ejs) command -v deno >/dev/null 2>&1 || command -v node >/dev/null 2>&1 ;;
+        fresh-editor) command -v fresh >/dev/null 2>&1 ;;
         *) command -v "$1" >/dev/null 2>&1 ;;
     esac
 }
