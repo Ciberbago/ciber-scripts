@@ -7,6 +7,7 @@ set -u
 
 REPO_URL="https://github.com/Ciberbago/ciber-scripts.git"
 REPO_BRANCH="main"
+PACKAGES_URL="https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts/termux/packages"
 TEMP_DIR=""
 
 cleanup() {
@@ -30,25 +31,34 @@ die() {
     exit 1
 }
 
+# Lee scripts/termux/packages del repo (uno por línea, # = comentario).
+# Si no hay internet, usa la lista de respaldo integrada.
+read_package_list() {
+    local url="$1" tmpfile="$2"
+    if curl -fsSL --max-time 15 "$url" -o "$tmpfile" 2>/dev/null; then
+        grep -vE '^[[:space:]]*(#|$)' "$tmpfile" | awk '{print $1}'
+        return 0
+    fi
+    return 1
+}
+
 install_packages() {
+    local packages_file pkgs
+    packages_file=$(mktemp "${TMPDIR:-/tmp}/ciber-packages.XXXXXX") || \
+        die 'No se pudo crear un archivo temporal.'
     info 'Actualizando repositorios'
     pkg update -y || die 'No se pudieron actualizar los repositorios.'
 
     info 'Instalando paquetes'
-    pkg install -y \
-        fish \
-        openssh \
-        git \
-        curl \
-        wget \
-        nano \
-        unzip \
-        tar \
-        eza \
-        fzf \
-        ffmpeg \
-        python-yt-dlp \
-        yt-dlp-ejs || die 'No se pudieron instalar todos los paquetes.'
+    if pkgs=$(read_package_list "$PACKAGES_URL" "$packages_file"); then
+        printf 'Lista de paquetes tomada del repositorio.\n'
+    else
+        warn 'Sin acceso a la lista del repo; usando lista de respaldo.'
+        pkgs=$(printf '%s\n' fish openssh git curl wget nano unzip tar eza fzf ffmpeg python-yt-dlp yt-dlp-ejs)
+    fi
+    rm -f "$packages_file"
+    # shellcheck disable=SC2086
+    pkg install -y $pkgs || die 'No se pudieron instalar todos los paquetes.'
 }
 
 setup_storage() {

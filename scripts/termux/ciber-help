@@ -49,7 +49,7 @@ section 'ACTUALIZACIÓN Y AYUDA'
 item 'ciber-help' \
     'Muestra esta ayuda. Usa ciber-help ffm, ciber-help yt o ciber-help ssh para filtrar.'
 item 'ciber-update' \
-    'Busca y descarga solo los scripts modificados desde GitHub, sin clonar el repositorio.'
+    'Sincroniza scripts desde GitHub sin clonar el repo, y asegura los paquetes de scripts/termux/packages.'
 item 'ciber-update --check' \
     'Comprueba si hay actualizaciones sin instalar nada.'
 item 'ciber-update --yes' \

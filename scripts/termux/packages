@@ -1,0 +1,16 @@
+# Paquetes base de Termux, uno por línea. Las líneas con # se ignoran.
+# Fuente única: la usan bootstrap.sh (instalación nueva) y ciber-update
+# (instalaciones existentes) para mantener los mismos paquetes.
+fish
+openssh
+git
+curl
+wget
+nano
+unzip
+tar
+eza
+fzf
+ffmpeg
+python-yt-dlp
+yt-dlp-ejs

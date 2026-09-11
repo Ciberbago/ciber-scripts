@@ -6,6 +6,7 @@ set -u
 
 BASE_URL="https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main"
 MANIFEST_URL="$BASE_URL/scripts/termux/manifest"
+PACKAGES_URL="$BASE_URL/scripts/termux/packages"
 BIN_DIR="$HOME/bin"
 TEMP_DIR=""
 AUTO_YES=0
@@ -30,9 +31,61 @@ die() {
     exit 1
 }
 
+# ¿Está cubierto un paquete? Algunos paquetes proveen otro comando:
+# openssh -> ssh, python-yt-dlp -> yt-dlp, yt-dlp-ejs -> deno o node.
+package_covered() {
+    case "$1" in
+        openssh) command -v ssh >/dev/null 2>&1 ;;
+        python-yt-dlp) command -v yt-dlp >/dev/null 2>&1 ;;
+        yt-dlp-ejs) command -v deno >/dev/null 2>&1 || command -v node >/dev/null 2>&1 ;;
+        *) command -v "$1" >/dev/null 2>&1 ;;
+    esac
+}
+
+# Instala los paquetes de scripts/termux/packages que falten en el teléfono.
+# En modo --check solo informa, no instala.
+ensure_packages() {
+    local pkg missing=()
+    if ! command -v pkg >/dev/null 2>&1; then
+        printf '\n%sSin pkg, se omite la revisión de paquetes.%s\n' "$AMAR" "$R"
+        return 0
+    fi
+    if ! curl -fsSL --max-time 15 "$PACKAGES_URL" -o "$TEMP_DIR/packages" 2>/dev/null; then
+        printf '\n%sNo se pudo descargar la lista de paquetes.%s\n' "$AMAR" "$R"
+        return 0
+    fi
+    while read -r pkg; do
+        [[ -z "$pkg" ]] && continue
+        package_covered "$pkg" || missing+=("$pkg")
+    done < <(grep -vE '^[[:space:]]*(#|$)' "$TEMP_DIR/packages" | awk '{print $1}')
+
+    if ((${#missing[@]} == 0)); then
+        printf '\nPaquetes: %stodo instalado%s.\n' "$VERDE" "$R"
+        return 0
+    fi
+    printf '\n%sPaquetes faltantes:%s %s\n' "$B" "$R" "${missing[*]}"
+    if ((CHECK_ONLY)); then
+        printf 'Modo comprobación: no se instaló ningún paquete.\n'
+        return 0
+    fi
+    if ((AUTO_YES == 0)); then
+        read -r -p '¿Instalar estos paquetes? [s/N] ' answer
+        [[ "$answer" =~ ^[sS]$ ]] || { printf 'No se instaló ningún paquete.\n'; return 0; }
+    fi
+    # shellcheck disable=SC2068
+    if pkg install -y ${missing[@]}; then
+        printf '%sPaquetes instalados.%s\n' "$VERDE" "$R"
+    else
+        printf '%sNo se pudieron instalar todos los paquetes.%s\n' "$ROJO" "$R" >&2
+        return 1
+    fi
+}
+
 usage() {
     printf '%s\n' \
         'Uso: ciber-update [opción]' \
+        '' \
+        'Sincroniza scripts y asegura los paquetes de scripts/termux/packages.' \
         '' \
         '  --check  Buscar cambios sin instalar nada' \
         '  --yes    Instalar actualizaciones sin preguntar' \
@@ -103,30 +156,31 @@ while IFS='|' read -r name remote_path mode target; do
 done < "$TEMP_DIR/manifest"
 
 if ((${#changed[@]} == 0)); then
-    printf '\nTodo está actualizado.\n'
-    exit 0
+    printf '\nArchivos: %stodo actualizado%s.\n' "$VERDE" "$R"
+else
+    printf '\n%sCambios disponibles:%s\n' "$B" "$R"
+    printf '  %s\n' "${changed[@]}"
+
+    if ((CHECK_ONLY)); then
+        printf '\nModo comprobación: no se instaló ningún archivo.\n'
+    else
+        if ((AUTO_YES == 0)); then
+            read -r -p $'¿Instalar estos cambios? [s/N] ' answer
+            [[ "$answer" =~ ^[sS]$ ]] || printf 'No se instaló ningún archivo.\n'
+        fi
+        if ((AUTO_YES == 1)) || [[ "${answer:-}" =~ ^[sS]$ ]]; then
+            for name in "${changed[@]}"; do
+                IFS='|' read -r manifest_name remote_path mode target < <(grep -F "${name}|" "$TEMP_DIR/manifest")
+                destination="$HOME/$target"
+                mkdir -p "$(dirname "$destination")" || die "No se pudo crear el destino de $name"
+                install -m "$mode" "$TEMP_DIR/$name" "$destination" || \
+                    die "No se pudo instalar $name"
+                printf '%sInstalado: %s%s\n' "$VERDE" "$destination" "$R"
+            done
+        fi
+    fi
 fi
 
-printf '\n%sCambios disponibles:%s\n' "$B" "$R"
-printf '  %s\n' "${changed[@]}"
-
-if ((CHECK_ONLY)); then
-    printf '\nModo comprobación: no se instaló ningún archivo.\n'
-    exit 0
-fi
-
-if ((AUTO_YES == 0)); then
-    read -r -p $'¿Instalar estos cambios? [s/N] ' answer
-    [[ "$answer" =~ ^[sS]$ ]] || { printf 'No se instaló nada.\n'; exit 0; }
-fi
-
-for name in "${changed[@]}"; do
-    IFS='|' read -r manifest_name remote_path mode target < <(grep -F "${name}|" "$TEMP_DIR/manifest")
-    destination="$HOME/$target"
-    mkdir -p "$(dirname "$destination")" || die "No se pudo crear el destino de $name"
-    install -m "$mode" "$TEMP_DIR/$name" "$destination" || \
-        die "No se pudo instalar $name"
-    printf '%sInstalado: %s%s\n' "$VERDE" "$destination" "$R"
-done
+ensure_packages
 
 printf '\nActualización completada.\n'

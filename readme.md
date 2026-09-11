@@ -162,7 +162,9 @@ ciber-update
 
 El comando descarga únicamente los scripts listados en
 `scripts/termux/manifest`, compara sus hashes y pide confirmación antes de
-reemplazar los que hayan cambiado. Para comprobar sin instalar:
+reemplazar los que hayan cambiado. También instala los paquetes de
+`scripts/termux/packages` que falten en el teléfono, para que las
+dependencias nuevas lleguen solas. Para comprobar sin instalar:
 
 ```fish
 ciber-update --check
