@@ -44,6 +44,8 @@ install_packages() {
         nano \
         unzip \
         tar \
+        eza \
+        fzf \
         ffmpeg \
         python-yt-dlp \
         yt-dlp-ejs || die 'No se pudieron instalar todos los paquetes.'
@@ -126,6 +128,20 @@ install_greeting() {
     fi
 }
 
+install_aliases() {
+    local source_file="$1/ciber-aliases.fish"
+    local destination="$HOME/.config/fish/conf.d/ciber-aliases.fish"
+    mkdir -p "$(dirname "$destination")" || die 'No se pudo crear la configuración de Fish.'
+
+    if [[ -e "$destination" ]]; then
+        printf 'Conservando existente: %s\n' "$destination"
+    elif install -m 644 "$source_file" "$destination"; then
+        printf 'Instalado: %s\n' "$destination"
+    else
+        warn 'No se pudo instalar los aliases de Fish.'
+    fi
+}
+
 download_repo() {
     TEMP_DIR=$(mktemp -d "${TMPDIR:-/tmp}/ciber-scripts.XXXXXX") || \
         die 'No se pudo crear un directorio temporal.'
@@ -138,6 +154,7 @@ download_repo() {
         die 'El repositorio no contiene scripts/termux.'
     install_user_scripts "$TEMP_DIR/repo/scripts/termux"
     install_greeting "$TEMP_DIR/repo/scripts/termux"
+    install_aliases "$TEMP_DIR/repo/scripts/termux"
 }
 
 show_summary() {
@@ -146,6 +163,7 @@ show_summary() {
     printf '  ciber-help    ayuda y sintaxis de los scripts\n'
     printf '  ciber-update  sincroniza scripts sin clonar el repo\n'
     printf '  greeting      bienvenida colorida de Fish\n'
+    printf '  aliases       ls/ll/la/lt con eza en Fish\n'
     printf '  ffm-tui       compresión y operaciones con FFmpeg\n'
     printf '  yt-tui        descargas con yt-dlp\n'
     printf '  termux-ssh    gestión del servidor SSH\n'

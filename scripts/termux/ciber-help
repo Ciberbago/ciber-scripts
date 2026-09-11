@@ -85,6 +85,14 @@ item 'net-tui' \
 item 'net-tui (opción 6)' \
     'Envía Wake-on-LAN escribiendo la MAC al momento; no guarda ninguna lista de hosts.'
 
+section 'ALIASES Y HERRAMIENTAS'
+item 'ls' \
+    'eza con iconos, permisos, lista y ocultos: eza --icons=auto -l -a.'
+item 'll / la / lt' \
+    'Variantes eza: ll compacto, la todo, lt árbol de 2 niveles.'
+item 'fzf' \
+    'Buscador difuso instalado por el bootstrap, listo para usarlo después.'
+
 section 'BOOTSTRAP'
 item 'bash <(curl -L url.jaimelopez.top/termux)' \
     'Prepara Termux desde cero: paquetes, almacenamiento, Fish, SSH y scripts personales.'

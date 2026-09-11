@@ -98,6 +98,21 @@ public_ip() {
     printf '%s' "${ip:-}"
 }
 
+# ¿Resuelve DNS este teléfono? En Termux 'getent' puede fallar aunque sí haya
+# resolución, así que se prueba Python primero y getent como respaldo.
+dns_resolves() {
+    local host="${1:-google.com}"
+    if command -v python3 >/dev/null 2>&1; then
+        if python3 -c 'import socket,sys; socket.gethostbyname(sys.argv[1])' "$host" 2>/dev/null; then
+            return 0
+        fi
+    fi
+    if getent hosts "$host" >/dev/null 2>&1; then
+        return 0
+    fi
+    return 1
+}
+
 show_summary() {
     local ip gw dns pub
     ip=$(local_ip)
@@ -156,7 +171,6 @@ quick_ping() {
         fi
     fi
     ping_host "1.1.1.1" 3
-    ping_host "google.com" 3
 }
 
 custom_ping() {
@@ -188,6 +202,18 @@ ensure_nmap() {
     return 1
 }
 
+nmap_scan() {
+    local ip base
+    ip=$(local_ip)
+    if [[ -z "$ip" ]]; then
+        err_msg 'Sin IP local no se puede derivar la subred.'
+        return 1
+    fi
+    base="${ip%.*}"
+    warn_msg "Escaneando $base.0/24 con nmap (asume máscara /24)..."
+    nmap -sn --unprivileged "$base.0/24"
+}
+
 lan_neighbors() {
     local found=0
     title 'Equipos conocidos en la red local'
@@ -202,12 +228,18 @@ lan_neighbors() {
         found=1
     fi
     if ((found == 0)); then
-        warn_msg 'No hay tabla ARP legible en este teléfono (Android lo bloquea).'
-        printf 'Usa la opción 5 (barrido) o nmap para descubrir equipos.\n'
+        if command -v nmap >/dev/null 2>&1; then
+            nmap_scan && found=1
+        else
+            warn_msg 'Sin tabla ARP legible aquí (Android la bloquea).'
+            printf 'nmap puede descubrir los equipos.\n'
+            if ensure_nmap; then
+                nmap_scan && found=1
+            fi
+        fi
     fi
-    if ! command -v nmap >/dev/null 2>&1; then
-        printf '\n%stip:%s nmap da escaneos más completos.\n' "$GRIS" "$R"
-        ensure_nmap || true
+    if ((found == 0)); then
+        warn_msg 'No se encontraron equipos. Prueba la opción 5 (barrido).'
     fi
 }
 
@@ -219,7 +251,11 @@ lan_sweep() {
         return 0
     fi
     base="${ip%.*}"
-    warn_msg "Barriendo $base.1-254 (asume máscara /24, ~30 s)..."
+    if command -v nmap >/dev/null 2>&1; then
+        nmap_scan
+        return 0
+    fi
+    warn_msg "Barriendo $base.1-254 con ping (asume máscara /24, ~30 s)..."
     for i in $(seq 1 254); do
         ping -c 1 -W 1 "$base.$i" >/dev/null 2>&1 &
         if ((i % 32 == 0)); then
@@ -267,7 +303,7 @@ ssh_status() {
 diagnose() {
     title 'Diagnóstico'
     printf 'DNS configurados: %s%s%s\n' "$VERDE" "$(dns_servers)" "$R"
-    if getent hosts google.com >/dev/null 2>&1; then
+    if dns_resolves "google.com"; then
         ok 'Resolución DNS: OK (google.com resuelve)'
     else
         err_msg 'Resolución DNS: FALLO'
@@ -278,6 +314,7 @@ diagnose() {
         err_msg 'Salida HTTPS: FALLO'
     fi
     ping_host "1.1.1.1" 3
+    ping_host "google.com" 2
 }
 
 main_menu() {
@@ -286,7 +323,7 @@ main_menu() {
         printf '\n%s%s%s\n' "$B$CIAN" 'net-tui — utilidades de red' "$R"
         printf '%s%s%s\n\n' "$GRIS" '============================' "$R"
         printf '%s1)%s Ver resumen de red\n' "$VERDE" "$R"
-        printf '%s2)%s Ping rápido (puerta, 1.1.1.1, google)\n' "$VERDE" "$R"
+        printf '%s2)%s Ping rápido (puerta y 1.1.1.1)\n' "$VERDE" "$R"
         printf '%s3)%s Ping a un host personalizado\n' "$VERDE" "$R"
         printf '%s4)%s Ver equipos en la red local\n' "$VERDE" "$R"
         printf '%s5)%s Barrido rápido de la red local\n' "$VERDE" "$R"
