@@ -49,6 +49,9 @@ install_packages() {
     info 'Actualizando repositorios'
     pkg update -y || die 'No se pudieron actualizar los repositorios.'
 
+    info 'Actualizando el sistema base (evita fallos en instalaciones frescas)'
+    pkg upgrade -y || die 'No se pudo actualizar el sistema base.'
+
     info 'Instalando paquetes'
     if pkgs=$(read_package_list "$PACKAGES_URL" "$packages_file"); then
         printf 'Lista de paquetes tomada del repositorio.\n'
@@ -85,11 +88,24 @@ setup_fish() {
     }
 
     info 'Configurando Fish como shell predeterminada'
-    if command -v chsh >/dev/null 2>&1; then
-        chsh -s "$fish_path" || warn 'No se pudo establecer Fish como shell predeterminada.'
-    else
+    if ! command -v chsh >/dev/null 2>&1; then
         warn 'chsh no está disponible; Fish quedó instalado pero no se cambió la shell.'
+        return 0
     fi
+    # El chsh de Termux acepta el nombre corto; la ruta completa la rechaza.
+    if chsh -s fish; then
+        printf 'Fish establecida como shell (nombre corto).\n'
+        return 0
+    fi
+    warn 'chsh -s fish falló; intentando con la ruta completa.'
+    if chsh -s "$fish_path"; then
+        printf 'Fish establecida como shell (ruta completa).\n'
+        return 0
+    fi
+    printf 'ERROR: no se pudo establecer Fish como shell.\n' >&2
+    printf 'Ejecuta a mano: chsh -s fish\n' >&2
+    printf 'Y después abre una sesión nueva de Termux.\n' >&2
+    return 1
 }
 
 hide_default_motd() {
@@ -178,8 +194,10 @@ show_summary() {
     printf '  yt-tui        descargas con yt-dlp\n'
     printf '  termux-ssh    gestión del servidor SSH\n'
     printf '  net-tui       utilidades rápidas de red\n'
-    printf '\nSi Fish no se activó en esta sesión, ejecuta:\n'
-    printf '  exec fish\n'
+    printf '\nIMPORTANTE: esta sesión sigue en Bash.\n'
+    printf 'Abre una sesión NUEVA de Termux para entrar en Fish,\n'
+    printf 'y verifícalo ahí con: echo $SHELL\n'
+    printf '(o ejecuta: exec fish)\n'
     printf '\nPara configurar SSH:\n'
     printf '  termux-ssh\n'
     printf '  Selecciona primero configurar contraseña y después iniciar servidor.\n'
