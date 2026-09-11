@@ -102,6 +102,13 @@ los scripts personales para trabajar desde el teléfono o desde un PC por SSH.
 En una instalación nueva de Termux, ejecuta:
 
 ```fish
+bash <(curl -L url.jaimelopez.top/termux)
+```
+
+Este comando fue probado después de desinstalar y reinstalar Termux desde cero.
+Como alternativa, puedes descargar el script directamente desde GitHub:
+
+```fish
 pkg install curl
 curl -fL https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts/termux/bootstrap.sh -o ~/bootstrap.sh
 bash ~/bootstrap.sh
