@@ -93,3 +93,45 @@ Incluye cosas como:
 - Red
     - wakeonlan
     - tailscale
+
+## Termux / Android
+
+El bootstrap de Termux instala el entorno base, Fish, SSH, FFmpeg, yt-dlp y
+los scripts personales para trabajar desde el teléfono o desde un PC por SSH.
+
+En una instalación nueva de Termux, ejecuta:
+
+```fish
+pkg install curl
+curl -fL https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts/termux/bootstrap.sh -o ~/bootstrap.sh
+bash ~/bootstrap.sh
+```
+
+Durante la instalación Android mostrará una solicitud para acceder al
+almacenamiento. Pulsa **Permitir**. El proceso instala estos comandos en
+`~/bin`, sin sobrescribir los que ya existan:
+
+```text
+ffm-tui       operaciones con FFmpeg
+yt-tui        descargas con yt-dlp
+termux-ssh    servidor SSH para controlar Termux desde el PC
+```
+
+Si Fish no se activa automáticamente al terminar, ejecuta:
+
+```fish
+exec fish
+```
+
+Para preparar SSH, ejecuta:
+
+```fish
+termux-ssh
+```
+
+Elige configurar una contraseña y luego iniciar el servidor. Termux usa el
+puerto `8022`. El menú mostrará el comando exacto para conectarte desde el PC.
+
+El bootstrap no incluye contraseñas, cookies, API keys, tokens ni claves
+privadas. Tampoco sobrescribe configuraciones personales ni scripts que ya
+estén en `~/bin`.

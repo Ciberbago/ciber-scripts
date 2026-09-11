@@ -1,0 +1,156 @@
+#!/usr/bin/env bash
+
+# Gestor sencillo de SSH para Termux.
+
+set -u
+
+SSH_PORT=8022
+HOME_DIR="${HOME:?No se pudo detectar HOME}"
+
+is_installed() {
+    command -v "$1" >/dev/null 2>&1
+}
+
+pause() {
+    printf '\nPulsa Enter para continuar...'
+    read -r
+}
+
+ensure_openssh() {
+    if is_installed sshd; then
+        return 0
+    fi
+
+    if ! is_installed pkg; then
+        printf 'Este script debe ejecutarse dentro de Termux.\n' >&2
+        return 1
+    fi
+
+    printf 'OpenSSH no está instalado. Instalándolo...\n'
+    pkg update -y && pkg install -y openssh
+}
+
+get_ip() {
+    local ip
+    ip=$(ip -o -4 addr show wlan0 2>/dev/null | awk '{print $4}' | cut -d/ -f1 | head -n 1)
+    if [[ -z "$ip" ]]; then
+        ip=$(ip route get 1.1.1.1 2>/dev/null | awk '{for (i = 1; i <= NF; i++) if ($i == "src") { print $(i + 1); exit }}')
+    fi
+    printf '%s' "${ip:-IP_NO_DETECTADA}"
+}
+
+get_user() {
+    whoami 2>/dev/null || printf '%s' "${USER:-usuario}"
+}
+
+server_running() {
+    pgrep -x sshd >/dev/null 2>&1
+}
+
+show_connection() {
+    local user ip
+    user=$(get_user)
+    ip=$(get_ip)
+
+    printf '\nDatos de conexión\n'
+    printf '%s\n' '-----------------'
+    printf 'Usuario: %s\n' "$user"
+    printf 'IP:      %s\n' "$ip"
+    printf 'Puerto:  %s\n' "$SSH_PORT"
+    printf '\nConectarte desde el PC:\n\n'
+    printf '  ssh -p %s %s@%s\n' "$SSH_PORT" "$user" "$ip"
+    printf '\nCopiar un vídeo al teléfono:\n\n'
+    printf '  scp -P %s video.mp4 %s@%s:~/storage/downloads/\n' "$SSH_PORT" "$user" "$ip"
+    printf '\nEjecutar ffm-tui remotamente:\n\n'
+    printf "  ssh -t -p %s %s@%s '~/bin/ffm-tui'\n" "$SSH_PORT" "$user" "$ip"
+}
+
+start_server() {
+    ensure_openssh || return 1
+
+    if server_running; then
+        printf 'El servidor SSH ya está ejecutándose.\n'
+        show_connection
+        return 0
+    fi
+
+    if sshd -p "$SSH_PORT"; then
+        printf 'Servidor SSH iniciado en el puerto %s.\n' "$SSH_PORT"
+        show_connection
+    else
+        printf 'No se pudo iniciar el servidor SSH.\n' >&2
+        return 1
+    fi
+}
+
+stop_server() {
+    if server_running; then
+        pkill -x sshd
+        printf 'Servidor SSH detenido.\n'
+    else
+        printf 'El servidor SSH no está ejecutándose.\n'
+    fi
+}
+
+configure_password() {
+    ensure_openssh || return 1
+    printf 'Configura la contraseña que usarás desde el PC.\n'
+    passwd
+}
+
+toggle_wake_lock() {
+    if is_installed termux-wake-lock; then
+        termux-wake-lock
+        printf 'Bloqueo de suspensión activado.\n'
+        printf 'Para liberarlo, usa la opción 6 o ejecuta termux-wake-unlock.\n'
+    else
+        printf 'termux-wake-lock no está disponible en esta instalación.\n'
+        printf 'Puedes continuar sin él; Android podría suspender Termux.\n'
+    fi
+}
+
+release_wake_lock() {
+    if is_installed termux-wake-unlock; then
+        termux-wake-unlock
+        printf 'Bloqueo de suspensión liberado.\n'
+    else
+        printf 'termux-wake-unlock no está disponible.\n'
+    fi
+}
+
+main_menu() {
+    local choice
+    while true; do
+        clear 2>/dev/null || true
+        printf 'Termux SSH\n'
+        printf '==========\n\n'
+        if server_running; then
+            printf 'Estado: ACTIVO (puerto %s)\n\n' "$SSH_PORT"
+        else
+            printf 'Estado: detenido\n\n'
+        fi
+        printf '1) Instalar/configurar OpenSSH\n'
+        printf '2) Configurar o cambiar contraseña\n'
+        printf '3) Iniciar servidor SSH\n'
+        printf '4) Detener servidor SSH\n'
+        printf '5) Mostrar datos de conexión\n'
+        printf '6) Activar bloqueo de suspensión\n'
+        printf '7) Liberar bloqueo de suspensión\n'
+        printf 'q) Salir\n\n'
+
+        read -r -p 'Elige una opción: ' choice
+        case "$choice" in
+            1) ensure_openssh; pause ;;
+            2) configure_password; pause ;;
+            3) start_server; pause ;;
+            4) stop_server; pause ;;
+            5) show_connection; pause ;;
+            6) toggle_wake_lock; pause ;;
+            7) release_wake_lock; pause ;;
+            q|Q) printf 'Hasta luego.\n'; return 0 ;;
+            *) printf 'Opción no válida.\n'; sleep 1 ;;
+        esac
+    done
+}
+
+main_menu

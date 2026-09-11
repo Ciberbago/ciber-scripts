@@ -1,0 +1,213 @@
+#!/usr/bin/env bash
+
+# TUI sencillo para yt-dlp en Termux.
+
+set -u
+
+CONFIG_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/yt-tui/config"
+DOWNLOAD_DIR="$HOME/storage/downloads"
+NO_PLAYLIST=1
+YTDLP_EXTRA_ARGS=()
+JS_RUNTIME=""
+
+if [[ -f "$CONFIG_FILE" ]]; then
+    # El archivo pertenece al usuario y permite definir arrays de argumentos.
+    # shellcheck disable=SC1090
+    source "$CONFIG_FILE"
+fi
+
+pause() {
+    printf '\nPulsa Enter para continuar...'
+    read -r
+}
+
+die() {
+    printf 'Error: %s\n' "$1" >&2
+    exit 1
+}
+
+select_js_runtime() {
+    if command -v deno >/dev/null 2>&1; then
+        JS_RUNTIME=deno
+    elif command -v node >/dev/null 2>&1; then
+        JS_RUNTIME=node
+    else
+        return 1
+    fi
+}
+
+ensure_dependencies() {
+    local missing=()
+    command -v yt-dlp >/dev/null 2>&1 || missing+=(yt-dlp)
+    command -v ffmpeg >/dev/null 2>&1 || missing+=(ffmpeg)
+    select_js_runtime || missing+=(javascript-runtime)
+
+    ((${#missing[@]} == 0)) && return 0
+
+    if ! command -v pkg >/dev/null 2>&1; then
+        die "Faltan yt-dlp y/o ffmpeg. Instálalos con el gestor de paquetes del sistema."
+    fi
+
+    printf 'Faltan dependencias: %s\n' "${missing[*]}"
+    printf 'Instalando python-yt-dlp, yt-dlp-ejs y ffmpeg con pkg...\n'
+    pkg update -y && pkg install -y python-yt-dlp yt-dlp-ejs ffmpeg || \
+        die "No se pudieron instalar las dependencias."
+
+    command -v yt-dlp >/dev/null 2>&1 || die "yt-dlp no quedó disponible."
+    command -v ffmpeg >/dev/null 2>&1 || die "ffmpeg no quedó disponible."
+    select_js_runtime || die "yt-dlp-ejs necesita Deno o Node.js."
+}
+
+prepare_destination() {
+    [[ -d "$DOWNLOAD_DIR" ]] || mkdir -p "$DOWNLOAD_DIR" || die "No se pudo crear: $DOWNLOAD_DIR"
+}
+
+show_config_hint() {
+    if [[ ! -f "$CONFIG_FILE" ]]; then
+        printf '\nConfiguración opcional:\n%s\n' "$CONFIG_FILE"
+        printf 'Puedes crearla más adelante para añadir argumentos extra a yt-dlp.\n'
+    fi
+}
+
+choose_url() {
+    if [[ $# -gt 0 ]]; then
+        URL="$1"
+        return 0
+    fi
+
+    printf '\nPega la URL del vídeo: '
+    read -r URL
+    [[ -n "$URL" ]] || die "No se proporcionó ninguna URL."
+}
+
+choose_type() {
+    local choice
+    while true; do
+        printf '\nTipo de descarga:\n'
+        printf '  1) Vídeo\n'
+        printf '  2) Audio\n'
+        printf '  q) Salir\n\n'
+        read -r -p 'Elige una opción: ' choice
+        case "$choice" in
+            1) TYPE=video; return 0 ;;
+            2) TYPE=audio; return 0 ;;
+            q|Q) exit 0 ;;
+            *) printf 'Opción no válida.\n' ;;
+        esac
+    done
+}
+
+choose_video_profile() {
+    local choice
+    while true; do
+        printf '\nCalidad de vídeo:\n'
+        printf '  1) Mejor disponible\n'
+        printf '  2) Hasta 360p\n'
+        printf '  3) Hasta 480p\n'
+        printf '  4) Hasta 720p\n'
+        printf '  5) Hasta 1080p\n'
+        printf '  q) Salir\n\n'
+        read -r -p 'Elige una calidad: ' choice
+        case "$choice" in
+            1) VIDEO_FORMAT='bestvideo*+bestaudio/best'; return 0 ;;
+            2) VIDEO_FORMAT='bv*[height<=360]+ba/b[height<=360]'; return 0 ;;
+            3) VIDEO_FORMAT='bv*[height<=480]+ba/b[height<=480]'; return 0 ;;
+            4) VIDEO_FORMAT='bv*[height<=720]+ba/b[height<=720]'; return 0 ;;
+            5) VIDEO_FORMAT='bv*[height<=1080]+ba/b[height<=1080]'; return 0 ;;
+            q|Q) exit 0 ;;
+            *) printf 'Opción no válida.\n' ;;
+        esac
+    done
+}
+
+choose_audio_profile() {
+    local choice
+    while true; do
+        printf '\nFormato de audio:\n'
+        printf '  1) MP3 a 192 kbps\n'
+        printf '  2) MP3 a 320 kbps\n'
+        printf '  3) M4A\n'
+        printf '  q) Salir\n\n'
+        read -r -p 'Elige un formato: ' choice
+        case "$choice" in
+            1) AUDIO_ARGS=(-x --audio-format mp3 --audio-quality 192K); return 0 ;;
+            2) AUDIO_ARGS=(-x --audio-format mp3 --audio-quality 320K); return 0 ;;
+            3) AUDIO_ARGS=(-x --audio-format m4a); return 0 ;;
+            q|Q) exit 0 ;;
+            *) printf 'Opción no válida.\n' ;;
+        esac
+    done
+}
+
+build_command() {
+    local output_template="$DOWNLOAD_DIR/%(title)s.%(ext)s"
+    CMD=(yt-dlp
+        --js-runtimes "$JS_RUNTIME"
+        --no-playlist
+        --no-overwrites
+        --newline
+        --trim-filenames 180
+        --output "$output_template"
+        "${YTDLP_EXTRA_ARGS[@]}")
+
+    if [[ "$TYPE" == video ]]; then
+        CMD+=(--format "$VIDEO_FORMAT" --merge-output-format mp4)
+    else
+        CMD+=("${AUDIO_ARGS[@]}" --embed-metadata)
+    fi
+
+    CMD+=("$URL")
+}
+
+run_download() {
+    local log_file status
+    log_file=$(mktemp "${TMPDIR:-/tmp}/yt-tui.XXXXXX") || die "No se pudo crear el registro temporal."
+
+    printf '\nDestino: %s\n' "$DOWNLOAD_DIR"
+    printf 'Iniciando descarga...\n\n'
+    "${CMD[@]}" 2>&1 | tee "$log_file"
+    status=${PIPESTATUS[0]}
+
+    if ((status == 0)); then
+        rm -f "$log_file"
+        printf '\nDescarga completada.\n'
+    else
+        printf '\nLa descarga falló.\n' >&2
+        if grep -Eiq '429|too many requests|rate.?limit|http error 429|temporarily blocked|sign in|login required|authentication|cookies|confirm you.re human|javascript runtime|js challenge' "$log_file"; then
+            printf '\nPosible causa detectada:\n' >&2
+            if grep -Eiq '429|too many requests|rate.?limit|http error 429|temporarily blocked' "$log_file"; then
+                printf '%s\n' '- El sitio puede estar limitando las solicitudes.' >&2
+                printf '%s\n' '- Prueba añadiendo pausas y cookies en ~/.config/yt-tui/config.' >&2
+            fi
+            if grep -Eiq 'sign in|login required|authentication|cookies|confirm you.re human' "$log_file"; then
+                printf '%s\n' '- El sitio puede requerir iniciar sesión o usar cookies.' >&2
+                printf '%s\n' '- Revisa las instrucciones de cookies del README.' >&2
+            fi
+            if grep -Eiq 'javascript runtime|js challenge' "$log_file"; then
+                printf '%s\n' '- Falta o no funciona el runtime JavaScript de yt-dlp.' >&2
+                printf '%s\n' '- Comprueba que Deno siga instalado con: command -v deno' >&2
+            fi
+        else
+            printf '%s\n' 'Revisa el mensaje anterior y comprueba la URL.' >&2
+        fi
+        rm -f "$log_file"
+        return "$status"
+    fi
+}
+
+main() {
+    ensure_dependencies
+    prepare_destination
+    choose_url "$@"
+    choose_type
+    if [[ "$TYPE" == video ]]; then
+        choose_video_profile
+    else
+        choose_audio_profile
+    fi
+    build_command
+    show_config_hint
+    run_download
+}
+
+main "$@"

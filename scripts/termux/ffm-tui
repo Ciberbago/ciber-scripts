@@ -1,0 +1,259 @@
+#!/usr/bin/env bash
+
+# TUI minimalista para operaciones comunes con FFmpeg.
+
+set -u
+shopt -s nullglob nocaseglob
+
+SCRIPT_NAME="ffm-tui"
+TEMP_DIR=""
+CURRENT_PID=""
+
+cleanup() {
+    if [[ -n "$CURRENT_PID" ]] && kill -0 "$CURRENT_PID" 2>/dev/null; then
+        kill "$CURRENT_PID" 2>/dev/null || true
+    fi
+    if [[ -n "$TEMP_DIR" && -d "$TEMP_DIR" ]]; then
+        rm -rf "$TEMP_DIR"
+    fi
+}
+
+trap cleanup EXIT
+trap 'exit 130' INT TERM
+
+die() {
+    printf 'Error: %s\n' "$1" >&2
+    exit 1
+}
+
+is_termux() {
+    [[ -n "${PREFIX:-}" && -d "${PREFIX:-}/bin" ]] || command -v pkg >/dev/null 2>&1
+}
+
+ensure_dependencies() {
+    local missing=()
+    command -v ffmpeg >/dev/null 2>&1 || missing+=(ffmpeg)
+    command -v ffprobe >/dev/null 2>&1 || missing+=(ffprobe)
+
+    ((${#missing[@]} == 0)) && return 0
+
+    if ! is_termux; then
+        die "Falta FFmpeg. Instálalo con el gestor de paquetes de tu sistema."
+    fi
+
+    printf 'FFmpeg no está instalado. Se instalará con pkg.\n'
+    if ! pkg update -y || ! pkg install -y ffmpeg; then
+        die "No se pudo instalar FFmpeg."
+    fi
+
+    command -v ffmpeg >/dev/null 2>&1 || die "ffmpeg sigue sin estar disponible."
+    command -v ffprobe >/dev/null 2>&1 || die "ffprobe sigue sin estar disponible."
+}
+
+is_video() {
+    case "${1##*.}" in
+        mp4|mkv|webm|mov|avi|ts|m4v|mpeg|mpg|3gp) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+format_bytes() {
+    awk -v bytes="${1:-0}" 'BEGIN {
+        if (bytes < 1024) printf "%.0f B", bytes;
+        else if (bytes < 1024^2) printf "%.1f KB", bytes / 1024;
+        else if (bytes < 1024^3) printf "%.1f MB", bytes / (1024^2);
+        else printf "%.1f GB", bytes / (1024^3);
+    }'
+}
+
+video_duration() {
+    ffprobe -v error -show_entries format=duration \
+        -of default=noprint_wrappers=1:nokey=1 "$1" 2>/dev/null || true
+}
+
+add_file_if_video() {
+    local file="$1"
+    [[ -f "$file" ]] && is_video "$file" && FILES+=("$file")
+}
+
+collect_files() {
+    FILES=()
+    local dir file
+
+    for dir in "$PWD" "${HOME:-}/storage/downloads"; do
+        [[ -d "$dir" ]] || continue
+        [[ "${dir%/}" == "${PWD%/}" ]] && [[ ${SEEN_PWD:-0} -eq 1 ]] && continue
+        [[ "${dir%/}" == "${PWD%/}" ]] && SEEN_PWD=1
+        for file in "$dir"/*; do
+            add_file_if_video "$file"
+        done
+    done
+}
+
+select_file() {
+    local i choice
+    collect_files
+
+    if ((${#FILES[@]} == 0)); then
+        die "No encontré vídeos en el directorio actual ni en ~/storage/downloads."
+    fi
+
+    printf '\nVídeos disponibles:\n\n'
+    for i in "${!FILES[@]}"; do
+        printf '  %2d) %s\n' "$((i + 1))" "${FILES[$i]}"
+    done
+    printf '\n'
+
+    while true; do
+        read -r -p 'Selecciona un vídeo (q para salir): ' choice
+        [[ "$choice" == q || "$choice" == Q ]] && exit 0
+        if [[ "$choice" =~ ^[0-9]+$ ]] && ((choice >= 1 && choice <= ${#FILES[@]})); then
+            INPUT="${FILES[$((choice - 1))]}"
+            return 0
+        fi
+        printf 'Selección no válida.\n'
+    done
+}
+
+show_info() {
+    local size duration resolution
+    size=$(stat -c '%s' "$INPUT" 2>/dev/null || stat -f '%z' "$INPUT")
+    duration=$(video_duration "$INPUT")
+    resolution=$(ffprobe -v error -select_streams v:0 \
+        -show_entries stream=width,height -of csv=p=0:s=x "$INPUT" 2>/dev/null || true)
+    printf '\nArchivo:    %s\n' "$INPUT"
+    printf 'Tamaño:     %s\n' "$(format_bytes "$size")"
+    [[ -n "$duration" ]] && printf 'Duración:   %s s\n' "${duration%.*}"
+    [[ -n "$resolution" ]] && printf 'Resolución: %s\n' "$resolution"
+}
+
+choose_operation() {
+    local choice
+    printf '\nOperación:\n'
+    printf '  1) Comprimir con mi preset (máximo 1080p, H.264, CRF 28)\n'
+    printf '  2) Comprimir sin cambiar la resolución\n'
+    printf '  3) Copiar sin recodificar\n'
+    printf '  4) Quitar audio\n'
+    printf '  q) Salir\n\n'
+
+    while true; do
+        read -r -p 'Elige una operación: ' choice
+        case "$choice" in
+            1|2|3|4) OPERATION="$choice"; return 0 ;;
+            q|Q) exit 0 ;;
+            *) printf 'Selección no válida.\n' ;;
+        esac
+    done
+}
+
+output_for_operation() {
+    local base ext
+    base="${INPUT%.*}"
+    case "$OPERATION" in
+        1) OUTPUT="${base}_comprimido.mp4" ;;
+        2) OUTPUT="${base}_comprimido.mp4" ;;
+        3)
+            ext="${INPUT##*.}"
+            OUTPUT="${base}_copia.${ext,,}"
+            ;;
+        4) OUTPUT="${base}_sin_audio.mp4" ;;
+    esac
+}
+
+confirm_output() {
+    local answer
+    if [[ -e "$OUTPUT" ]]; then
+        read -r -p "Ya existe '$OUTPUT'. ¿Sobrescribir? [s/N] " answer
+        [[ "$answer" =~ ^[sS]$ ]] || exit 0
+    fi
+    printf '\nSalida: %s\n' "$OUTPUT"
+}
+
+build_command() {
+    case "$OPERATION" in
+        1)
+            CMD=(ffmpeg -noautorotate -i "$INPUT"
+                -map 0:v:0 -map '0:a:?'
+                -vf "scale='if(gte(iw,ih),min(1920,iw),-2)':'if(gte(iw,ih),-2,min(1080,ih))'"
+                -c:v libx264 -crf 28 -preset slow
+                -c:a aac -b:a 128k -movflags +faststart -y "$OUTPUT")
+            ;;
+        2)
+            CMD=(ffmpeg -noautorotate -i "$INPUT"
+                -map 0:v:0 -map '0:a:?'
+                -c:v libx264 -crf 28 -preset slow
+                -c:a aac -b:a 128k -movflags +faststart -y "$OUTPUT")
+            ;;
+        3)
+            CMD=(ffmpeg -noautorotate -i "$INPUT"
+                -map 0:v:0 -map '0:a:?'
+                -c:v copy -c:a copy -movflags +faststart -y "$OUTPUT")
+            ;;
+        4)
+            CMD=(ffmpeg -noautorotate -i "$INPUT"
+                -map 0:v:0 -c:v copy -an -movflags +faststart -y "$OUTPUT")
+            ;;
+    esac
+}
+
+run_conversion() {
+    local duration progress_us percent spinner_index=0 spinner_chars='|/-\\'
+    TEMP_DIR=$(mktemp -d "${TMPDIR:-/tmp}/ffm-tui.XXXXXX") || die "No se pudo crear un directorio temporal."
+    local progress_file="$TEMP_DIR/progress"
+    local error_file="$TEMP_DIR/error"
+    duration=$(video_duration "$INPUT")
+
+    "${CMD[@]}" -progress "$progress_file" -nostats -loglevel error \
+        > /dev/null 2>"$error_file" &
+    CURRENT_PID=$!
+
+    printf '\nProcesando...\n'
+    while kill -0 "$CURRENT_PID" 2>/dev/null; do
+        if [[ -n "$duration" && -f "$progress_file" ]]; then
+            progress_us=$(awk -F= '$1 == "out_time_us" { value=$2 } END { print value + 0 }' "$progress_file")
+            percent=$(awk -v current="$progress_us" -v total="$duration" \
+                'BEGIN { if (total > 0) printf "%.0f", current / 1000000 / total * 100; else print 0 }')
+            ((percent > 99)) && percent=99
+            printf '\rProgreso: %3d%%' "$percent"
+        else
+            printf '\rProcesando %s' "${spinner_chars:spinner_index:1}"
+            spinner_index=$(( (spinner_index + 1) % 4 ))
+        fi
+        sleep 0.5
+    done
+
+    wait "$CURRENT_PID"
+    local status=$?
+    CURRENT_PID=""
+    printf '\n'
+
+    if ((status != 0)); then
+        printf 'FFmpeg falló:\n%s\n' "$(<"$error_file")" >&2
+        rm -f "$OUTPUT"
+        return 1
+    fi
+
+    printf 'Completado.\n'
+    printf 'Original: %s\n' "$(format_bytes "$(stat -c '%s' "$INPUT" 2>/dev/null || stat -f '%z' "$INPUT")")"
+    printf 'Resultado: %s\n' "$(format_bytes "$(stat -c '%s' "$OUTPUT" 2>/dev/null || stat -f '%z' "$OUTPUT")")"
+}
+
+main() {
+    ensure_dependencies
+    if [[ $# -gt 0 ]]; then
+        [[ -f "$1" ]] || die "El archivo no existe: $1"
+        is_video "$1" || die "No parece ser un vídeo: $1"
+        INPUT="$1"
+    else
+        select_file
+    fi
+
+    show_info
+    choose_operation
+    output_for_operation
+    confirm_output
+    build_command
+    run_conversion
+}
+
+main "$@"
