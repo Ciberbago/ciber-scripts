@@ -4,6 +4,8 @@
 
 set -u
 
+VERSION="2026.09.11-1"
+
 BASE_URL="https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main"
 MANIFEST_URL="$BASE_URL/scripts/termux/manifest"
 PACKAGES_URL="$BASE_URL/scripts/termux/packages"
@@ -11,6 +13,13 @@ BIN_DIR="$HOME/bin"
 TEMP_DIR=""
 AUTO_YES=0
 CHECK_ONLY=0
+# Anti-caché del CDN de GitHub: cada corrida pide URLs distintas.
+# Pon CIBER_CACHE_BUST=0 para desactivarlo (útil en pruebas locales).
+CACHE_BUST="${CIBER_CACHE_BUST:-1}"
+CACHE_Q=""
+if ((CACHE_BUST)); then
+    CACHE_Q="?t=$(date +%s)"
+fi
 if [[ -t 1 && -z "${NO_COLOR:-}" ]] && command -v tput >/dev/null 2>&1; then
     B=$(tput bold 2>/dev/null || true)
     R=$(tput sgr0 2>/dev/null || true)
@@ -50,7 +59,7 @@ ensure_packages() {
         printf '\n%sSin pkg, se omite la revisión de paquetes.%s\n' "$AMAR" "$R"
         return 0
     fi
-    if ! curl -fsSL --max-time 15 "$PACKAGES_URL" -o "$TEMP_DIR/packages" 2>/dev/null; then
+    if ! curl -fsSL --max-time 15 "$PACKAGES_URL$CACHE_Q" -o "$TEMP_DIR/packages" 2>/dev/null; then
         printf '\n%sNo se pudo descargar la lista de paquetes.%s\n' "$AMAR" "$R"
         return 0
     fi
@@ -87,15 +96,17 @@ usage() {
         '' \
         'Sincroniza scripts y asegura los paquetes de scripts/termux/packages.' \
         '' \
-        '  --check  Buscar cambios sin instalar nada' \
-        '  --yes    Instalar actualizaciones sin preguntar' \
-        '  --help   Mostrar esta ayuda'
+        '  --check    Buscar cambios sin instalar nada' \
+        '  --yes      Instalar actualizaciones sin preguntar' \
+        '  --version  Mostrar la versión instalada' \
+        '  --help     Mostrar esta ayuda'
 }
 
 for argument in "$@"; do
     case "$argument" in
         --check) CHECK_ONLY=1 ;;
         --yes) AUTO_YES=1 ;;
+        --version|-v) printf 'ciber-update %s\n' "$VERSION"; exit 0 ;;
         --help|-h) usage; exit 0 ;;
         *) printf 'Opción desconocida: %s\n\n' "$argument" >&2; usage; exit 2 ;;
     esac
@@ -116,7 +127,7 @@ fi
 TEMP_DIR=$(mktemp -d "${TMPDIR:-/tmp}/ciber-update.XXXXXX") || die 'No se pudo crear un directorio temporal.'
 
 printf 'Descargando manifiesto...\n'
-curl -fsSL "$MANIFEST_URL" -o "$TEMP_DIR/manifest" || \
+curl -fsSL "$MANIFEST_URL$CACHE_Q" -o "$TEMP_DIR/manifest" || \
     die 'No se pudo descargar el manifiesto desde GitHub.'
 
 changed=()
@@ -124,7 +135,7 @@ while IFS='|' read -r name remote_path mode target; do
     [[ -z "${name:-}" || "$name" == \#* ]] && continue
     [[ -n "${remote_path:-}" && -n "${mode:-}" && -n "${target:-}" ]] || continue
 
-    remote_url="$BASE_URL/$remote_path"
+    remote_url="$BASE_URL/$remote_path$CACHE_Q"
     downloaded="$TEMP_DIR/$name"
     destination="$HOME/$target"
 

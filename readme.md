@@ -179,6 +179,24 @@ ciber-update --yes
 Las configuraciones personales, cookies, API keys y archivos fuera de `~/bin`
 no se modifican.
 
+Si `ciber-update` repite "sin cambios" cuando sabes que hay algo nuevo,
+primero revisa su versión (las viejas no saben de paquetes):
+
+```fish
+ciber-update --version
+```
+
+La versión actual del repo es `2026.09.11-1`. Si la instalada es anterior,
+reinstálalo directo con anti-caché (el `?t=` salta la caché del CDN):
+
+```fish
+curl -fsSL "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts/termux/ciber-update?t=(date +%s)" -o ~/bin/ciber-update
+chmod 700 ~/bin/ciber-update
+ciber-update --yes
+```
+
+Si aun así insiste, espera unos minutos y repite.
+
 Si Fish no se activa automáticamente al terminar, ejecuta:
 
 ```fish

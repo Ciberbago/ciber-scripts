@@ -54,6 +54,8 @@ item 'ciber-update --check' \
     'Comprueba si hay actualizaciones sin instalar nada.'
 item 'ciber-update --yes' \
     'Instala todas las actualizaciones sin pedir confirmación.'
+item 'ciber-update --version' \
+    'Muestra la versión instalada; sirve para diagnosticar un update atorado.'
 
 section 'FFMPEG'
 item 'ffm-tui' \
