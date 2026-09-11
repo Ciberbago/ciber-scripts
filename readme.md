@@ -187,15 +187,29 @@ ciber-update --version
 ```
 
 La versión actual del repo es `2026.09.11-1`. Si la instalada es anterior,
-reinstálalo directo con anti-caché (el `?t=` salta la caché del CDN):
+reinstálalo directo con la URL fijada al commit (sin caracteres especiales,
+a prueba de copiado desde el teléfono):
 
 ```fish
-curl -fsSL "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts/termux/ciber-update?t=(date +%s)" -o ~/bin/ciber-update
+curl -fsSL https://raw.githubusercontent.com/Ciberbago/ciber-scripts/a0c79b3/scripts/termux/ciber-update -o ~/bin/ciber-update
 chmod 700 ~/bin/ciber-update
 ciber-update --yes
 ```
 
-Si aun así insiste, espera unos minutos y repite.
+Alternativa con anti-caché sobre `main` (si el commit de arriba ya es viejo,
+revisa el hash actual con `git log` en el repo). Ojo: al copiar desde Android
+el teléfono a veces pega comillas curvas; si curl responde `Malformed input`,
+reescribe las comillas a mano. En Fish:
+
+```fish
+curl -fsSL "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts/termux/ciber-update?t=(date +%s)" -o ~/bin/ciber-update
+```
+
+En Bash:
+
+```bash
+curl -fsSL "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts/termux/ciber-update?t=$(date +%s)" -o ~/bin/ciber-update
+```
 
 Si Fish no se activa automáticamente al terminar, ejecuta:
 
