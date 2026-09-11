@@ -119,10 +119,50 @@ almacenamiento. Pulsa **Permitir**. El proceso instala estos comandos en
 `~/bin`, sin sobrescribir los que ya existan:
 
 ```text
+ciber-help    ayuda y sintaxis de los scripts
+ciber-update  sincronizar scripts sin clonar el repositorio
 ffm-tui       operaciones con FFmpeg
 yt-tui        descargas con yt-dlp
 termux-ssh    servidor SSH para controlar Termux desde el PC
 ```
+
+Para ver la ayuda de estos comandos:
+
+```fish
+ciber-help
+```
+
+También puedes filtrar la ayuda:
+
+```fish
+ciber-help ffm
+ciber-help yt
+ciber-help ssh
+```
+
+Para sincronizar los scripts con la versión más reciente del repositorio, sin
+clonar todo `ciber-scripts`, ejecuta:
+
+```fish
+ciber-update
+```
+
+El comando descarga únicamente los scripts listados en
+`scripts/termux/manifest`, compara sus hashes y pide confirmación antes de
+reemplazar los que hayan cambiado. Para comprobar sin instalar:
+
+```fish
+ciber-update --check
+```
+
+Para actualizar sin preguntas:
+
+```fish
+ciber-update --yes
+```
+
+Las configuraciones personales, cookies, API keys y archivos fuera de `~/bin`
+no se modifican.
 
 Si Fish no se activa automáticamente al terminar, ejecuta:
 

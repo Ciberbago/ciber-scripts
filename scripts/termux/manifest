@@ -1,0 +1,6 @@
+# nombre|ruta relativa en el repositorio|permisos
+ciber-help|scripts/termux/ciber-help|700
+ciber-update|scripts/termux/ciber-update|700
+ffm-tui|scripts/termux/ffm-tui|700
+yt-tui|scripts/termux/yt-tui|700
+termux-ssh|scripts/termux/termux-ssh|700

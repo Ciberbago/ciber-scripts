@@ -1,0 +1,113 @@
+#!/usr/bin/env bash
+
+# Actualiza únicamente los scripts de Termux desde GitHub, sin clonar el repo.
+
+set -u
+
+BASE_URL="https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main"
+MANIFEST_URL="$BASE_URL/scripts/termux/manifest"
+BIN_DIR="$HOME/bin"
+TEMP_DIR=""
+AUTO_YES=0
+CHECK_ONLY=0
+
+cleanup() {
+    [[ -n "$TEMP_DIR" && -d "$TEMP_DIR" ]] && rm -rf "$TEMP_DIR"
+}
+trap cleanup EXIT
+
+die() {
+    printf 'Error: %s\n' "$1" >&2
+    exit 1
+}
+
+usage() {
+    printf '%s\n' \
+        'Uso: ciber-update [opción]' \
+        '' \
+        '  --check  Buscar cambios sin instalar nada' \
+        '  --yes    Instalar actualizaciones sin preguntar' \
+        '  --help   Mostrar esta ayuda'
+}
+
+for argument in "$@"; do
+    case "$argument" in
+        --check) CHECK_ONLY=1 ;;
+        --yes) AUTO_YES=1 ;;
+        --help|-h) usage; exit 0 ;;
+        *) printf 'Opción desconocida: %s\n\n' "$argument" >&2; usage; exit 2 ;;
+    esac
+done
+
+command -v curl >/dev/null 2>&1 || die 'Necesitas curl. Ejecuta: pkg install curl'
+command -v sha256sum >/dev/null 2>&1 || die 'Necesitas sha256sum. Ejecuta: pkg install coreutils'
+
+mkdir -p "$BIN_DIR" || die "No se pudo crear $BIN_DIR"
+TEMP_DIR=$(mktemp -d "${TMPDIR:-/tmp}/ciber-update.XXXXXX") || die 'No se pudo crear un directorio temporal.'
+
+printf 'Descargando manifiesto...\n'
+curl -fsSL "$MANIFEST_URL" -o "$TEMP_DIR/manifest" || \
+    die 'No se pudo descargar el manifiesto desde GitHub.'
+
+changed=()
+while IFS='|' read -r name remote_path mode; do
+    [[ -z "${name:-}" || "$name" == \#* ]] && continue
+    [[ -n "${remote_path:-}" && -n "${mode:-}" ]] || continue
+
+    remote_url="$BASE_URL/$remote_path"
+    downloaded="$TEMP_DIR/$name"
+    destination="$BIN_DIR/$name"
+
+    printf 'Comprobando %-18s ' "$name"
+    if ! curl -fsSL "$remote_url" -o "$downloaded"; then
+        printf 'ERROR\n'
+        printf '  No se pudo descargar %s\n' "$remote_url" >&2
+        continue
+    fi
+
+    chmod "$mode" "$downloaded"
+    remote_hash=$(sha256sum "$downloaded" | cut -d' ' -f1)
+    if [[ -f "$destination" ]]; then
+        local_hash=$(sha256sum "$destination" | cut -d' ' -f1)
+    else
+        local_hash=''
+    fi
+
+    if [[ "$remote_hash" == "$local_hash" ]]; then
+        printf 'sin cambios\n'
+    else
+        if [[ -f "$destination" ]]; then
+            printf 'actualización disponible\n'
+        else
+            printf 'nuevo\n'
+        fi
+        changed+=("$name")
+    fi
+done < "$TEMP_DIR/manifest"
+
+if ((${#changed[@]} == 0)); then
+    printf '\nTodo está actualizado.\n'
+    exit 0
+fi
+
+printf '\nCambios disponibles:\n'
+printf '  %s\n' "${changed[@]}"
+
+if ((CHECK_ONLY)); then
+    printf '\nModo comprobación: no se instaló ningún archivo.\n'
+    exit 0
+fi
+
+if ((AUTO_YES == 0)); then
+    read -r -p $'¿Instalar estos cambios? [s/N] ' answer
+    [[ "$answer" =~ ^[sS]$ ]] || { printf 'No se instaló nada.\n'; exit 0; }
+fi
+
+for name in "${changed[@]}"; do
+    IFS='|' read -r manifest_name remote_path mode < <(grep -F "${name}|" "$TEMP_DIR/manifest")
+    install -m "$mode" "$TEMP_DIR/$name" "$BIN_DIR/$name" || \
+        die "No se pudo instalar $name"
+    printf 'Instalado: %s\n' "$BIN_DIR/$name"
+done
+
+printf '\nActualización completada.\n'

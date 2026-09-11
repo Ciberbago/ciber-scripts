@@ -85,7 +85,7 @@ install_user_scripts() {
     destination="$HOME/bin"
     mkdir -p "$destination" || die "No se pudo crear $destination."
 
-    for name in ffm-tui yt-tui termux-ssh; do
+    for name in ciber-help ciber-update ffm-tui yt-tui termux-ssh; do
         if [[ -e "$destination/$name" ]]; then
             printf 'Conservando existente: %s\n' "$destination/$name"
             continue
@@ -119,6 +119,8 @@ download_repo() {
 show_summary() {
     printf '\nInstalación terminada.\n'
     printf '\nScripts disponibles:\n'
+    printf '  ciber-help    ayuda y sintaxis de los scripts\n'
+    printf '  ciber-update  sincroniza scripts sin clonar el repo\n'
     printf '  ffm-tui       compresión y operaciones con FFmpeg\n'
     printf '  yt-tui        descargas con yt-dlp\n'
     printf '  termux-ssh    gestión del servidor SSH\n'
