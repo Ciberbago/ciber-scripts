@@ -1,0 +1,204 @@
+---
+# Unidades de systemd (Debian).
+#
+# Es el gemelo del rol systemd_units de Arch, con una diferencia que no es de
+# estilo: usa 'ansible.builtin.systemd' en lugar de 'systemd_service'.
+# El alias systemd_service existe desde ansible-core 2.16, y Debian 12 trae
+# ansible-core 2.14 en sus repos. Con systemd_service el playbook ni siquiera
+# arranca en una Debian recien instalada.
+#
+# AUTODESCUBRIMIENTO: no hay lista de archivos que mantener. Cualquier unidad
+# que pongas en systemd/debian/ se instala sola; las de usuario van en
+# systemd/debian/user/. Para agregar una unidad nueva no se toca codigo: se deja
+# caer el .service y, si debe arrancar en boot, se agrega a la lista de
+# systemd.yml.
+
+# --- Unidades de sistema (/etc/systemd/system) ---
+
+- name: Descubrir unidades de sistema en el repo
+  ansible.builtin.find:
+    paths: "{{ ciber_repo_root }}/{{ systemd_units_dir }}"
+    patterns:
+      - "*.service"
+      - "*.timer"
+      - "*.mount"
+      - "*.automount"
+      - "*.socket"
+      - "*.path"
+      - "*.target"
+    file_type: file
+    # recurse: false para no agarrar las de user/, que van a otro destino.
+    recurse: false
+  register: unidades_encontradas
+
+- name: Ordenar las unidades encontradas
+  ansible.builtin.set_fact:
+    unidades: >-
+      {{ unidades_encontradas.files | map(attribute='path') | map('basename')
+         | sort | list }}
+
+- name: Mostrar el resultado del descubrimiento
+  ansible.builtin.debug:
+    msg:
+      carpeta: "{{ systemd_units_dir }}"
+      sistema: "{{ unidades }}"
+
+- name: Instalar unidades en /etc/systemd/system
+  ansible.builtin.copy:
+    src: "{{ ciber_repo_root }}/{{ systemd_units_dir }}/{{ item }}"
+    dest: "/etc/systemd/system/{{ item }}"
+    owner: root
+    group: root
+    mode: "0644"
+  loop: "{{ unidades }}"
+  become: true
+  notify: Recargar systemd
+
+# --- Unidades de usuario (systemctl --user), en systemd/debian/user/ ---
+
+- name: Ver si hay carpeta de unidades de usuario
+  ansible.builtin.stat:
+    path: "{{ ciber_repo_root }}/{{ systemd_units_dir }}/user"
+  register: dir_user_units
+
+- name: Descubrir unidades de usuario
+  ansible.builtin.find:
+    paths: "{{ ciber_repo_root }}/{{ systemd_units_dir }}/user"
+    patterns: ["*.service", "*.timer", "*.socket", "*.path", "*.target"]
+    file_type: file
+  register: unidades_usuario
+  when: dir_user_units.stat.exists
+
+- name: Crear el directorio de unidades de usuario
+  ansible.builtin.file:
+    path: "{{ ciber_home }}/.config/systemd/user"
+    state: directory
+    mode: "0755"
+  become: false
+
+- name: Instalar unidades de usuario
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "{{ ciber_home }}/.config/systemd/user/{{ item | basename }}"
+    mode: "0644"
+  loop: "{{ unidades_usuario.files | default([]) | map(attribute='path') | sort }}"
+  loop_control:
+    label: "{{ item | basename }}"
+  become: false
+
+# Recargar ANTES de habilitar: 'systemctl enable' sobre una unidad que systemd
+# todavia no conoce falla. En el script de bash el daemon-reload venia DESPUES
+# del enable, que es justo al reves.
+- name: Recargar systemd ahora
+  ansible.builtin.systemd:
+    daemon_reload: true
+  become: true
+  changed_when: false
+
+- name: Recargar systemd de usuario ahora
+  ansible.builtin.systemd:
+    daemon_reload: true
+    scope: user
+  become: false
+  changed_when: false
+
+# --- Habilitar ---
+#
+# Se comprueba que la unidad exista antes de habilitarla. La lista de systemd.yml
+# mezcla unidades del repo con unidades que traen los paquetes (docker,
+# tailscaled), y si un paquete no se instalo (por ejemplo, Tailscale sin repo
+# para este release) el enable fallaria y tumbaria el play. Este es exactamente
+# el bug del 'todoist-check.timer' que no existia, pero al reves: en vez de
+# fallar en silencio, ahora se avisa.
+
+- name: Ver que unidades de sistema conoce systemd
+  # El awk saca el primer campo, que es el nombre de la unidad. Se usa 'shell' y
+  # no 'command' porque hay un pipe. La alternativa habria sido el filtro
+  # 'split' de Jinja, que no existe en el ansible-core 2.14 de Debian 12.
+  ansible.builtin.shell:
+    cmd: systemctl list-unit-files --no-legend --no-pager | awk '{print $1}'
+  register: unit_files
+  changed_when: false
+  check_mode: false
+
+- name: Separar las unidades de sistema que existen de las que no
+  ansible.builtin.set_fact:
+    unidades_conocidas: "{{ unit_files.stdout_lines }}"
+
+- name: Avisar de unidades que no existen
+  ansible.builtin.debug:
+    msg: >-
+      Estas unidades no existen en el sistema y se omitieron:
+      {{ (systemd_units_enabled + systemd_units_started)
+         | unique | reject('in', unidades_conocidas) | list | join(', ') }}.
+      Suelen venir con un paquete: comprueba que ese paquete se haya instalado.
+  when: >-
+    (systemd_units_enabled + systemd_units_started)
+    | unique | reject('in', unidades_conocidas) | list | length > 0
+
+- name: Habilitar unidades en boot
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    enabled: true
+  loop: "{{ systemd_units_enabled | select('in', unidades_conocidas) | list }}"
+  become: true
+
+- name: Habilitar y arrancar unidades
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    enabled: true
+    state: started
+  loop: "{{ systemd_units_started | select('in', unidades_conocidas) | list }}"
+  become: true
+
+# --- Unidades de usuario: linger ---
+#
+# Sin linger, las unidades --user solo corren mientras el usuario tenga alguna
+# sesion abierta: systemd para su instancia al cerrar el ultimo login. Con
+# linger activo, la instancia arranca en boot y sigue viva sin sesiones.
+#
+# El script de bash nunca lo activaba, asi que el estado depende de la maquina:
+# comprueba el actual con 'loginctl show-user <usuario> -p Linger'. Si ya estaba
+# activo, esta tarea no cambia nada.
+- name: Leer el estado actual del linger
+  ansible.builtin.command:
+    cmd: "loginctl show-user {{ ciber_user }} --property=Linger --value"
+  register: linger_actual
+  changed_when: false
+  check_mode: false
+  failed_when: false
+
+- name: Permitir unidades de usuario sin sesion abierta (linger)
+  ansible.builtin.command:
+    cmd: "loginctl enable-linger {{ ciber_user }}"
+  become: true
+  when:
+    - systemd_user_linger | bool
+    - linger_actual.stdout | trim != 'yes'
+  changed_when: true
+
+- name: Avisar de que el linger quedo desactivado
+  ansible.builtin.debug:
+    msg: >-
+      systemd_user_linger es false y el linger esta en
+      '{{ linger_actual.stdout | trim | default('desconocido', true) }}'.
+      Las unidades de usuario ({{ systemd_user_units_enabled | join(', ') }})
+      solo van a correr mientras {{ ciber_user }} tenga una sesion abierta.
+  when: not (systemd_user_linger | bool)
+
+- name: Habilitar unidades de usuario
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    enabled: true
+    scope: user
+  loop: "{{ systemd_user_units_enabled }}"
+  become: false
+
+- name: Habilitar y arrancar unidades de usuario
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    enabled: true
+    state: started
+    scope: user
+  loop: "{{ systemd_user_units_started | default([]) }}"
+  become: false

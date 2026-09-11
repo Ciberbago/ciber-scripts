@@ -1,0 +1,59 @@
+---
+# Tailscale desde el repo APT oficial.
+#
+# Misma razon que en el rol de docker: el script de bash usaba
+# 'curl -fsSL https://tailscale.com/install.sh | sh', que deja el paquete fuera
+# del ciclo de 'apt upgrade'. El repo oficial lo mantiene al dia solo.
+
+- name: Instalar la llave GPG de Tailscale
+  # La llave va en /usr/share/keyrings y no en /etc/apt/keyrings a proposito:
+  # es la ruta que usa el .list que publica Tailscale y la que aparece en su
+  # documentacion. Si se cambia, 'apt update' falla con NO_PUBKEY.
+  #
+  # El .noarmor.gpg ya viene en formato binario (dearmored): se guarda tal cual,
+  # sin pasarlo por 'gpg --dearmor'.
+  ansible.builtin.get_url:
+    url: "{{ tailscale_gpg_url }}"
+    dest: "{{ tailscale_keyring }}"
+    owner: root
+    group: root
+    mode: "0644"
+  become: true
+  register: tailscale_key
+  failed_when: false
+
+- name: Avisar si no hay repo de Tailscale para este release
+  # Tailscale publica un repo por codename. Si sale un Debian nuevo antes de que
+  # ellos lo suban, la descarga da 404 y esto lo dice claro en vez de dejar un
+  # sources.list roto que hace fallar TODOS los 'apt update' posteriores.
+  ansible.builtin.debug:
+    msg: >-
+      No se pudo bajar la llave de Tailscale para '{{ ciber_debian_codename }}'
+      ({{ tailscale_gpg_url }}). Probablemente aun no publican repo para este
+      release. Se omite Tailscale; revisa https://pkgs.tailscale.com/stable/debian/
+  when: tailscale_key.failed | default(false)
+
+- name: Agregar el repo de Tailscale
+  ansible.builtin.apt_repository:
+    repo: >-
+      deb [signed-by={{ tailscale_keyring }}]
+      {{ tailscale_repo_url }} {{ ciber_debian_codename }} main
+    filename: tailscale
+    state: present
+    update_cache: true
+  become: true
+  when: not (tailscale_key.failed | default(false))
+
+- name: Instalar Tailscale
+  ansible.builtin.apt:
+    name: tailscale
+    state: present
+  become: true
+  when: not (tailscale_key.failed | default(false))
+
+# tailscaled se habilita desde systemd.yml, igual que docker.
+#
+# 'tailscale up' NO se ejecuta aqui: abre un navegador para autenticar y en un
+# servidor sin escritorio se queda esperando. El playbook lo recuerda en el
+# resumen de site-debian.yml. Automatizarlo pediria una auth key, y una auth key
+# en el repo es una credencial en texto plano.

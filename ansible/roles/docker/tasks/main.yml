@@ -1,0 +1,89 @@
+---
+# Docker desde el repo APT oficial.
+#
+# El script de bash hacia 'curl -fsSL https://get.docker.com | sudo sh'. Eso
+# funciona, pero deja Docker fuera del ciclo normal de actualizaciones: 'apt
+# upgrade' no lo toca y hay que volver a correr el curl a mano. Con el repo
+# oficial, Docker se actualiza como cualquier otro paquete.
+#
+# Ademas, el script de conveniencia se descarga y se ejecuta con sudo en cada
+# corrida, sin verificar nada. Aqui la llave se instala una vez y apt verifica
+# la firma de cada paquete contra ella.
+
+- name: Instalar la llave GPG de Docker
+  # get_url y no 'apt_key': apt-key esta eliminado en Debian 12. La llave de
+  # Docker se publica en ASCII armored, asi que se guarda como .asc y se
+  # referencia tal cual desde signed-by=. No hace falta desarmarla con gpg.
+  ansible.builtin.get_url:
+    url: "{{ docker_gpg_url }}"
+    dest: "{{ apt_keyrings_dir }}/docker.asc"
+    owner: root
+    group: root
+    # 0644 y no 0600: apt corre como _apt (usuario sin privilegios) al
+    # descargar, y si no puede leer la llave falla con "signature couldn't be
+    # verified". Es el error mas comun al seguir esta guia a medias.
+    mode: "0644"
+  become: true
+
+- name: Agregar el repo de Docker
+  ansible.builtin.apt_repository:
+    repo: >-
+      deb [arch={{ docker_deb_arch }} signed-by={{ apt_keyrings_dir }}/docker.asc]
+      {{ docker_repo_url }} {{ ciber_debian_codename }} stable
+    filename: docker
+    state: present
+    update_cache: true
+  become: true
+
+- name: Que sigue - Docker
+  ansible.builtin.debug:
+    msg:
+      sigue: "Instalar Docker Engine, containerd y los plugins buildx/compose"
+      tarda: "~1-2 min, dependiendo de la conexion (~120 MB)"
+
+- name: Instalar Docker
+  ansible.builtin.apt:
+    name: "{{ docker_packages }}"
+    state: present
+  become: true
+
+# El servicio se habilita y arranca desde systemd.yml (systemd_units_enabled /
+# systemd_units_started), no aqui: asi toda la gestion de unidades vive en un
+# solo lugar y se ve de un vistazo que arranca en boot.
+
+- name: Crear el directorio de stacks
+  ansible.builtin.file:
+    path: "{{ docker_stacks_dir }}"
+    state: directory
+    # BUG ORIGINAL: 'sudo chown jaime /opt/docker' hardcodeaba el usuario, asi
+    # que en cualquier maquina donde el usuario no se llamara jaime el chown
+    # fallaba y el clone posterior se hacia como root.
+    owner: "{{ ciber_user }}"
+    group: "{{ ciber_user }}"
+    mode: "0755"
+  become: true
+
+- name: Clonar o actualizar los stacks de docker
+  # BUG ORIGINAL: 'git clone' a secas fallaba en la segunda corrida con
+  # "destination path already exists and is not an empty directory". El modulo
+  # git es idempotente: clona si no hay nada y hace fetch+checkout si ya esta.
+  #
+  # update: true con version HEAD equivale al 'git pull --ff-only' del script.
+  ansible.builtin.git:
+    repo: "{{ docker_stacks_repo }}"
+    dest: "{{ docker_stacks_dir }}"
+    update: true
+    version: HEAD
+  become: true
+  become_user: "{{ ciber_user }}"
+  register: docker_stacks
+  # Un servidor sin acceso a GitHub no deberia tumbar el resto del playbook.
+  failed_when: false
+
+- name: Avisar si no se pudieron traer los stacks
+  ansible.builtin.debug:
+    msg: >-
+      No se pudo clonar/actualizar {{ docker_stacks_repo }} en
+      {{ docker_stacks_dir }}. Revisa la conexion o los permisos y vuelve a
+      correr 'ciber-apply --tags docker'.
+  when: docker_stacks.failed | default(false)

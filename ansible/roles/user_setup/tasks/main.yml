@@ -1,0 +1,55 @@
+---
+# Grupos y shell del usuario.
+#
+# Este rol corre DESPUES de 'packages' a proposito, y las dos tareas van con
+# guarda. En la version anterior estaban en pacman_setup, antes de instalar nada,
+# y en una maquina recien instalada eso rompia de dos formas:
+#
+#   - 'groups: vboxusers' fallaba, porque ese grupo lo crea el paquete
+#     virtualbox y todavia no estaba instalado.
+#   - 'shell: /usr/bin/fish' NO falla aunque fish no exista (el modulo user no
+#     valida la ruta): escribia un shell inexistente en /etc/passwd. Si la
+#     corrida moria entre pacman_setup y packages, el usuario se quedaba sin
+#     poder abrir sesion.
+
+- name: Leer los grupos del sistema
+  ansible.builtin.getent:
+    database: group
+
+- name: Agregar el usuario a los grupos extra
+  ansible.builtin.user:
+    name: "{{ ciber_user }}"
+    groups: "{{ item }}"
+    append: true
+  loop: "{{ ciber_extra_groups }}"
+  when: item in ansible_facts.getent_group
+  become: true
+
+- name: Avisar de grupos que no existen
+  ansible.builtin.debug:
+    msg: >-
+      Estos grupos no existen todavia, se omitieron:
+      {{ ciber_extra_groups | reject('in', ansible_facts.getent_group) | list | join(', ') }}.
+      Suelen crearlos sus paquetes: si acabas de instalarlos, vuelve a correr
+      'ciber-apply --tags user'.
+  when: ciber_extra_groups | reject('in', ansible_facts.getent_group) | list | length > 0
+
+- name: Comprobar que el shell existe antes de asignarlo
+  ansible.builtin.stat:
+    path: "{{ ciber_shell }}"
+  register: shell_stat
+
+- name: Shell por defecto
+  # 'chsh' interactivo pedia el password y bloqueaba el script de bash
+  ansible.builtin.user:
+    name: "{{ ciber_user }}"
+    shell: "{{ ciber_shell }}"
+  become: true
+  when: shell_stat.stat.exists
+
+- name: Avisar si el shell no existe
+  ansible.builtin.debug:
+    msg: >-
+      {{ ciber_shell }} no existe: no se cambio el shell de {{ ciber_user }}.
+      Revisa que el paquete este en pacman_packages.
+  when: not shell_stat.stat.exists

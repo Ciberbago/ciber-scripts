@@ -1,0 +1,15 @@
+[Unit]
+Description=Servicio de notificaciones precisas Todoist
+
+[Service]
+Type=oneshot
+
+# Los tres tokens salen de aqui. '%h' es el HOME del usuario: esta es una unidad
+# de usuario, asi que el archivo vive en su HOME y no en /etc, donde un 0600 de
+# root seria ilegible para ella.
+#
+# El guion inicial ('-') evita que systemd falle la unidad si el archivo no
+# existe todavia; el script da el mensaje claro.
+EnvironmentFile=-%h/.config/ciber/todoist.env
+
+ExecStart=/usr/local/bin/todoist.sh

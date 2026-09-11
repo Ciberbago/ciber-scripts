@@ -1,0 +1,236 @@
+---
+# chaotic-aur (repo binario) + yay + los paquetes que si hay que compilar.
+#
+# Este es el rol mas delicado del playbook, por una razon estructural: makepkg se
+# niega a correr como root, pero necesita sudo para instalar dependencias. Como
+# ansible-pull no es una terminal interactiva, yay no puede pedir el password a
+# medias. La solucion es un permiso NOPASSWD temporal, limitado a /usr/bin/pacman
+# y a este usuario, que se retira siempre al final (bloque always) incluso si
+# algo falla.
+
+- name: Ver si la llave de chaotic ya esta en el keyring de pacman
+  ansible.builtin.command:
+    cmd: "pacman-key --list-keys {{ chaotic_key_id }}"
+  register: chaotic_key_check
+  changed_when: false
+  check_mode: false
+  failed_when: false
+  become: true
+
+- name: Importar y firmar la llave de chaotic-aur
+  # No se usa community.general.pacman_key porque exige la huella COMPLETA de 40
+  # caracteres y rechaza el ID corto de 16 que publica chaotic
+  # ("key ID is not full-length"). El modulo tiene razon: los IDs cortos son
+  # susceptibles a colisiones. Aqui se usan los dos comandos que documenta
+  # chaotic, con guarda de idempotencia.
+  #
+  # MEJORA PENDIENTE: pinear la huella completa. Se obtiene con
+  #   pacman-key --finger 3056513887B78AEB
+  # y luego se puede volver a pacman_key con esa huella, que es mas seguro.
+  ansible.builtin.command:
+    cmd: "{{ item }}"
+  loop:
+    - "pacman-key --recv-key {{ chaotic_key_id }} --keyserver {{ chaotic_keyserver }}"
+    - "pacman-key --lsign-key {{ chaotic_key_id }}"
+  become: true
+  when: chaotic_key_check.rc != 0
+  changed_when: true
+
+- name: Ver si el keyring y el mirrorlist de chaotic ya estan
+  ansible.builtin.command:
+    cmd: "pacman -Qq {{ item }}"
+  loop:
+    - chaotic-keyring
+    - chaotic-mirrorlist
+  register: chaotic_base
+  changed_when: false
+  check_mode: false
+  failed_when: false
+
+- name: Instalar keyring y mirrorlist de chaotic-aur
+  # Se instalan por URL (pacman -U). La guarda de arriba evita reinstalarlos en
+  # cada corrida: instalar por URL no es idempotente por si solo.
+  community.general.pacman:
+    name: "https://cdn-mirror.chaotic.cx/chaotic-aur/{{ item.item }}.pkg.tar.zst"
+    state: present
+  loop: "{{ chaotic_base.results | rejectattr('rc', 'equalto', 0) | list }}"
+  loop_control:
+    label: "{{ item.item }}"
+  become: true
+
+- name: Agregar el repo chaotic-aur a pacman.conf
+  # En bash esto era 'tee -a', que duplicaba la seccion en cada corrida.
+  # blockinfile usa marcadores, asi que reemplaza su propio bloque.
+  ansible.builtin.blockinfile:
+    path: /etc/pacman.conf
+    marker: "# {mark} chaotic-aur (ansible)"
+    block: |
+      [chaotic-aur]
+      Include = /etc/pacman.d/chaotic-mirrorlist
+  become: true
+  register: chaotic_repo
+
+- name: Sincronizar bases despues de agregar chaotic-aur
+  community.general.pacman:
+    update_cache: true
+  become: true
+  when: chaotic_repo is changed
+
+- name: Ver que paquetes de chaotic existen realmente
+  # Sin esta comprobacion, UN nombre que ya no este en el repo tumba la
+  # instalacion de los otros nueve. Ademas el error del modulo es enganoso:
+  # cuando no resuelve el nombre en los repos cae a tratarlo como archivo local
+  # (pacman --upgrade) y reporta "could not find or read package".
+  ansible.builtin.command:
+    cmd: "pacman -Si chaotic-aur/{{ item }}"
+  loop: "{{ chaotic_packages }}"
+  register: chaotic_check
+  changed_when: false
+  check_mode: false
+  failed_when: false
+
+- name: Que sigue - binarios de chaotic
+  ansible.builtin.debug:
+    msg:
+      sigue: >-
+        Instalar {{ chaotic_check.results | selectattr('rc', 'equalto', 0)
+        | map(attribute='item') | list | length }} paquetes binarios de
+        chaotic-aur (incluye el kernel linux-cachyos)
+      tarda: "~2 min en limpio. Es descarga, no compilacion"
+      avance: "ciber-watch en otra terminal"
+
+- name: Instalar binarios de chaotic-aur
+  # Son paquetes de un repo normal: los instala pacman sin compilar nada.
+  #
+  # UNA SOLA transaccion con toda la lista, no un loop por paquete. Se probo el
+  # loop para ver avance en pantalla y fue un error: con ParallelDownloads = 20
+  # en pacman.conf, una transaccion baja hasta 20 paquetes en paralelo, mientras
+  # que N transacciones separadas bajan de uno en uno. Partirlo tiraba a la
+  # basura esa optimizacion, y ademas pierde la resolucion conjunta de
+  # dependencias.
+  #
+  # Para ver el avance dentro de esta tarea esta 'ciber-watch' en otra terminal,
+  # que lee /var/log/pacman.log y da mas detalle que las lineas de Ansible.
+  #
+  # Se pasan los nombres SIN el prefijo "chaotic-aur/": el modulo interpreta un
+  # nombre con "/" como ruta a un archivo y usa -U en lugar de -S.
+  community.general.pacman:
+    name: "{{ chaotic_check.results | selectattr('rc', 'equalto', 0) | map(attribute='item') | list }}"
+    state: present
+  become: true
+  when: chaotic_check.results | selectattr('rc', 'equalto', 0) | list | length > 0
+
+- name: Avisar de paquetes que no estan en chaotic-aur
+  ansible.builtin.debug:
+    msg: >-
+      No estan en chaotic-aur, se omitieron:
+      {{ chaotic_check.results | rejectattr('rc', 'equalto', 0)
+         | map(attribute='item') | list | join(', ') }}.
+      Si los necesitas, muevelos a aur_packages para que yay los compile.
+  when: chaotic_check.results | rejectattr('rc', 'equalto', 0) | list | length > 0
+
+# --- A partir de aqui, compilacion del AUR ---
+
+- name: Ver si yay ya esta instalado
+  ansible.builtin.command:
+    cmd: pacman -Qq yay
+  register: yay_check
+  changed_when: false
+  check_mode: false
+  failed_when: false
+
+- name: Ver que paquetes del AUR faltan
+  ansible.builtin.command:
+    cmd: "pacman -Qq {{ item }}"
+  loop: "{{ aur_packages }}"
+  register: aur_check
+  changed_when: false
+  check_mode: false
+  failed_when: false
+
+- name: Compilar del AUR
+  when: yay_check.rc != 0 or (aur_check.results | rejectattr('rc', 'equalto', 0) | list | length > 0)
+  block:
+    - name: Permitir pacman sin password temporalmente
+      ansible.builtin.copy:
+        dest: /etc/sudoers.d/99-ciber-aur
+        content: "{{ ciber_user }} ALL=(root) NOPASSWD: /usr/bin/pacman\n"
+        owner: root
+        group: root
+        mode: "0440"
+        validate: "visudo -cf %s"
+      become: true
+
+    - name: Clonar yay
+      ansible.builtin.git:
+        repo: https://aur.archlinux.org/yay.git
+        dest: /tmp/ciber-build-yay
+        depth: 1
+        version: master
+      become: false
+      when: yay_check.rc != 0
+
+    - name: Que sigue - compilar yay
+      ansible.builtin.debug:
+        msg:
+          sigue: "Compilar yay desde el AUR con makepkg"
+          tarda: "~40 s. Aqui si es compilacion, no descarga"
+      when: yay_check.rc != 0
+
+    - name: Compilar e instalar yay
+      # makepkg NO puede correr como root: become false a proposito.
+      ansible.builtin.command:
+        cmd: makepkg -si --noconfirm --needed
+        chdir: /tmp/ciber-build-yay
+      become: false
+      when: yay_check.rc != 0
+      changed_when: true
+
+    - name: Que sigue - compilar del AUR
+      ansible.builtin.debug:
+        msg:
+          sigue: >-
+            Compilar del AUR con yay:
+            {{ aur_check.results | rejectattr('rc', 'equalto', 0)
+               | map(attribute='item') | list }}
+          tarda: "Varios minutos. Los paquetes -git y los dkms son los lentos"
+          avance: >-
+            'ciber-watch' muestra los procesos de compilacion en curso cada 5 s
+
+    - name: Instalar paquetes del AUR con yay
+      # No aborta el play si uno falla. Compilar el AUR toma minutos, y perder
+      # una corrida entera (y las tareas que faltaban despues) por UN nombre de
+      # paquete muerto no tiene sentido. Lo que falle se reporta abajo.
+      ansible.builtin.command:
+        cmd: "yay -S --needed --noconfirm --answerclean None --answerdiff None {{ item.item }}"
+      become: false
+      loop: "{{ aur_check.results | rejectattr('rc', 'equalto', 0) | list }}"
+      loop_control:
+        label: "{{ item.item }}"
+      changed_when: true
+      failed_when: false
+      register: yay_result
+
+    - name: Reportar paquetes del AUR que fallaron
+      ansible.builtin.debug:
+        msg:
+          fallaron: >-
+            {{ yay_result.results | rejectattr('rc', 'equalto', 0)
+               | map(attribute='item.item') | list }}
+          que_hacer: >-
+            Busca el nombre correcto con 'yay -Ss <termino>'. Si el paquete ya no
+            existe, quitalo de aur_packages en packages.yml.
+      when: yay_result.results | rejectattr('rc', 'equalto', 0) | list | length > 0
+
+  always:
+    - name: Retirar el permiso NOPASSWD
+      ansible.builtin.file:
+        path: /etc/sudoers.d/99-ciber-aur
+        state: absent
+      become: true
+
+    - name: Limpiar el directorio de compilacion
+      ansible.builtin.file:
+        path: /tmp/ciber-build-yay
+        state: absent
+      become: false

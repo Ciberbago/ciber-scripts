@@ -1,0 +1,62 @@
+---
+# Ocultar lanzadores de la rejilla de aplicaciones de GNOME.
+#
+# Vive en session.yml y no en site.yml porque en el flujo original esto corria
+# desde postinstall.sh, DESPUES del primer login en GNOME. GNOME Shell construye
+# su lista de aplicaciones al arrancar la sesion y observa los directorios XDG;
+# hacerlo antes de que exista la sesion es justo el escenario donde los cambios
+# no se reflejan.
+
+- name: Crear /usr/local/share/applications
+  ansible.builtin.file:
+    path: /usr/local/share/applications
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  become: true
+
+- name: Ver que lanzadores existen
+  ansible.builtin.stat:
+    path: "/usr/share/applications/{{ item }}.desktop"
+  loop: "{{ gnome_hide_apps }}"
+  register: desktop_stat
+
+- name: Copiar los lanzadores a /usr/local/share
+  # Se copia en lugar de editar /usr/share porque pacman sobrescribe /usr/share
+  # en cada actualizacion del paquete.
+  ansible.builtin.copy:
+    src: "/usr/share/applications/{{ item.item }}.desktop"
+    dest: "/usr/local/share/applications/{{ item.item }}.desktop"
+    remote_src: true
+    owner: root
+    group: root
+    mode: "0644"
+    force: false     # no sobrescribir si ya lo editamos
+  loop: "{{ desktop_stat.results | selectattr('stat.exists') | list }}"
+  loop_control:
+    label: "{{ item.item }}"
+  become: true
+
+- name: Marcar los lanzadores como ocultos
+  # En bash era 'sed -i "$ a Hidden=true" .../applications/*', que agregaba la
+  # linea A TODOS los archivos en CADA corrida: al segundo run quedaban dos
+  # Hidden=true, al tercero tres. lineinfile es idempotente.
+  ansible.builtin.lineinfile:
+    path: "/usr/local/share/applications/{{ item.item }}.desktop"
+    regexp: '^Hidden='
+    line: "Hidden=true"
+    insertafter: EOF
+  loop: "{{ desktop_stat.results | selectattr('stat.exists') | list }}"
+  loop_control:
+    label: "{{ item.item }}"
+  become: true
+  notify: Actualizar base de datos de lanzadores
+
+- name: Avisar de lanzadores que no existen
+  ansible.builtin.debug:
+    msg: >-
+      No instalados, se omitieron:
+      {{ desktop_stat.results | rejectattr('stat.exists')
+         | map(attribute='item') | list | join(', ') }}
+  when: desktop_stat.results | rejectattr('stat.exists') | list | length > 0

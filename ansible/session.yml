@@ -1,0 +1,39 @@
+---
+# =============================================================================
+#  Playbook de sesion. Requiere estar dentro de GNOME.
+#
+#  Ejecutar con:  ciber-session
+#  (equivale a: ansible-pull ... ansible/session.yml)
+# =============================================================================
+- name: Configuracion de la sesion de GNOME
+  hosts: workstations_arch
+  gather_facts: true
+
+  pre_tasks:
+    - name: Comprobar que hay sesion DBus
+      ansible.builtin.assert:
+        that: lookup('env', 'DBUS_SESSION_BUS_ADDRESS') | length > 0
+        fail_msg: >-
+          Sin sesion DBus. Entra a GNOME y ejecuta 'ciber-session' desde una
+          terminal grafica (no por SSH ni desde una TTY).
+        quiet: true
+      tags: always
+
+  roles:
+    - { role: gnome_session, tags: [gnome] }
+    # AM registra los lanzadores de las AppImages en la rejilla de GNOME, y eso
+    # solo prende bien con la sesion ya abierta. Antes estaba en site.yml, que
+    # corre sin sesion grafica: era una regresion respecto al flujo de bash,
+    # donde appimages.sh se ejecutaba desde postinstall.sh tras el primer login.
+    - { role: appimages,     tags: [appimages] }
+    # Misma razon: tocar la rejilla de aplicaciones quiere la sesion viva.
+    - { role: hide_apps,     tags: [cleanup, hide] }
+    - { role: firefox,       tags: [firefox] }
+
+  post_tasks:
+    - name: Resumen
+      ansible.builtin.debug:
+        msg:
+          - "Sesion configurada."
+          - "Cierra sesion y vuelve a entrar para que apliquen las extensiones."
+      tags: always

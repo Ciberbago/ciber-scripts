@@ -1,0 +1,83 @@
+#!/usr/bin/env bash
+# Vuelve a aplicar el playbook de Debian.
+#
+#   ciber-apply                      todo
+#   ciber-apply --check --diff       simulacro: dice que cambiaria, sin tocar nada
+#   ciber-apply --tags packages      solo paquetes
+#   ciber-apply --tags docker        solo Docker
+#   ciber-apply --tags systemd       solo unidades de systemd
+#   ciber-apply --list-tags          ver todas las etiquetas
+#
+# Rama fijada cuando se genero este archivo: {{ ciber_branch }}
+# Playbook:   {{ ciber_playbook }}
+# Inventario: {{ ciber_inventory }}  (propio de Debian, ver el comentario del archivo)
+#
+# NO usa 'ansible-pull'. ansible-pull lanza ansible-playbook como subproceso
+# conectado por un pipe, y ese hijo, al no ver una terminal, pasa a
+# block-buffering: la salida se acumula y aparece toda de golpe al final, sin
+# importar que haya del lado de afuera. Aqui se hace a mano lo unico que
+# ansible-pull aportaba (actualizar el checkout) y se llama a ansible-playbook
+# directo, que si imprime tarea por tarea.
+#
+# Generado por Ansible. No editar a mano: se sobrescribe en cada run.
+set -euo pipefail
+
+#<-------No como root------->
+# El bootstrap ya se negaba a correr como root, pero este envoltorio no, y esa
+# omision costo una VM rota.
+#
+# El motivo no es purismo: la ruta del checkout se calcula con
+# lookup('env','HOME') AL GENERAR este archivo. Un 'sudo ciber-apply' hace que
+# el rol cli_tools se regenere a si mismo con DEST=/root/... incrustado, y a
+# partir de ahi el comando ya no funciona para el usuario normal:
+#
+#   fatal: could not create leading directories of '/root/.local/share/...'
+#
+# Ademas ciber_user pasa a ser 'root', asi que los dotfiles, el shell y los
+# grupos se aplican a root en vez de a ti.
+if [[ $EUID -eq 0 ]]; then
+    echo "!!! No corras ciber-apply con sudo." >&2
+    echo "    Ansible pide la contrasena de sudo cuando la necesita." >&2
+    echo "    Corriendolo como root, el checkout y los dotfiles acaban en /root" >&2
+    echo "    y este mismo comando se regenera apuntando ahi." >&2
+    exit 1
+fi
+
+REPO="{{ ciber_git_repo }}"
+RAMA="{{ ciber_branch }}"
+DEST="{{ ciber_checkout_dir }}"
+PLAYBOOK="{{ ciber_playbook }}"
+INVENTARIO="{{ ciber_inventory }}"
+LOGFILE="$HOME/ciber.log"
+
+export ANSIBLE_CONFIG="${DEST}/ansible/ansible.cfg"
+export PYTHONUNBUFFERED=1
+export ANSIBLE_FORCE_COLOR=1
+
+#<-------Actualizar el checkout------->
+# Igual que hacia ansible-pull: el repo remoto manda y lo local se descarta.
+# Si editas archivos dentro de ${DEST} los vas a perder aqui; edita en tu clon
+# de trabajo y haz push.
+echo "==> Actualizando ${DEST} (rama ${RAMA})"
+if [[ -d "${DEST}/.git" ]]; then
+    git -C "$DEST" fetch --prune origin
+    git -C "$DEST" checkout -qf -B "$RAMA" "origin/${RAMA}"
+else
+    git clone --branch "$RAMA" "$REPO" "$DEST"
+fi
+cd "$DEST"
+
+#<-------Aplicar------->
+CMD="ansible-playbook -i ${INVENTARIO} --ask-become-pass"
+CMD+=" --extra-vars 'ciber_branch=${RAMA}'"
+CMD+=" ${PLAYBOOK}"
+for arg in "$@"; do
+    CMD+=" $(printf '%q' "$arg")"
+done
+
+# 'script' da un pseudo-terminal: la salida sale en vivo Y queda en el log.
+if command -v script &>/dev/null; then
+    script -q -a -e -c "$CMD" "$LOGFILE"
+else
+    eval "$CMD"
+fi

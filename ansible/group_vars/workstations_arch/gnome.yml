@@ -1,0 +1,122 @@
+---
+# =============================================================================
+#  GNOME  -  solo aplica en session.yml (necesita sesion grafica activa)
+# =============================================================================
+#
+#  Ojo con el formato de los valores: el modulo dconf usa sintaxis GVariant,
+#  no la de gsettings.
+#      texto     ->  "'prefer-dark'"     (comillas dobles Y simples)
+#      booleano  ->  "true" / "false"
+#      entero    ->  "1"
+#      uint32    ->  "uint32 0"
+#      lista     ->  "@as []"
+#
+#  Para saber el valor exacto de una tecla que ya configuraste a mano:
+#      dconf read /org/gnome/desktop/interface/color-scheme
+# =============================================================================
+
+gnome_dconf:
+  # --- apariencia ---
+  - { key: /org/gnome/desktop/interface/color-scheme,  value: "'prefer-dark'" }
+  - { key: /org/gnome/desktop/interface/gtk-theme,     value: "'adw-gtk3-dark'" }
+  - { key: /org/gnome/desktop/interface/icon-theme,    value: "'Papirus-Dark'" }
+  - { key: /org/gnome/desktop/interface/cursor-theme,  value: "'Bibata-Rainbow-Modern'" }
+  - { key: /org/gnome/desktop/wm/preferences/button-layout, value: "'appmenu:minimize,maximize,close'" }
+
+  # --- sesion: sin confirmacion al apagar, con boton de logout ---
+  - { key: /org/gnome/SessionManager/logout-prompt,    value: "false" }
+  - { key: /org/gnome/shell/always-show-log-out,       value: "true" }
+
+  # --- sin suspender pantalla (idle-delay es uint32) ---
+  - { key: /org/gnome/desktop/session/idle-delay,      value: "uint32 0" }
+
+  # --- un solo workspace ---
+  - { key: /org/gnome/mutter/dynamic-workspaces,       value: "false" }
+  - { key: /org/gnome/desktop/wm/preferences/num-workspaces, value: "1" }
+
+  # --- puntero y reloj ---
+  - { key: /org/gnome/desktop/interface/locate-pointer,     value: "true" }
+  - { key: /org/gnome/desktop/interface/clock-format,       value: "'12h'" }
+  - { key: /org/gnome/desktop/interface/clock-show-seconds, value: "true" }
+  - { key: /org/gnome/desktop/interface/clock-show-weekday, value: "true" }
+
+  # --- capturas de pantalla ---
+  # Antes <Control>minus era un atajo personalizado (custom9) que lanzaba
+  # flameshot. Al quitar flameshot del setup, el atajo se reasigna a la
+  # herramienta integrada de GNOME. Se conserva 'Print', que es el default.
+  - { key: /org/gnome/shell/keybindings/show-screenshot-ui, value: "['<Control>minus', 'Print']" }
+
+  # --- libera el atajo de emoji de ibus para usar la extension ---
+  - { key: /org/freedesktop/ibus/panel/emoji/hotkey,   value: "@as []" }
+
+# Volcados de dconf completos (configuracion de extensiones y atajos).
+# 'src' es relativo a la raiz del repo; si el archivo no existe se omite.
+gnome_dconf_loads:
+  - { path: /org/gnome/shell/extensions/dash-to-panel/, src: dotfiles/arch/extensions/dashtopanel.conf }
+  - { path: /org/gnome/shell/extensions/executor/,      src: dotfiles/arch/extensions/executor.conf }
+  - { path: /org/gnome/shell/extensions/bring-out-submenu-of-power-off-logout/, src: dotfiles/arch/extensions/poweroffmenu.conf }
+  - { path: /org/gnome/desktop/wm/keybindings/,         src: dotfiles/arch/keybindings.dconf }
+  - { path: /org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/, src: dotfiles/arch/custom-values.dconf }
+
+# Los atajos personalizados necesitan ademas la LISTA de rutas activas, que es
+# una sola tecla y no un volcado. El archivo la trae ya en formato GVariant.
+gnome_custom_keybindings_list_src: dotfiles/arch/custom-keys.dconf
+
+# Extensiones de GNOME Shell, por UUID.
+#
+# Se usan UUIDs y no los IDs numericos de extensions.gnome.org a proposito: el
+# UUID es lo que reporta 'gext list' en tu propia maquina, es estable, y se lee
+# solo. Con IDs numericos, un numero equivocado instala la extension equivocada
+# en silencio y no hay forma de notarlo leyendo el archivo.
+#
+# Para agregar una: instalala a mano, corre 'gext list' y pega el UUID aqui.
+gnome_extensions:
+  - { uuid: "AlphabeticalAppGrid@stuarthayhurst",       name: "Alphabetical App Grid" }
+  - { uuid: "appindicatorsupport@rgcjonas.gmail.com",   name: "AppIndicator Support" }
+  - { uuid: "bluetooth-battery@michalw.github.com",     name: "Bluetooth battery indicator" }
+  - { uuid: "blur-my-shell@aunetx",                     name: "Blur my Shell" }
+  - { uuid: "BringOutSubmenuOfPowerOffLogoutButton@pratap.fastmail.fm", name: "Bring Out Submenu Of Power Off" }
+  - { uuid: "copyous@boerdereinar.dev",                 name: "Copyous" }
+  - { uuid: "dash-to-panel@jderose9.github.com",        name: "Dash to Panel" }
+  - { uuid: "emoji-copy@felipeftn",                     name: "Emoji Copy" }
+  - { uuid: "executor@raujonas.github.io",              name: "Executor" }
+  - { uuid: "quick-settings-audio-panel@rayzeq.github.io",              name: "Quick Settings Audio Panel" }
+  - { uuid: "quicksettings-audio-devices-hider@marcinjahn.com",         name: "Audio Devices Hider" }
+  - { uuid: "quicksettings-audio-devices-renamer@marcinjahn.com",       name: "Audio Devices Renamer" }
+
+# Extensiones que NO estan en extensions.gnome.org y hay que compilar del repo.
+# Se clonan y se ejecuta 'build'. Con la guarda de 'uuid', si ya esta instalada
+# no se vuelve a compilar.
+#
+# Para agregar otra, una entrada aqui: no hay codigo que tocar.
+gnome_extensions_git:
+  - uuid: "gradia-integration@alexandervanhee.github.io"
+    name: "Gradia Capture"
+    repo: "https://github.com/AlexanderVanhee/gradia-capture.git"
+    build: "./build.sh -i"
+
+# Lanzadores a ocultar del menu de aplicaciones. Se copia el .desktop a
+# /usr/local/share/applications con Hidden=true, para no tocar /usr/share
+# (que pacman sobrescribe en cada actualizacion).
+gnome_hide_apps:
+  - assistant
+  - avahi-discover
+  # Estos tres son nombres de archivo .desktop sin extension. Si el rol los
+  # reporta como "no instalados", el nombre real es otro: buscalo con
+  #   ls /usr/share/applications | grep -iE 'lstopo|micro|fresh'
+  - lstopo          # "Hardware locality lstopo", del paquete hwloc
+  - micro
+  - fresh
+  - bssh
+  - btop
+  - bvnc
+  - cmake-gui
+  - designer
+  - fish
+  - linguist
+  - nnn
+  - qdbusviewer
+  - qv4l2
+  - qvidcap
+  - scrcpy
+  - scrcpy-console

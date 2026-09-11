@@ -1,0 +1,130 @@
+---
+# fish: aliases, funciones y plugins.
+#
+# El bug original aqui fue de formato: los 15 aliases estaban en UNA sola linea
+# fisica de 3185 caracteres separados por espacios, asi que fish parseaba todo lo
+# que seguia al primer "&& funcsave limpiar" como ARGUMENTOS de funcsave y solo
+# se guardaba 1 de 15. Con una plantilla generada desde una lista YAML eso ya no
+# puede pasar: cada alias es una entrada, y la plantilla pone los saltos de linea.
+
+- name: Crear carpetas de fish
+  ansible.builtin.file:
+    path: "{{ ciber_home }}/.config/fish/{{ item }}"
+    state: directory
+    mode: "0755"
+  loop: [conf.d, functions, completions]
+  become: false
+
+- name: Instalar config.fish base
+  ansible.builtin.copy:
+    src: "{{ ciber_repo_root }}/dotfiles/common/config.fish"
+    dest: "{{ ciber_home }}/.config/fish/config.fish"
+    mode: "0644"
+  become: false
+
+- name: Generar aliases y funciones
+  # Va a conf.d/ y no a functions/ a proposito: funcsave escribe un archivo por
+  # funcion que despues nunca se sincroniza con el repo, asi que un alias que
+  # borras del repo seguiria vivo en la maquina para siempre. Con un solo archivo
+  # generado, el repo es la unica verdad.
+  ansible.builtin.template:
+    src: ciber.fish.j2
+    dest: "{{ ciber_home }}/.config/fish/conf.d/ciber.fish"
+    mode: "0644"
+  become: false
+
+- name: Limpiar funciones sueltas que dejo el script viejo
+  # El bash guardaba estos con funcsave; ahora los define conf.d/ciber.fish.
+  # Si se quedan, las dos definiciones compiten y gana la de functions/.
+  ansible.builtin.file:
+    path: "{{ ciber_home }}/.config/fish/functions/{{ item.name }}.fish"
+    state: absent
+  loop: "{{ fish_aliases + fish_functions }}"
+  loop_control:
+    label: "{{ item.name }}"
+  become: false
+
+- name: Fijar EDITOR como variable universal de fish
+  ansible.builtin.command:
+    cmd: "fish -c 'set -Ux EDITOR {{ fish_editor }}'"
+  become: false
+  register: fish_editor_result
+  changed_when: false
+  # 'set -U' ya es idempotente; no se reporta como cambio para no ensuciar el diff.
+
+- name: Comprobar que fisher esta disponible
+  ansible.builtin.command:
+    cmd: "fish -c 'type -q fisher'"
+  become: false
+  register: fisher_check
+  changed_when: false
+  check_mode: false
+  failed_when: false
+
+- name: Instalar plugins de fish
+  ansible.builtin.command:
+    cmd: "fish -c 'fisher install {{ item }}'"
+  become: false
+  loop: "{{ fish_plugins }}"
+  when: fisher_check.rc == 0
+  register: fisher_install
+  changed_when: "'Installing' in (fisher_install.stdout | default(''))"
+
+- name: Avisar si fisher no esta
+  ansible.builtin.debug:
+    msg: "fisher no esta disponible: se omitieron los plugins {{ fish_plugins | join(', ') }}"
+  when: fisher_check.rc != 0
+
+# --- Variables universales de plugins (tide y compania) ---
+#
+# Van DESPUES de instalar los plugins: si se aplicaran antes, la instalacion de
+# tide podria sobrescribir sus propias variables con los defaults.
+
+- name: Ver que archivos de variables universales existen
+  ansible.builtin.stat:
+    path: "{{ ciber_repo_root }}/{{ item.src }}"
+  loop: "{{ fish_universal_files | default([]) }}"
+  loop_control:
+    label: "{{ item.src }}"
+  register: fishuni_stat
+
+- name: Avisar de archivos de variables que faltan
+  ansible.builtin.debug:
+    msg: >-
+      No existen y se omiten:
+      {{ fishuni_stat.results | rejectattr('stat.exists')
+         | map(attribute='item.src') | list | join(', ') }}.
+      Generalos desde una maquina ya configurada con
+      'fish scripts/common/fish-dump-universals.fish > <archivo>'.
+  when: fishuni_stat.results | rejectattr('stat.exists') | list | length > 0
+
+- name: Volcar las variables universales actuales
+  # El mismo script que genera el archivo sirve para leer el estado actual, asi
+  # que la comparacion es exacta: mismo formato y mismo orden en los dos lados.
+  ansible.builtin.command:
+    cmd: >-
+      fish {{ ciber_repo_root }}/scripts/common/fish-dump-universals.fish
+      {{ item.item.patron | default('') }}
+  loop: "{{ fishuni_stat.results | selectattr('stat.exists') | list }}"
+  loop_control:
+    label: "{{ item.item.nombre }}"
+  become: false
+  register: fishuni_actual
+  changed_when: false
+  check_mode: false
+  failed_when: false
+
+- name: Aplicar las variables universales declaradas
+  # Solo si difieren: 'set -U' escribe en ~/.config/fish/fish_variables, y
+  # reaplicarlo cuando ya coincide seria ruido en el reporte de cambios.
+  ansible.builtin.command:
+    cmd: "fish {{ ciber_repo_root }}/{{ item.item.item.src }}"
+  loop: "{{ fishuni_actual.results | default([]) }}"
+  loop_control:
+    label: "{{ item.item.item.nombre }}"
+  become: false
+  when: >-
+    item.stdout | default('') | trim
+    != lookup('file', ciber_repo_root ~ '/' ~ item.item.item.src) | trim
+  changed_when: true
+

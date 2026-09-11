@@ -1,0 +1,11 @@
+# Archivos de entorno con secretos. No deben entrar NUNCA al repo: los tokens
+# viven en /etc/ciber/*.env (unidades de sistema) y en ~/.config/ciber/*.env
+# (unidades de usuario), fuera del arbol del repositorio.
+#
+# Esta linea es una red de seguridad, no el mecanismo: el mecanismo es que esos
+# archivos esten fuera del repo. Un archivo ignorado que viviera aqui dentro se
+# perderia igual, porque 'ciber-apply' hace 'git checkout -qf' sobre el clon.
+*.env
+
+# Logs que dejan el bootstrap y ciber-apply
+ciber*.log

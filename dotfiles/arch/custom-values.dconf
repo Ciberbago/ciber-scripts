@@ -1,0 +1,39 @@
+[custom0]
+binding='<Super>t'
+command='terminator'
+name='Terminal'
+
+[custom1]
+binding='<Super>e'
+command='nautilus'
+name='Archivos'
+
+[custom2]
+binding='<Control><Alt>l'
+command='pkill clicker'
+name='autoclick cancel'
+
+[custom3]
+binding='<Alt>l'
+command='clicker -d 25'
+name='l click'
+
+[custom4]
+binding='<Alt>r'
+command='clicker -d 25 -b Right'
+name='r click'
+
+[custom5]
+binding='<Control>F8'
+command='obs-cmd recording start'
+name='OBS Start record'
+
+[custom6]
+binding='<Shift><Control>Escape'
+command='resources'
+name='task manager'
+
+[custom7]
+binding='<Control>F9'
+command='obs-cmd recording stop'
+name='OBS Stop record'

@@ -1,0 +1,7 @@
+---
+- name: Actualizar base de datos de lanzadores
+  ansible.builtin.command:
+    cmd: update-desktop-database /usr/local/share/applications
+  become: true
+  changed_when: true
+  failed_when: false

@@ -1,0 +1,12 @@
+---
+# Traduccion de la arquitectura que reporta Ansible a la que usa Debian en la
+# linea 'deb [arch=...]'. Sin esto habria que escribir 'amd64' a mano y el repo
+# quedaria mal en cualquier maquina ARM (una Raspberry, por ejemplo), con un
+# 'apt update' que falla diciendo que no hay Release para esa arquitectura.
+docker_deb_arch_map:
+  x86_64: amd64
+  aarch64: arm64
+  armv7l: armhf
+
+docker_deb_arch: >-
+  {{ docker_deb_arch_map[ansible_facts.architecture] | default(ansible_facts.architecture) }}

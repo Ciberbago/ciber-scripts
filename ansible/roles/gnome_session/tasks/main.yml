@@ -1,0 +1,243 @@
+---
+# GNOME: dconf, volcados de configuracion y extensiones.
+#
+# Todo esto necesita la sesion DBus del usuario, que es la razon por la que vive
+# en session.yml y no en site.yml. En un Arch recien instalado no hay sesion, y
+# gsettings/dconf/gext fallan de formas confusas si se ejecutan ahi.
+
+- name: Aplicar ajustes de dconf
+  # El modulo dconf es idempotente: lee el valor actual y solo escribe si difiere,
+  # asi que un segundo run reporta 0 cambios. 'gsettings set' siempre escribia.
+  community.general.dconf:
+    key: "{{ item.key }}"
+    value: "{{ item.value }}"
+    state: present
+  loop: "{{ gnome_dconf }}"
+  loop_control:
+    label: "{{ item.key }}"
+  become: false
+
+- name: Comprobar que los volcados de dconf existen en el repo
+  ansible.builtin.stat:
+    path: "{{ ciber_repo_root }}/{{ item.src }}"
+  loop: "{{ gnome_dconf_loads }}"
+  loop_control:
+    label: "{{ item.src }}"
+  register: dumps_stat
+  become: false
+
+- name: Cargar volcados de dconf
+  # 'dconf load' no tiene forma de consultar el estado previo, asi que no se
+  # puede hacer idempotente de verdad: se marca changed_when: false para que no
+  # ensucie el resumen. El script viejo ademas fallaba cuando el archivo no
+  # existia (el caso de tilix, que ya no se instala); aqui se omite con aviso.
+  ansible.builtin.shell:
+    cmd: "dconf load {{ item.item.path }} < {{ ciber_repo_root }}/{{ item.item.src }}"
+  loop: "{{ dumps_stat.results | selectattr('stat.exists') | list }}"
+  loop_control:
+    label: "{{ item.item.path }}"
+  become: false
+  changed_when: false
+
+- name: Avisar de volcados que faltan
+  ansible.builtin.debug:
+    msg: >-
+      No existen, se omitieron:
+      {{ dumps_stat.results | rejectattr('stat.exists')
+         | map(attribute='item.src') | list | join(', ') }}
+  when: dumps_stat.results | rejectattr('stat.exists') | list | length > 0
+
+- name: Leer la lista de atajos personalizados
+  # Los atajos custom de GNOME son dos cosas: los valores (un volcado, arriba) y
+  # la LISTA de rutas activas, que es una sola tecla en formato GVariant.
+  # Si solo se carga el volcado, los atajos existen pero no estan activos.
+  ansible.builtin.slurp:
+    src: "{{ ciber_repo_root }}/{{ gnome_custom_keybindings_list_src }}"
+  register: custom_keys_raw
+  become: false
+
+- name: Activar la lista de atajos personalizados
+  community.general.dconf:
+    key: /org/gnome/settings-daemon/plugins/media-keys/custom-keybindings
+    value: "{{ custom_keys_raw.content | b64decode | trim }}"
+    state: present
+  become: false
+
+- name: Ver si gext esta disponible
+  ansible.builtin.command:
+    cmd: which gext
+  register: gext_check
+  changed_when: false
+  check_mode: false
+  failed_when: false
+
+- name: Ver que extensiones ya estan instaladas
+  # El directorio existe si la extension esta desplegada, este habilitada o no.
+  ansible.builtin.stat:
+    path: "{{ ciber_home }}/.local/share/gnome-shell/extensions/{{ item.uuid }}"
+  loop: "{{ gnome_extensions }}"
+  loop_control:
+    label: "{{ item.uuid }}"
+  register: ext_stat
+
+- name: Que sigue - extensiones de GNOME
+  ansible.builtin.debug:
+    msg:
+      sigue: >-
+        Instalar {{ ext_stat.results | rejectattr('stat.exists')
+                    | map(attribute='item.name') | list }}
+      tarda: "~2 s por extension, es descarga desde extensions.gnome.org"
+      importante: >-
+        No se ven en la app de Extensiones hasta que cierres sesion y vuelvas a
+        entrar: se instalan a disco y el shell no las relee en caliente.
+  when:
+    - gext_check.rc == 0
+    - ext_stat.results | rejectattr('stat.exists') | list | length > 0
+
+- name: Instalar extensiones de GNOME Shell
+  # Por UUID, no por ID numerico: gext acepta ambos y el UUID es verificable
+  # leyendo el archivo. Con --filesystem porque el backend de DBus abre un
+  # dialogo de confirmacion por extension, imposible de automatizar.
+  ansible.builtin.command:
+    cmd: "gext --filesystem install {{ item.item.uuid }}"
+  loop: "{{ ext_stat.results | rejectattr('stat.exists') | list }}"
+  loop_control:
+    label: "{{ item.item.uuid }}"
+  become: false
+  when: gext_check.rc == 0
+  register: gext_install
+  changed_when: true
+  failed_when: false
+
+- name: Reportar extensiones que fallaron
+  # NO filtrar con selectattr('rc','defined'): un fallo de become o de conexion
+  # revienta antes de ejecutar el modulo y su resultado no trae 'rc'. Ese filtro
+  # descartaba justo esos casos y el reporte se saltaba en silencio.
+  ansible.builtin.debug:
+    msg:
+      fallaron: >-
+        {{ gext_install.results | default([]) | rejectattr('rc', 'equalto', 0)
+           | map(attribute='item.item.uuid') | list }}
+      motivos: >-
+        {{ gext_install.results | default([]) | rejectattr('rc', 'equalto', 0)
+           | map(attribute='msg') | list | unique }}
+  when: gext_install.results | default([]) | rejectattr('rc', 'equalto', 0) | list | length > 0
+
+- name: Avisar si gext no esta
+  ansible.builtin.debug:
+    msg: >-
+      gext no esta instalado (paquete AUR gnome-extensions-cli): se omitieron
+      las extensiones. Corre 'ciber-apply --tags aur' primero.
+  when: gext_check.rc != 0
+
+# --- Extensiones que hay que compilar del repo ---
+#
+# Las que no estan en extensions.gnome.org. Se clona y se corre su script de
+# build. La guarda por UUID evita recompilar en cada corrida.
+
+- name: Ver que extensiones de git ya estan instaladas
+  ansible.builtin.stat:
+    path: "{{ ciber_home }}/.local/share/gnome-shell/extensions/{{ item.uuid }}"
+  loop: "{{ gnome_extensions_git | default([]) }}"
+  loop_control:
+    label: "{{ item.uuid }}"
+  register: extgit_stat
+
+- name: Compilar extensiones desde su repo
+  when: extgit_stat.results | rejectattr('stat.exists') | list | length > 0
+  block:
+    - name: Que sigue - extensiones desde git
+      ansible.builtin.debug:
+        msg:
+          sigue: >-
+            Clonar y compilar:
+            {{ extgit_stat.results | rejectattr('stat.exists')
+               | map(attribute='item.name') | list }}
+          nota: >-
+            Si el script de build pide sudo, va a fallar aqui: Ansible no tiene
+            terminal para el prompt. El reporte de abajo lo dira.
+
+    - name: Clonar el repo de la extension
+      ansible.builtin.git:
+        repo: "{{ item.item.repo }}"
+        dest: "/tmp/ciber-ext-{{ item.item.uuid }}"
+        depth: 1
+        version: "{{ item.item.version | default('HEAD') }}"
+      loop: "{{ extgit_stat.results | rejectattr('stat.exists') | list }}"
+      loop_control:
+        label: "{{ item.item.uuid }}"
+      become: false
+
+    - name: Compilar e instalar la extension
+      ansible.builtin.command:
+        cmd: "{{ item.item.build }}"
+        chdir: "/tmp/ciber-ext-{{ item.item.uuid }}"
+      loop: "{{ extgit_stat.results | rejectattr('stat.exists') | list }}"
+      loop_control:
+        label: "{{ item.item.uuid }}"
+      become: false
+      changed_when: true
+      failed_when: false
+      register: extgit_build
+
+    - name: Reportar extensiones de git que fallaron
+      ansible.builtin.debug:
+        msg:
+          fallaron: >-
+            {{ extgit_build.results | default([]) | rejectattr('rc', 'equalto', 0)
+               | map(attribute='item.item.uuid') | list }}
+          motivos: >-
+            {{ extgit_build.results | default([]) | rejectattr('rc', 'equalto', 0)
+               | map(attribute='stderr') | list | unique }}
+      when: extgit_build.results | default([]) | rejectattr('rc', 'equalto', 0) | list | length > 0
+
+  always:
+    - name: Limpiar los clones
+      ansible.builtin.file:
+        path: "/tmp/ciber-ext-{{ item.uuid }}"
+        state: absent
+      loop: "{{ gnome_extensions_git | default([]) }}"
+      loop_control:
+        label: "{{ item.uuid }}"
+      become: false
+
+# --- Habilitar ---
+#
+# 'gext --filesystem install' despliega la extension y la habilita, pero las que
+# se compilan desde su repo NO quedan activadas: su build solo copia archivos.
+# Esta parte cierra las dos rutas por igual y es idempotente.
+
+- name: Ver que extensiones estan habilitadas
+  ansible.builtin.command:
+    cmd: gnome-extensions list --enabled
+  register: ext_enabled
+  changed_when: false
+  check_mode: false
+  failed_when: false
+
+- name: Habilitar las extensiones que falten
+  ansible.builtin.command:
+    cmd: "gnome-extensions enable {{ item }}"
+  loop: >-
+    {{ (gnome_extensions | map(attribute='uuid') | list
+        + gnome_extensions_git | default([]) | map(attribute='uuid') | list)
+       | difference(ext_enabled.stdout_lines | default([])) }}
+  become: false
+  changed_when: true
+  failed_when: false
+  register: ext_enable
+
+- name: Reportar extensiones que no se pudieron habilitar
+  # Habilitar una extension recien instalada puede fallar porque GNOME Shell
+  # todavia no la conoce: no relee el disco en caliente. Eso se resuelve solo al
+  # cerrar sesion y volver a entrar, y en la siguiente corrida ya no aparece.
+  ansible.builtin.debug:
+    msg:
+      no_habilitadas: >-
+        {{ ext_enable.results | default([]) | rejectattr('rc', 'equalto', 0)
+           | map(attribute='item') | list }}
+      por_que: >-
+        Normal si se acaban de instalar: GNOME Shell no las conoce hasta que
+        cierres sesion y vuelvas a entrar. Corre 'ciber-session --tags gnome'
+        despues del login y deberian quedar activas.
+  when: ext_enable.results | default([]) | rejectattr('rc', 'equalto', 0) | list | length > 0

@@ -1,0 +1,55 @@
+---
+# =============================================================================
+#  SYSTEMD  -  agregar una unidad nueva son 2 pasos, ninguno toca codigo
+# =============================================================================
+#
+#  1. Pon el archivo en  systemd/debian/  del repo. El rol lo descubre por glob
+#     y lo copia a /etc/systemd/system/. Si es una unidad de USUARIO
+#     (systemctl --user), va en  systemd/debian/user/  y termina en
+#     ~/.config/systemd/user/.
+#
+#  2. Si debe arrancar en boot, agrega su nombre a la lista que corresponda.
+#     Si no lo agregas, el archivo queda instalado pero deshabilitado.
+# =============================================================================
+
+# Carpeta del repo de donde salen las unidades de esta distro.
+systemd_units_dir: systemd/debian
+
+# Unidades de sistema a habilitar en boot. Acepta las que vienen con los
+# paquetes (docker, tailscaled) y las del repo (backup).
+systemd_units_enabled:
+  - backup.timer
+  - docker.service
+  - containerd.service
+  - tailscaled.service
+
+# Unidades a habilitar Y arrancar de una vez (no esperan al reboot). En un
+# servidor esto importa mas que en el escritorio: no se reinicia por gusto.
+systemd_units_started:
+  - docker.service
+
+# Unidades de usuario (systemctl --user). Salen de systemd/debian/user/
+#
+# BUG ORIGINAL: el script hacia 'systemctl --user enable --now todoist-check.timer'
+# pero el archivo que descargaba se llamaba 'todoist-precise.timer'. El enable
+# fallaba en TODAS las corridas y el timer nunca se activo. Aqui el nombre sale
+# de esta lista y el rol comprueba que la unidad exista antes de habilitarla.
+systemd_user_units_enabled:
+  - todoist-precise.timer
+
+# Unidades de usuario a habilitar Y arrancar.
+systemd_user_units_started:
+  - todoist-precise.timer
+
+# Linger: permite que la instancia de usuario de systemd arranque en boot y siga
+# viva sin ninguna sesion abierta.
+#
+# ESTO CAMBIA EL COMPORTAMIENTO ACTUAL. Comprobado en el servidor el 2026-08-28:
+# 'loginctl show-user <usuario> -p Linger' devolvia Linger=no. Es decir, hoy el
+# timer de todoist solo corre mientras hay una sesion SSH abierta; tras un
+# reinicio sin login no dispara hasta que entras. Como se entra seguido y
+# notifica cada minuto, el hueco pasa desapercibido.
+#
+# Con linger activo el notificador corre 24/7, que es lo que se espera de el.
+# Ponlo en false si prefieres dejarlo exactamente como esta hoy.
+systemd_user_linger: true

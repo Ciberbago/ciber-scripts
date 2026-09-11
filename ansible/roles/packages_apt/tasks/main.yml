@@ -1,0 +1,90 @@
+---
+# Paquetes de los repos oficiales de Debian.
+#
+# Misma idea que el rol 'packages' de Arch: antes de instalar se comprueba QUE
+# NOMBRES EXISTEN. Sin eso, un solo nombre mal escrito o un paquete que
+# desaparecio entre releases hace fallar la instalacion de los otros veinte, y
+# apt no dice cual de todos fue.
+#
+# La parte que NO se reimplementa es la resolucion de dependencias: apt ya la
+# hace, y el script viejo tenia una clasificacion casera que sobraba.
+
+# Quitar ANTES de instalar, por la misma razon que en Arch: si un paquete nuevo
+# entra en conflicto con uno viejo, apt aborta la transaccion completa antes de
+# llegar a cualquier limpieza posterior.
+- name: Quitar paquetes no deseados
+  ansible.builtin.apt:
+    name: "{{ apt_remove }}"
+    state: absent
+    purge: true
+  become: true
+  when: apt_remove | length > 0
+
+- name: Ver que paquetes ya estan instalados
+  # Una sola consulta a dpkg. Preguntar paquete por paquete serian 25
+  # invocaciones solo para averiguar que hay que hacer.
+  ansible.builtin.command:
+    cmd: dpkg-query -W -f=${Package}\n
+  register: dpkg_installed
+  changed_when: false
+  check_mode: false
+  failed_when: false
+
+- name: Listar los paquetes disponibles en los repos
+  # 'apt-cache pkgnames' saca los nombres del indice ya descargado: no toca la
+  # red y tarda menos de un segundo.
+  ansible.builtin.command:
+    cmd: apt-cache pkgnames
+  register: apt_disponibles
+  changed_when: false
+  check_mode: false
+
+- name: Separar pendientes e inexistentes
+  ansible.builtin.set_fact:
+    apt_pendientes: "{{ apt_packages | difference(dpkg_installed.stdout_lines) }}"
+    apt_inexistentes: >-
+      {{ apt_packages | difference(dpkg_installed.stdout_lines)
+         | difference(apt_disponibles.stdout_lines) }}
+
+- name: Avisar de paquetes que no existen en ningun repo
+  # El caso tipico en Debian es un paquete que solo esta en backports o que
+  # cambio de nombre entre releases (por ejemplo 'exa', que en Debian 13 quedo
+  # reemplazado por 'eza'). Se avisa y se sigue con los demas.
+  ansible.builtin.debug:
+    msg:
+      no_existen: "{{ apt_inexistentes }}"
+      que_hacer: >-
+        Revisa el nombre con 'apt-cache search <termino>'. Si el paquete vive en
+        backports hay que habilitar ese repo; si cambio de nombre, corrigelo en
+        group_vars/workstations_debian/packages.yml. Se instala todo lo demas.
+  when: apt_inexistentes | length > 0
+
+- name: Que sigue - paquetes oficiales
+  # Ansible no imprime de forma fiable el banner de la tarea siguiente antes de
+  # ejecutarla: con profile_tasks activo, lo ultimo en pantalla durante una
+  # tarea larga es la linea de tiempos de la ANTERIOR. Por eso este aviso es una
+  # tarea propia: imprime y termina antes de que arranque la lenta.
+  ansible.builtin.debug:
+    msg:
+      sigue: >-
+        Instalar {{ apt_pendientes | difference(apt_inexistentes) | length }}
+        paquetes nuevos (de {{ apt_packages | length }} declarados)
+      cuales: "{{ apt_pendientes | difference(apt_inexistentes) }}"
+      por_que_no_imprime: >-
+        Ansible captura el stdout de apt y lo suelta al terminar. Para ver
+        paquete por paquete: 'ciber-watch' en otra terminal o por otra sesion SSH.
+
+- name: Instalar paquetes de los repos oficiales
+  # Se pasa la lista completa menos los inexistentes: los ya instalados son
+  # no-ops con state: present, y asi un nombre muerto no tumba a los demas.
+  ansible.builtin.apt:
+    name: "{{ apt_packages | difference(apt_inexistentes) }}"
+    state: present
+  become: true
+
+- name: Quitar dependencias huerfanas
+  ansible.builtin.apt:
+    autoremove: true
+    purge: true
+  become: true
+  when: apt_autoremove | bool

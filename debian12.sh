@@ -1,84 +1,159 @@
-SOURCE_LIST="/etc/apt/sources.list"
+#!/usr/bin/env bash
+#
+# Bootstrap de Debian 12 -> Ansible
+#
+#   wget -O - url.jaimelopez.top/debian | bash
+#
+# Lo unico que hace este script es dejar la maquina en condiciones de correr
+# Ansible, y despues delegar todo el trabajo real al playbook. A partir de aqui,
+# para cambiar la configuracion se editan los archivos de
+# ansible/group_vars/workstations_debian/, no este script.
+#
+# Despues de la primera corrida queda instalado el comando:
+#   ciber-apply      vuelve a aplicar el playbook
+#
+# No hay 'ciber-session' como en Arch: eso configura GNOME y aqui no hay
+# escritorio.
+#
+# La version anterior en bash puro sigue en legacy/debian-bash.sh como respaldo.
+#
+# BUG ORIGINAL: el script no tenia shebang. Con 'wget -O - ... | bash' daba
+# igual, pero al descargarlo y ejecutarlo se corria con /bin/sh (dash), donde
+# los arrays y '[[ ]]' que usaba no existen.
+set -euo pipefail
 
-# Hacer respaldo
-sudo cp "$SOURCE_LIST" "$SOURCE_LIST.bak"
+REPO="${CIBER_REPO:-https://github.com/Ciberbago/ciber-scripts.git}"
+RAMA="${CIBER_BRANCH:-main}"
+DEST="${CIBER_DIR:-$HOME/.local/share/ciber-scripts}"
+LOGFILE="$HOME/ciber-debian.log"
 
-# Reescribir correctamente cada línea que empiece con deb o deb-src
-sudo sed -i -E \
-    's|^(deb(-src)?\s+\S+\s+\S+)\s+.*|\1 main non-free non-free-firmware|' \
-    "$SOURCE_LIST"
+# OJO: aqui NO va 'exec > >(tee -a "$LOGFILE") 2>&1', que es justo lo que hacia
+# el script viejo.
+#
+# Eso manda stdout a un pipe en lugar de a la terminal, y Python (o sea Ansible)
+# al detectar que no habla con una TTY pasa de line-buffered a block-buffered:
+# acumula toda la salida y la suelta al final. El efecto es que despues del
+# prompt de BECOME la pantalla se queda muerta varios minutos y luego aparece
+# todo de golpe.
+#
+# La parte del bootstrap si pasa por tee (son cuatro lineas, no importa), pero
+# el playbook corre bajo 'script', que le da un pseudo-terminal: Ansible cree
+# que habla con una terminal real, imprime tarea por tarea, conserva colores, y
+# el log queda completo igual.
+echo "=== Bootstrap: $(date) ===" | tee -a "$LOGFILE"
 
-# Actualizar los repos
-sudo apt update
+#<-------Comprobaciones------->
+if [[ ! -f /etc/debian_version ]]; then
+    echo "!!! Esto es para Debian" >&2
+    exit 1
+fi
+if [[ $EUID -eq 0 ]]; then
+    echo "!!! No lo corras como root: Ansible pide sudo cuando lo necesita, y" >&2
+    echo "    varias tareas (dotfiles, fisher, plugins de neovim, unidades de" >&2
+    echo "    usuario) tienen que escribir en el \$HOME de TU usuario, no en" >&2
+    echo "    /root." >&2
+    exit 1
+fi
+if ! sudo -v; then
+    echo "!!! Este usuario necesita sudo" >&2
+    exit 1
+fi
 
+#<-------Dependencias minimas------->
+echo "==> Instalando ansible y git"
+sudo apt-get update
+sudo apt-get install -y --no-install-recommends ansible git curl ca-certificates
 
-#Instalacion de paquetes
-sudo apt install -y nala
-sudo nala install -y bat curl duf exa fish fuse fzf gdu git htop intel-media-va-driver-non-free lm-sensors lshw micro nload powertop radeontop rclone time tmux unattended-upgrades wakeonlan 
+#<-------Colecciones de Ansible------->
+# Los roles compartidos con Arch usan community.general y el callback
+# profile_tasks vive en ansible.posix. Debian empaqueta el metapaquete 'ansible'
+# (que ya trae las dos), pero si alguien instalo solo ansible-core no estarian.
+echo "==> Instalando colecciones de Ansible"
+tmp_req="$(mktemp)"
+curl -fsSL "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/${RAMA}/ansible/requirements.yml" \
+    -o "$tmp_req"
+ansible-galaxy collection install -r "$tmp_req"
+rm -f "$tmp_req"
 
-#<-------Variables------->
-dotfiles='https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/dotfiles'
-scriptsv='https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts'
-sdconfig='https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/systemd'
-interfaz=$(ip r | grep default | cut -d ' ' -f 5 | head -n1)
+#<-------Clonar el repo------->
+# Antes esto lo hacia 'ansible-pull', pero ansible-pull lanza ansible-playbook
+# como subproceso conectado por un PIPE, y ese hijo, al no ver una terminal,
+# pasa a block-buffering: la salida se acumula y aparece toda de golpe al final.
+# Lo unico que ansible-pull aportaba era clonar o actualizar el checkout: son
+# tres lineas de git.
+#
+# Los archivos de configuracion salen de este clon, NO de URLs. Eso elimina de
+# raiz la clase de bug mas comun del script viejo: 'wget -O' trunca el destino
+# antes de saber si la descarga sirvio, asi que un typo en una URL dejaba un
+# archivo de 0 bytes y algo se rompia cuarenta lineas despues.
+echo "==> Clonando el repo en ${DEST} (rama ${RAMA})"
+if [[ -d "${DEST}/.git" ]]; then
+    git -C "$DEST" fetch --prune origin
+    git -C "$DEST" checkout -qf -B "$RAMA" "origin/${RAMA}"
+else
+    git clone --branch "$RAMA" "$REPO" "$DEST"
+fi
+cd "$DEST"
 
-#Crear carpetas
-mkdir -p ~/scripts
-mkdir -p ~/.config/micro
-mkdir -p ~/.config/nvim/vim-plug
-mkdir -p ~/.config/nvim/autoload/plugged
-mkdir -p ~/.config/systemd/user
-sudo mkdir -p /opt/docker
-#Descarga de scripts
-wget -O /usr/local/bin/backup.sh ${scriptsv}/backupdebian.sh
-wget -O /usr/local/bin/todoist.sh ${scriptsv}/todoist.sh
-#wget -O ~/scripts/portainerupdate.sh ${scriptsv}/portainerupdate.sh
-wget -O ~/.config/nvim/init.vim ${dotfiles}/init.vim
-wget -O ~/.config/nvim/vim-plug/plugins.vim ${dotfiles}/plugins.vim
-wget -O ~/.config/nvim/autoload/plug.vim https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-wget -O ~/.config/systemd/user/todoist-precise.service ${sdconfig}/todoist-precise.service
-wget -O ~/.config/systemd/user/todoist-precise.timer ${sdconfig}/todoist-precise.timer
-sudo wget -O /etc/systemd/system/backup.service ${sdconfig}/backup.service
-sudo wget -O /etc/systemd/system/backup.timer ${sdconfig}/backup.timer
-sudo wget -O /usr/local/bin/nvim https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.appimage
-sudo wget -O /usr/local/bin/ufetch ${scriptsv}/ufetch.sh
-#Instalacion de tailscale
-curl -fsSL https://tailscale.com/install.sh | sh
-#Instalacion docker
-curl -fsSL https://get.docker.com | sudo sh
-sudo usermod -aG docker $USER
-newgrp docker
-docker run hello-world
-#Doy permiso a los scripts y programas descargados
-sudo chmod +x ~/scripts/*
-sudo chmod +x /usr/local/bin/*
-sudo chown jaime /opt/docker
-systemctl --user enable --now todoist-check.timer
-sudo systemctl enable backup.timer
-sudo chsh -s $(which fish) $(whoami)
-#Configuro micro para que use el portapeles de SSH
-echo '{ "clipboard": "terminal" }' > $HOME/.config/micro/settings.json
-#Servicios
-git clone https://github.com/Ciberbago/ciber-docker.git /opt/docker
-nvim -es -u ~/.config/nvim/init.vim -i NONE -c "PlugInstall" -c "qa"
-fish <<'EOF'
-set -Ux EDITOR nvim
-alias ffmpeg="docker run -v $(pwd):$(pwd) -w $(pwd) --device /dev/dri:/dev/dri linuxserver/ffmpeg" && funcsave ffmpeg
-alias vim="nvim" && funcsave vim
-alias sin="sudo nala install" && funcsave sin
-alias sup="sudo nala update" && funcsave sup
-alias historial="history | fzf" && funcsave historial
-alias cat="batcat" && funcsave cat
-alias cc="cd && clear" && funcsave cc
-alias ls="exa -lha --icons" && funcsave ls
-alias mkdir="mkdir -pv" && funcsave mkdir
-alias espacio="gdu /" && funcsave espacio
-alias rebootuefi='sudo systemctl reboot --firmware-setup' && funcsave rebootuefi
-function cheat; curl cheat.sh/$argv; end; and funcsave cheat
-function subir; curl -F 'file=@-' 0x0.st < $argv[1]; end; and funcsave subirrtl88xxau-aircrack-dkms-git
-curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source && fisher install jorgebucaran/fisher
-fisher install IlanCosman/tide@v6
-fisher install oh-my-fish/plugin-bang-bang
-EOF
+#<-------Aplicar el playbook------->
+export ANSIBLE_CONFIG="${DEST}/ansible/ansible.cfg"
+export PYTHONUNBUFFERED=1
+export ANSIBLE_FORCE_COLOR=1
 
-echo "Ejecuta fish para terminar la configuración"
+echo "==> Aplicando el playbook (te va a pedir el password de sudo)" | tee -a "$LOGFILE"
+
+# Inventario propio de Debian, no el de Arch: ver ansible/inventory-debian.ini
+CMD="ansible-playbook -i ansible/inventory-debian.ini --ask-become-pass"
+CMD+=" --extra-vars 'ciber_branch=${RAMA}'"
+CMD+=" ansible/site-debian.yml"
+for arg in "$@"; do
+    CMD+=" $(printf '%q' "$arg")"
+done
+
+if command -v script &>/dev/null; then
+    # 'script' da un pseudo-terminal: la salida sale en vivo Y queda en el log.
+    # -q sin banners, -a append, -e devuelve el codigo de salida del hijo.
+    script -q -a -e -c "$CMD" "$LOGFILE"
+else
+    eval "$CMD"
+fi
+
+cat <<'FIN'
+
+=== Listo ===
+
+  1. Cierra sesion y vuelve a entrar
+     (el grupo 'docker' y el shell fish aplican en el proximo login)
+
+  2. Conecta Tailscale:  sudo tailscale up
+     El playbook no lo hace solo: abre un navegador para autenticar, y
+     automatizarlo pediria guardar una auth key dentro del repo.
+
+Empieza por aqui:
+
+  ciber-help                     TODO lo que quedo instalado y para que sirve
+  ciber-help docker              la misma lista, filtrada
+
+El resto de comandos:
+
+  ciber-apply                    reaplica todo
+  ciber-apply --check --diff      simulacro: dice que cambiaria sin tocar nada
+  ciber-apply --tags packages     solo paquetes
+  ciber-apply --tags docker       solo Docker
+  ciber-apply --list-tags         ver todas las etiquetas
+  ciber-secrets                   que credenciales faltan por poner
+
+Para cambiar algo, edita el repo y vuelve a aplicar:
+
+  ansible/group_vars/workstations_debian/packages.yml   paquetes
+  ansible/group_vars/workstations_debian/files.yml      dotfiles y /usr/local/bin
+  ansible/group_vars/workstations_debian/systemd.yml    unidades a habilitar
+  ansible/group_vars/workstations_debian/services.yml   Docker, Tailscale, neovim
+  ansible/group_vars/workstations_debian/shell.yml      aliases de fish
+
+FIN
+echo "Logs:"
+echo "  ${LOGFILE}       la corrida del playbook (via script, con pty)"
+echo "  /var/log/apt/history.log  cada paquete instalado, con fecha"
+echo
+echo "Para ver el progreso en vivo, en otra sesion SSH:  ciber-watch"

@@ -1,0 +1,122 @@
+---
+# =============================================================================
+#  Playbook de Debian 12 (servidor).
+#
+#  Sustituye a debian12.sh, que ahora solo hace de bootstrap: instala Ansible,
+#  clona el repo y llama a este archivo.
+#
+#  No hay un 'session.yml' equivalente al de Arch porque aqui no hay GNOME: todo
+#  corre sin sesion grafica y se puede aplicar por SSH.
+#
+#  Para cambiar algo se editan los archivos de group_vars/workstations_debian/,
+#  no los roles.
+# =============================================================================
+- name: Configuracion de Debian 12
+  hosts: workstations_debian
+  gather_facts: true
+
+  pre_tasks:
+    - name: Comprobar que estamos en Debian
+      ansible.builtin.assert:
+        that: ansible_facts.os_family == 'Debian'
+        fail_msg: >-
+          Este playbook es para Debian, no para
+          {{ ansible_facts.distribution }}.
+        quiet: true
+      tags: always
+
+    - name: Avisar del release detectado
+      # El codename se usa en las lineas de los repos de Docker y Tailscale. Si
+      # se detecta mal, 'apt update' falla con "no Release file" y conviene
+      # verlo aqui y no treinta tareas despues.
+      ansible.builtin.debug:
+        msg: >-
+          {{ ansible_facts.distribution }} {{ ansible_facts.distribution_version }}
+          ({{ ciber_debian_codename }}), arquitectura {{ ansible_facts.architecture }}
+      tags: always
+
+  roles:
+    - { role: apt_setup,             tags: [apt, base] }
+    - { role: packages_apt,          tags: [packages] }
+    # Tailscale y Docker antes de user_setup: el grupo 'docker' lo crea el
+    # paquete docker-ce, y user_setup necesita que ya exista para meter al
+    # usuario. Si se hiciera al reves, el grupo se omitiria con un aviso y
+    # habria que volver a aplicar.
+    - { role: tailscale,             tags: [tailscale, red], when: tailscale_enabled }
+    - { role: docker,                tags: [docker],           when: docker_enabled }
+    # Despues de packages y docker: necesita que existan el grupo 'docker' y el
+    # binario de fish, que los crean sus paquetes.
+    - { role: user_setup,            tags: [user, base] }
+    - { role: system_files,          tags: [files, system] }
+    # ANTES de cli_tools y systemd: los scripts leen sus tokens de estos
+    # archivos y las unidades los declaran con EnvironmentFile. Si no existen
+    # cuando systemd arranca todoist-precise.timer, el primer disparo falla.
+    - { role: env_files,             tags: [secrets, files] }
+    - { role: cli_tools_debian,      tags: [files, tools] }
+    # Despues de cli_tools: backup.service apunta a /usr/local/bin/backup.sh y
+    # todoist-precise.service a /usr/local/bin/todoist.sh. Habilitar una unidad
+    # cuyo ExecStart no existe deja un servicio que falla en el primer disparo.
+    - { role: systemd_units_debian,  tags: [systemd] }
+    - { role: dotfiles,              tags: [files, dotfiles] }
+    # Despues de dotfiles: init.vim y plugins.vim salen de ahi, y PlugInstall
+    # los lee.
+    - { role: neovim,                tags: [neovim, editor] }
+    # fisher ANTES de shell_fish: Debian no empaqueta fisher (en Arch si es un
+    # paquete de los repos) y shell_fish se salta los plugins si no lo encuentra.
+    - { role: fisher,                tags: [shell, fish] }
+    - { role: shell_fish,            tags: [shell, fish] }
+
+  post_tasks:
+    # Va ANTES del resumen normal a proposito: lo ultimo que queda en pantalla
+    # es lo que la gente lee, y esto es lo unico que exige una accion manual.
+    - name: FALTAN CREDENCIALES POR PONER
+      ansible.builtin.debug:
+        msg:
+          - "=============================================================="
+          - "  ACCION REQUERIDA: faltan credenciales"
+          - "=============================================================="
+          - ""
+          - "Estos archivos existen pero tienen claves sin valor:"
+          - "{{ ciber_secrets_pendientes | join(', ') }}"
+          - ""
+          - "MIENTRAS SIGAN VACIAS NO HAY RESPALDO. Los scripts usan"
+          - "la forma VAR:?mensaje, que aborta si la variable esta vacia,"
+          - "asi que backup.service y todoist-precise.service FALLAN al"
+          - "arrancar. Lo veras con: systemctl --failed"
+          - ""
+          - "Si acabas de migrar desde la version con el token dentro del"
+          - "script, RELLENALOS ANTES DE LAS 18:00 o pierdes el respaldo de"
+          - "esta noche."
+          - ""
+          - "Rellenalos con:"
+          - "  sudo micro /etc/ciber/backup.env"
+          - "  micro ~/.config/ciber/todoist.env"
+          - ""
+          - "Y comprueba en cualquier momento con:"
+          - "  sudo ciber-secrets"
+          - "=============================================================="
+      when: ciber_secrets_pendientes | default([]) | length > 0
+      tags: always
+
+    - name: Credenciales completas
+      ansible.builtin.debug:
+        msg: "Credenciales: todas puestas (comprueba con 'sudo ciber-secrets')"
+      when: ciber_secrets_pendientes | default([]) | length == 0
+      tags: always
+
+    - name: Resumen
+      ansible.builtin.debug:
+        msg:
+          - "Debian configurado."
+          - "Cierra sesion y vuelve a entrar: el grupo 'docker' y el shell fish"
+          - "aplican en el proximo login."
+          - ""
+          - "Falta un paso manual: conectar Tailscale."
+          - "  sudo tailscale up"
+          - "(no se automatiza porque abre un navegador para autenticar; hacerlo"
+          - " sin interaccion pediria guardar una auth key en el repo)"
+          - ""
+          - "Para ver TODO lo que quedo instalado y como usarlo:"
+          - "  ciber-help              la lista completa, con colores"
+          - "  ciber-help docker       filtrada por un termino"
+      tags: always

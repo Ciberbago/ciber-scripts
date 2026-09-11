@@ -1,158 +1,157 @@
-#!/bin/bash
+#!/usr/bin/env bash
+#
+# Bootstrap de Arch Linux -> Ansible
+#
+#   bash <(curl -L url.jaimelopez.top/arch)
+#
+# Lo unico que hace este script es dejar la maquina en condiciones de correr
+# Ansible, y despues delegar todo el trabajo real al playbook. A partir de aqui,
+# para cambiar la configuracion se editan los archivos de ansible/group_vars/,
+# no este script.
+#
+# Despues de la primera corrida quedan instalados dos comandos:
+#   ciber-apply      vuelve a aplicar el playbook de sistema
+#   ciber-session    aplica la parte de GNOME (necesita estar dentro de la sesion)
+#
+# La version anterior en bash puro sigue en legacy/arch-bash.sh como respaldo.
+#
+set -euo pipefail
 
+REPO="${CIBER_REPO:-https://github.com/Ciberbago/ciber-scripts.git}"
+RAMA="${CIBER_BRANCH:-main}"
+DEST="${CIBER_DIR:-$HOME/.local/share/ciber-scripts}"
 LOGFILE="$HOME/ciber.log"
-exec > >(tee -a "$LOGFILE") 2>&1
-echo "Inicio del script: $(date)"
 
-#<-------Variables------->
-dotfiles='https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/dotfiles'
-scriptsv='https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts'
-sdconfig='https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/systemd'
-interfaz=$(ip r | grep default | cut -d ' ' -f 5 | head -n1)
-#<-------Ajustes de pacman------->
-sudo sed -i "/etc/pacman.conf" \
-    -e "s|^#Color|&\nColor|" \
-    -e "s|^#VerbosePkgLists|&\nVerbosePkgLists|" \
-    -e "s|^#ParallelDownloads.*|&\nParallelDownloads = 20|" \
-    -e "/\[multilib\]/,/Include/s/^#//"
-#<-------Ajustes para compilacion-------->#
-sudo sed -i "/etc/makepkg.conf" \
-    -e "s|^#BUILDDIR=.*|&\nBUILDDIR=/tmp/makepkg|" \
-    -e "s|^PKGEXT.*|PKºGEXT='.pkg.tar'|" \
-    -e "s|^OPTIONS=.*|#&\nOPTIONS=(docs \!strip \!libtool \!staticlibs emptydirs zipman purge \!debug lto)|" \
-    -e "s|-march=.* -mtune=generic|-march=native|" \
-    -e "s|^#RUSTFLAGS=.*|&\nRUSTFLAGS=\"-C opt-level=2 -C target-cpu=native\"|" \
-    -e "s|^#MAKEFLAGS=.*|&\nMAKEFLAGS=\"-j$(($(nproc --all)-1))\"|"
-sudo pacman -Syy
-#<-------Instalacion de paquetes con comprobacion de errores------->
-declare -a pkgs pkgs_200 pkgs_202 pkgs_404
-declare -A pkgs_301
+# OJO: aqui NO va 'exec > >(tee -a "$LOGFILE") 2>&1'.
+#
+# Eso mandaba stdout a un pipe en lugar de a la terminal, y Python (o sea
+# Ansible) al detectar que no habla con una TTY pasa de line-buffered a
+# block-buffered: acumula toda la salida y la suelta al final. El efecto era que
+# despues del prompt de BECOME la pantalla se quedaba muerta varios minutos y
+# luego aparecia todo de golpe.
+#
+# La parte del bootstrap si pasa por tee (son cuatro lineas, no importa), pero
+# ansible-pull corre bajo 'script', que le da un pseudo-terminal: Ansible cree
+# que habla con una terminal real, imprime tarea por tarea, conserva colores, y
+# el log queda completo igual.
+echo "=== Bootstrap: $(date) ===" | tee -a "$LOGFILE"
 
-pkgs=(7zip adw-gtk-theme android-tools amberol baobab base-devel bat bluez bluez-utils btop decibels dkms ethtool eyedropper eza fastfetch ffmpegthumbnailer file-roller firefox fish fisher fragments freerdp fzf gdm gdu git gnome-bluetooth-3.0 gnome-calculator gnome-characters gnome-control-center gnome-disk-utility gnome-font-viewer gnome-keyring gnome-remote-desktop gnome-shell gnome-tweaks gnome-text-editor gvfs gvfs-smb handbrake imagemagick jre8-openjdk jre17-openjdk jre21-openjdk jq iperf3 less libmad linux-headers linux-lts loupe mangohud mesa minizip mpv-mpris nautilus net-tools nnn noto-fonts-cjk ntfs-3g obs-studio papirus-icon-theme pacman-contrib papers pkgfile python-tqdm qt5ct qt6-base radeontop reflector remmina resources rocm-smi-lib rust scrcpy smbclient steam tailscale terminator traceroute ttf-firacode-nerd tumbler uget unrar usbutils video-trimmer virtualbox virtualbox-guest-iso vulkan-radeon webp-pixbuf-loader wget wl-clipboard xdg-desktop-portal-gnome)
+#<-------Comprobaciones------->
+if [[ ! -f /etc/arch-release ]]; then
+    echo "!!! Esto es para Arch Linux" >&2
+    exit 1
+fi
+if [[ $EUID -eq 0 ]]; then
+    echo "!!! No lo corras como root: Ansible pide sudo cuando lo necesita, y" >&2
+    echo "    makepkg se niega a compilar del AUR siendo root." >&2
+    exit 1
+fi
+if ! sudo -v; then
+    echo "!!! Este usuario necesita sudo" >&2
+    exit 1
+fi
 
-pkgs=($(printf '%s\n' "${pkgs[@]}"|sort -u))
-pkgs_200=($(comm -12 <(pacman -Slq|sort -u) <(printf '%s\n' "${pkgs[@]}")))
-pkgs_202=($(comm -23 <(printf '%s\n' "${pkgs[@]}") <(printf '%s\n' "${pkgs_200[@]}")))
-for pkg in "${pkgs_202[@]}"; do
-  pkgname=$(pacman -Spdd --print-format %n "$pkg" 2> /dev/null)
-  if [[ -n $pkgname ]]; then
-    pkgs_301[$pkg]=$pkgname
-  else
-    pkgs_404+=("$pkg")
-  fi
+#<-------Keyring primero------->
+# Si archlinux-keyring esta viejo, pacman rechaza los paquetes nuevos por firma
+# invalida y todo lo que sigue falla en cascada, con errores que no dicen que el
+# problema es el keyring. Arch documenta actualizarlo aparte y antes que nada.
+# El 'pacman -Sy' suelto seria un partial upgrade, pero es la excepcion
+# documentada y va seguido del -Syu completo de abajo.
+echo "==> Actualizando archlinux-keyring"
+if ! sudo pacman -Sy --needed --noconfirm archlinux-keyring; then
+    echo "!!! Fallo la actualizacion del keyring, se reconstruye desde cero" >&2
+    sudo pacman-key --init
+    sudo pacman-key --populate archlinux
+    sudo pacman -Sy --needed --noconfirm archlinux-keyring
+fi
+
+#<-------Dependencias minimas------->
+# -Syu y no -Sy: un 'pacman -Sy' seguido de instalar paquetes es un partial
+# upgrade, el escenario que Arch advierte que rompe el sistema.
+echo "==> Instalando ansible y git"
+sudo pacman -Syu --needed --noconfirm \
+    ansible \
+    git \
+    python-psutil          # lo necesita el modulo dconf del playbook
+
+#<-------Colecciones de Ansible------->
+echo "==> Instalando colecciones de Ansible"
+tmp_req="$(mktemp)"
+curl -fsSL "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/${RAMA}/ansible/requirements.yml" \
+    -o "$tmp_req"
+ansible-galaxy collection install -r "$tmp_req"
+rm -f "$tmp_req"
+
+#<-------Clonar el repo------->
+# Antes esto lo hacia 'ansible-pull', pero ansible-pull lanza ansible-playbook
+# como subproceso conectado por un PIPE, y ese hijo, al no ver una terminal,
+# pasa a block-buffering: la salida se acumulaba y aparecia toda de golpe al
+# final, varios minutos despues del prompt de BECOME. Daba igual lo que hubiera
+# del lado de afuera, porque el bufferado ocurria entre ansible-pull y su hijo.
+#
+# Lo unico que ansible-pull aportaba era esto: clonar o actualizar el checkout.
+# Son tres lineas de git, y llamando a ansible-playbook directo la salida sale
+# tarea por tarea.
+#
+# Los archivos de configuracion salen de este clon, no de URLs: eso elimina de
+# raiz la clase de bug donde un typo en una URL dejaba un archivo de 0 bytes.
+echo "==> Clonando el repo en ${DEST} (rama ${RAMA})"
+if [[ -d "${DEST}/.git" ]]; then
+    git -C "$DEST" fetch --prune origin
+    git -C "$DEST" checkout -qf -B "$RAMA" "origin/${RAMA}"
+else
+    git clone --branch "$RAMA" "$REPO" "$DEST"
+fi
+cd "$DEST"
+
+#<-------Aplicar el playbook------->
+export ANSIBLE_CONFIG="${DEST}/ansible/ansible.cfg"
+export PYTHONUNBUFFERED=1
+export ANSIBLE_FORCE_COLOR=1
+
+echo "==> Aplicando el playbook (te va a pedir el password de sudo)" | tee -a "$LOGFILE"
+
+CMD="ansible-playbook -i ansible/inventory.ini --ask-become-pass"
+CMD+=" --extra-vars 'ciber_branch=${RAMA}'"
+CMD+=" ansible/site.yml"
+for arg in "$@"; do
+    CMD+=" $(printf '%q' "$arg")"
 done
 
-sudo pacman -S --needed --noconfirm "${pkgs_200[@]}" "${pkgs_301[@]}"
-#<-----Update repos for when a command is not found----->
-sudo pkgfile --update
-#<-----Installing appimage manager----->
-wget https://raw.githubusercontent.com/ivan-hc/AM/main/INSTALL && chmod a+x ./INSTALL && sudo ./INSTALL
-#<-------Crear carpetas------->
-mkdir -p ~/.config/autostart
-mkdir -p ~/.config/fish
-mkdir -p ~/.config/mpv/fonts
-mkdir -p ~/.config/mpv/scripts
-mkdir -p ~/.config/mpv/script-opts
-mkdir -p ~/.config/obs-studio/basic/profiles/Untitled/
-mkdir -p ~/.config/yay
-mkdir -p ~/.config/terminator
-mkdir -p gnome
-mkdir -p Screenshots/tmp
-mkdir -p ~/.local/share/nautilus/scripts
-sudo mkdir -p /usr/local/share/applications
-sudo mkdir -p /etc/systemd/system.conf.d/
-sudo mkdir -p /etc/sysctl.d/
+if command -v script &>/dev/null; then
+    # 'script' da un pseudo-terminal: la salida sale en vivo Y queda en el log.
+    # -q sin banners, -a append, -e devuelve el codigo de salida del hijo.
+    script -q -a -e -c "$CMD" "$LOGFILE"
+else
+    eval "$CMD"
+fi
 
-#<-------Dotfiles------->#
-wget -O ~/.config/firefoxuser.js ${dotfiles}/firefoxuser.js
-wget -O ~/.config/dashtopanel.conf ${dotfiles}/extensions/dashtopanel.conf
-#wget -O ~/.config/tilix.conf ${dotfiles}/extensions/tilix.conf
-wget -O ~/.config/terminator/config ${dotfiles}/terminatorconf
-wget -O ~/.config/executor.conf ${dotfiles}/extensions/executor.conf
-wget -O ~/.config/poweroffmenu.conf ${dotfiles}/extensions/poweroffmenu.conf
-wget -O ~/.config/autostart/wallpaper.desktop ${dotfiles}/wallpaper.desktop
-wget -O ~/.config/flameshot/flameshot.ini ${dotfiles}/flameshot.ini
-wget -O ~/.config/fish/config.fish ${dotfiles}/config.fish
-wget -O ~/.config/mpv/mpv.conf ${dotfiles}/mpv.conf
-wget -O ~/.config/mpv/scripts/modern.lua ${dotfiles}/modern.lua
-wget -O ~/.config/mpv/scripts/thumbfast.lua ${dotfiles}/thumbfast.lua
-wget -O ~/.config/mpv/script-opts/osc.conf ${dotfiles}/osc.conf
-wget -O ~/.config/mpv/fonts/Material-Design-Iconic-Font.ttf ${dotfiles}/Material-Design-Iconic-Font.ttf 
-wget -O ~/.config/obs-studio/basic/profiles/Untitled/basic.ini ${dotfiles}/obsprofile.ini
-wget -O ~/.config/obs-studio/basic/profiles/Untitled/recordEncoder.json ${dotfiles}/obsrecorder.json
-wget -O ~/.config/obs-studio/global.ini ${dotfiles}/obsglobal.ini
-wget -O ~/.config/yay/config.json ${dotfiles}/yayconfig.json
-wget -O ~/gnome/custom-keys.dconf ${dotfiles}/custom-keys.dconf
-wget -O ~/gnome/custom-values.dconf ${dotfiles}/custom-values.dconf
-wget -O ~/gnome/keybindings.dconf ${dotfiles}/keybindings.dconf
-sudo wget -O /etc/xdg/reflector/reflector.conf ${dotfiles}/reflector.conf
-sudo wget -O /etc/modules-load.d/virtualbox.conf ${dotfiles}/virtualbox.conf
-sudo wget -O /etc/systemd/system/wol@.service ${sdcondfig}/wol@.service
-sudo wget -O /etc/systemd/system/run-media-nas.mount ${sdcondfig}/run-media-nas.mount
-sudo wget -O /etc/systemd/system/run-media-nas.automount ${sdcondfig}/run-media-nas.automount
-sudo wget -O /boot/loader/entries/cachyos.conf ${sdconfig}/cachyos.conf
-sudo wget -O /boot/loader/entries/lts.conf ${sdconfig}/lts.conf
-sudo wget -O /etc/sysctl.d/80-gaming.conf ${sdconfig}/80-gaming.conf
-sudo wget -O /etc/sysctl.d/99-cachyos-settings.conf ${sdconfig}/99-cachyos-settings.conf
-sudo wget -O /etc/systemd/system.conf.d/00-timeout.conf ${sdconfig}/00-timeout.conf
-sudo wget -O /usr/lib/systemd/zram-generator.conf ${sdconfig}/zram-generator.conf
-sudo wget -O /usr/lib/udev/rules.d/30-zram.rules ${sdconfig}/30-zram.rules
-sudo wget -O /etc/systemd/system/dpm-high.service ${sdconfig}/dpm-high.service
+cat <<'FIN'
 
-#<-------Scripts y programas------->
-wget -O ~/gnome.sh ${scriptsv}/gnome.sh
-wget -O ~/ext.sh ${scriptsv}/ext.sh
-wget -O ~/gnomeconfig.sh ${scriptsv}/gnomeconfig.sh
-wget -O ~/hideapps.sh ${scriptsv}/hideapps.sh
-wget -O ~/removeapps.sh ${scriptsv}/removeapps.sh
-wget -O ~/appimages.sh ${scriptsv}/appimages.sh
-wget -O ~/aur.sh ${scriptsv}/aur.sh
-wget -O ~/firefoxconfig.sh ${scriptsv}/firefoxconfig.sh
-wget -O ~/postinstall.sh ${scriptsv}/postinstall.sh
-wget -O ~/.local/share/nautilus/scripts/mediainfo.sh ${scriptsv}/mediainfo.sh
-sudo wget -O /usr/local/bin/wallpaper ${scriptsv}/wallpaper.sh
-sudo wget -O /usr/local/bin/archbootgen ${scriptsv}/archbootgen.sh
+=== Listo ===
 
-#<-------Configuraciones------->
-echo "export QT_QPA_PLATFORMTHEME=qt5ct" | sudo tee /etc/environment
-chmod +x *.sh
-chmod +x ~/.local/share/nautilus/scripts/*.sh
-sudo chmod +x /usr/local/bin/*
-sudo chmod 755 /boot/loader/entries/cachyos.conf
-sudo chmod 755 /boot/loader/entries/lts.conf
-sudo gpasswd -a $USER vboxusers
-chsh -s /usr/bin/fish
-sudo sed -i '/^#\?MaxRetentionSec=/cMaxRetentionSec=1w' /etc/systemd/journald.conf
+  1. Reinicia y entra a GNOME
+  2. Abre una terminal y ejecuta:  ciber-session
 
-#<-------Servicios------->
+Comandos disponibles de aqui en adelante:
 
-sudo systemctl enable gdm.service
-sudo systemctl enable bluetooth.service
-sudo systemctl enable tailscaled
-sudo systemctl enable run-media-nas.automount
-sudo systemctl enable reflector.timer
-sudo systemctl enable paccache.timer
-sudo systemctl enable wol@$interfaz.service 
-sudo systemctl enable dpm-high.service
-sudo timedatectl set-timezone "America/Tijuana"
-#<-------instalar yay------->
-git clone https://aur.archlinux.org/yay.git
-cd yay
-makepkg -si --noconfirm
-#<-------Crear aliases e instalar extensiones en fish shell------->
+  ciber-apply                    reaplica todo el sistema
+  ciber-apply --check --diff      simulacro: dice que cambiaria sin tocar nada
+  ciber-apply --tags packages     solo paquetes
+  ciber-apply --list-tags         ver todas las etiquetas
+  ciber-session                   configuracion de GNOME (dentro de la sesion)
 
-fish <<'EOF'
-set -Ux EDITOR micro
-alias limpiar="paccache -rk1 && paccache -ruk0 && yay -Sc && sudo pacman -Qdtq | sudo pacman -Runs -" && funcsave limpiar                        alias historial="history | fzf" && funcsave historial                                                                                            alias cat="bat" && funcsave cat                                                                                                                  alias cc="cd && clear" && funcsave cc                                                                                                            alias ls="exa -lha --icons" && funcsave ls                                                                                                       alias mkdir="mkdir -pv" && funcsave mkdir                                                                                                        alias espacio="gdu /" && funcsave espacio                                                                                                        alias f34='firefox -P "Cyb_R34" -no-remote' && funcsave f34                                                                                      alias orphans='sudo pacman -Qdtq | sudo pacman -Runs  -' && funcsave orphans                                                                     alias rebootuefi='sudo systemctl reboot --firmware-setup' && funcsave rebootuefi                                                                 alias sss="sudo systemctl status" && funcsave sss                                                                                                alias ssa="sudo systemctl start" && funcsave ssa                                                                                                 alias sso="sudo systemctl stop" && funcsave sso                                                                                                  alias sse="sudo systemctl enable" && funcsave sse                                                                                                alias ssd="sudo systemctl daemon-reload" && funcsave ssd                                                                                         function buscar; /usr/bin/find . -type f -iname "*$argv*"; end; funcsave buscar                                                                  function cheat; curl cheat.sh/$argv; end; funcsave cheat                                                                                         function convimg; magick mogrify -path $argv[2] -strip -interlace Plane -quality 80% -format jpg -verbose $argv[1]/*; end; funcsave convimg      function subir; curl -F 'file=@-' 0x0.st < $argv[1]; end; funcsave subir                                                                         function img2mp4; for file in *.gif; ffmpeg -i $file "$file.mp4"; end; end; funcsave img2mp4                                                     function tts; set ts (date "+%Y%m%d_%H%M%S"); set f "tts_$ts.mp3"; curl -s --get --data-urlencode "ie=UTF-8" --data-urlencode "client=tw-ob" --data-urlencode "tl=es-mx" --data-urlencode "q=$argv" "https://translate.google.com/translate_tts" > $f; echo "Guardado: $f"; end; funcsave tts
-fisher install IlanCosman/tide@v6
-fisher install oh-my-fish/plugin-bang-bang                                            
-EOF
+Para cambiar algo, edita el repo y vuelve a aplicar:
 
-#<-----Errores de instalacion----->
-printf "\n301 Moved Permanently:\n" >&2
-paste -d : <(printf "%s\n" "${!pkgs_301[@]}") <(printf "%s\n" "${pkgs_301[@]}") >&2
-printf "\n404 Not Found:\n" >&2
-printf "%s\n" "${pkgs_404[@]}" >&2
+  ansible/group_vars/workstations_arch/packages.yml   paquetes
+  ansible/group_vars/workstations_arch/files.yml      dotfiles y config de /etc
+  ansible/group_vars/workstations_arch/systemd.yml    unidades a habilitar
+  ansible/group_vars/workstations_arch/gnome.yml      ajustes de GNOME
+  ansible/group_vars/workstations_arch/shell.yml      aliases de fish
 
-echo "Fin del script: $(date)"
-
+FIN
+echo "Logs:"
+echo "  ${LOGFILE}          la corrida del playbook (via script, con pty)"
+echo "  /var/log/pacman.log  cada paquete instalado, con fecha"
+echo
+echo "Para ver el progreso en vivo, en otra terminal (Ctrl+Alt+F2):  ciber-watch"
