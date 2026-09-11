@@ -10,6 +10,15 @@ BIN_DIR="$HOME/bin"
 TEMP_DIR=""
 AUTO_YES=0
 CHECK_ONLY=0
+if [[ -t 1 && -z "${NO_COLOR:-}" ]] && command -v tput >/dev/null 2>&1; then
+    B=$(tput bold 2>/dev/null || true)
+    R=$(tput sgr0 2>/dev/null || true)
+    VERDE=$(tput setaf 2 2>/dev/null || true)
+    AMAR=$(tput setaf 3 2>/dev/null || true)
+    ROJO=$(tput setaf 1 2>/dev/null || true)
+else
+    B=""; R=""; VERDE=""; AMAR=""; ROJO=""
+fi
 
 cleanup() {
     [[ -n "$TEMP_DIR" && -d "$TEMP_DIR" ]] && rm -rf "$TEMP_DIR"
@@ -50,17 +59,17 @@ curl -fsSL "$MANIFEST_URL" -o "$TEMP_DIR/manifest" || \
     die 'No se pudo descargar el manifiesto desde GitHub.'
 
 changed=()
-while IFS='|' read -r name remote_path mode; do
+while IFS='|' read -r name remote_path mode target; do
     [[ -z "${name:-}" || "$name" == \#* ]] && continue
-    [[ -n "${remote_path:-}" && -n "${mode:-}" ]] || continue
+    [[ -n "${remote_path:-}" && -n "${mode:-}" && -n "${target:-}" ]] || continue
 
     remote_url="$BASE_URL/$remote_path"
     downloaded="$TEMP_DIR/$name"
-    destination="$BIN_DIR/$name"
+    destination="$HOME/$target"
 
-    printf 'Comprobando %-18s ' "$name"
+    printf '%sComprobando %-18s%s ' "$B" "$name" "$R"
     if ! curl -fsSL "$remote_url" -o "$downloaded"; then
-        printf 'ERROR\n'
+        printf '%sERROR%s\n' "$ROJO" "$R"
         printf '  No se pudo descargar %s\n' "$remote_url" >&2
         continue
     fi
@@ -74,12 +83,12 @@ while IFS='|' read -r name remote_path mode; do
     fi
 
     if [[ "$remote_hash" == "$local_hash" ]]; then
-        printf 'sin cambios\n'
+        printf '%ssin cambios%s\n' "$VERDE" "$R"
     else
         if [[ -f "$destination" ]]; then
-            printf 'actualización disponible\n'
+            printf '%sactualización disponible%s\n' "$AMAR" "$R"
         else
-            printf 'nuevo\n'
+            printf '%snuevo%s\n' "$VERDE" "$R"
         fi
         changed+=("$name")
     fi
@@ -90,7 +99,7 @@ if ((${#changed[@]} == 0)); then
     exit 0
 fi
 
-printf '\nCambios disponibles:\n'
+printf '\n%sCambios disponibles:%s\n' "$B" "$R"
 printf '  %s\n' "${changed[@]}"
 
 if ((CHECK_ONLY)); then
@@ -104,10 +113,12 @@ if ((AUTO_YES == 0)); then
 fi
 
 for name in "${changed[@]}"; do
-    IFS='|' read -r manifest_name remote_path mode < <(grep -F "${name}|" "$TEMP_DIR/manifest")
-    install -m "$mode" "$TEMP_DIR/$name" "$BIN_DIR/$name" || \
+    IFS='|' read -r manifest_name remote_path mode target < <(grep -F "${name}|" "$TEMP_DIR/manifest")
+    destination="$HOME/$target"
+    mkdir -p "$(dirname "$destination")" || die "No se pudo crear el destino de $name"
+    install -m "$mode" "$TEMP_DIR/$name" "$destination" || \
         die "No se pudo instalar $name"
-    printf 'Instalado: %s\n' "$BIN_DIR/$name"
+    printf '%sInstalado: %s%s\n' "$VERDE" "$destination" "$R"
 done
 
 printf '\nActualización completada.\n'

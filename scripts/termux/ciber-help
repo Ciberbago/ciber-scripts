@@ -6,6 +6,15 @@ set -u
 
 FILTER="${1:-}"
 FOUND=0
+if [[ -t 1 && -z "${NO_COLOR:-}" ]] && command -v tput >/dev/null 2>&1; then
+    B=$(tput bold 2>/dev/null || true)
+    R=$(tput sgr0 2>/dev/null || true)
+    CIAN=$(tput setaf 6 2>/dev/null || true)
+    VERDE=$(tput setaf 2 2>/dev/null || true)
+    GRIS=$(tput setaf 8 2>/dev/null || true)
+else
+    B=""; R=""; CIAN=""; VERDE=""; GRIS=""
+fi
 
 matches() {
     if [[ -z "$FILTER" ]]; then
@@ -19,18 +28,18 @@ matches() {
 }
 
 section() {
-    printf '\n%s\n' "$1"
-    printf '%s\n' '────────────────────────────────────────'
+    printf '\n%s%s%s\n' "$B$CIAN" "$1" "$R"
+    printf '%s%s%s\n' "$GRIS" '----------------------------------------' "$R"
 }
 
 item() {
     local command="$1" description="$2"
     matches "$command" "$description" || return 0
-    printf '\n%s\n' "$command"
+    printf '\n%s%s%s\n' "$B$VERDE" "$command" "$R"
     printf '  %s\n' "$description"
 }
 
-printf '\nCIBER-SCRIPTS PARA TERMUX\n'
+printf '\n%s%s%s\n' "$B$CIAN" 'CIBER-SCRIPTS PARA TERMUX' "$R"
 printf '=========================\n'
 if [[ -n "$FILTER" ]]; then
     printf 'Filtro: %s\n' "$FILTER"

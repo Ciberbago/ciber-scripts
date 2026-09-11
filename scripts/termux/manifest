@@ -1,6 +1,7 @@
-# nombre|ruta relativa en el repositorio|permisos
-ciber-help|scripts/termux/ciber-help|700
-ciber-update|scripts/termux/ciber-update|700
-ffm-tui|scripts/termux/ffm-tui|700
-yt-tui|scripts/termux/yt-tui|700
-termux-ssh|scripts/termux/termux-ssh|700
+# nombre|ruta relativa en el repositorio|permisos|destino relativo a HOME
+ciber-help|scripts/termux/ciber-help|700|bin/ciber-help
+ciber-update|scripts/termux/ciber-update|700|bin/ciber-update
+ffm-tui|scripts/termux/ffm-tui|700|bin/ffm-tui
+yt-tui|scripts/termux/yt-tui|700|bin/yt-tui
+termux-ssh|scripts/termux/termux-ssh|700|bin/termux-ssh
+ciber-greeting|scripts/termux/ciber-greeting.fish|644|.config/fish/conf.d/ciber-greeting.fish

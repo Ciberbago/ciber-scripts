@@ -103,6 +103,20 @@ install_user_scripts() {
     fi
 }
 
+install_greeting() {
+    local source_file="$1/ciber-greeting.fish"
+    local destination="$HOME/.config/fish/conf.d/ciber-greeting.fish"
+    mkdir -p "$(dirname "$destination")" || die 'No se pudo crear la configuración de Fish.'
+
+    if [[ -e "$destination" ]]; then
+        printf 'Conservando existente: %s\n' "$destination"
+    elif install -m 644 "$source_file" "$destination"; then
+        printf 'Instalado: %s\n' "$destination"
+    else
+        warn 'No se pudo instalar el mensaje de bienvenida de Fish.'
+    fi
+}
+
 download_repo() {
     TEMP_DIR=$(mktemp -d "${TMPDIR:-/tmp}/ciber-scripts.XXXXXX") || \
         die 'No se pudo crear un directorio temporal.'
@@ -114,6 +128,7 @@ download_repo() {
     [[ -d "$TEMP_DIR/repo/scripts/termux" ]] || \
         die 'El repositorio no contiene scripts/termux.'
     install_user_scripts "$TEMP_DIR/repo/scripts/termux"
+    install_greeting "$TEMP_DIR/repo/scripts/termux"
 }
 
 show_summary() {
@@ -121,6 +136,7 @@ show_summary() {
     printf '\nScripts disponibles:\n'
     printf '  ciber-help    ayuda y sintaxis de los scripts\n'
     printf '  ciber-update  sincroniza scripts sin clonar el repo\n'
+    printf '  greeting      bienvenida colorida de Fish\n'
     printf '  ffm-tui       compresión y operaciones con FFmpeg\n'
     printf '  yt-tui        descargas con yt-dlp\n'
     printf '  termux-ssh    gestión del servidor SSH\n'

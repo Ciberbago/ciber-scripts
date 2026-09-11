@@ -126,6 +126,10 @@ yt-tui        descargas con yt-dlp
 termux-ssh    servidor SSH para controlar Termux desde el PC
 ```
 
+Al iniciar una shell interactiva de Fish aparecerá también una bienvenida
+colorida con estos comandos. Se instala en `~/.config/fish/conf.d/` y no
+sobrescribe tu `config.fish`.
+
 Para ver la ayuda de estos comandos:
 
 ```fish
