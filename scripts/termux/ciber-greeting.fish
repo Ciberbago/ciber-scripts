@@ -22,5 +22,6 @@ if status is-interactive
     printf '  %s%-14s%s Herramientas para vídeo\n' "$green" 'ffm-tui' "$reset"
     printf '  %s%-14s%s Descargar vídeo o audio\n' "$green" 'yt-tui' "$reset"
     printf '  %s%-14s%s Administrar SSH\n' "$green" 'termux-ssh' "$reset"
+    printf '  %s%-14s%s Utilidades de red\n' "$green" 'net-tui' "$reset"
     printf '\n%s💡 Usa ciber-help para ver ejemplos%s\n\n' "$bold$cyan" "$reset"
 end

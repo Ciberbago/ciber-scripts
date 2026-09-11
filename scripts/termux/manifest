@@ -4,4 +4,5 @@ ciber-update|scripts/termux/ciber-update|700|bin/ciber-update
 ffm-tui|scripts/termux/ffm-tui|700|bin/ffm-tui
 yt-tui|scripts/termux/yt-tui|700|bin/yt-tui
 termux-ssh|scripts/termux/termux-ssh|700|bin/termux-ssh
+net-tui|scripts/termux/net-tui|700|bin/net-tui
 ciber-greeting|scripts/termux/ciber-greeting.fish|644|.config/fish/conf.d/ciber-greeting.fish

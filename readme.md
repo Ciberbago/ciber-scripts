@@ -124,6 +124,7 @@ ciber-update  sincronizar scripts sin clonar el repositorio
 ffm-tui       operaciones con FFmpeg
 yt-tui        descargas con yt-dlp
 termux-ssh    servidor SSH para controlar Termux desde el PC
+net-tui       utilidades rápidas de red (IP, ping, red local, WoL puntual)
 ```
 
 Al iniciar una shell interactiva de Fish aparecerá también una bienvenida

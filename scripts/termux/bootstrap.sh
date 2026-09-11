@@ -94,7 +94,7 @@ install_user_scripts() {
     destination="$HOME/bin"
     mkdir -p "$destination" || die "No se pudo crear $destination."
 
-    for name in ciber-help ciber-update ffm-tui yt-tui termux-ssh; do
+    for name in ciber-help ciber-update ffm-tui yt-tui termux-ssh net-tui; do
         if [[ -e "$destination/$name" ]]; then
             printf 'Conservando existente: %s\n' "$destination/$name"
             continue
@@ -149,6 +149,7 @@ show_summary() {
     printf '  ffm-tui       compresión y operaciones con FFmpeg\n'
     printf '  yt-tui        descargas con yt-dlp\n'
     printf '  termux-ssh    gestión del servidor SSH\n'
+    printf '  net-tui       utilidades rápidas de red\n'
     printf '\nSi Fish no se activó en esta sesión, ejecuta:\n'
     printf '  exec fish\n'
     printf '\nPara configurar SSH:\n'

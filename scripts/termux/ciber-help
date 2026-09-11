@@ -79,6 +79,12 @@ item 'ssh -p 8022 USUARIO@IP' \
 item 'scp -P 8022 archivo USUARIO@IP:~/storage/downloads/' \
     'Copia archivos del PC al almacenamiento compartido del teléfono.'
 
+section 'RED'
+item 'net-tui' \
+    'Resumen de red, ping rápido, equipos en la red local, Wake-on-LAN puntual y diagnóstico.'
+item 'net-tui (opción 6)' \
+    'Envía Wake-on-LAN escribiendo la MAC al momento; no guarda ninguna lista de hosts.'
+
 section 'BOOTSTRAP'
 item 'bash <(curl -L url.jaimelopez.top/termux)' \
     'Prepara Termux desde cero: paquetes, almacenamiento, Fish, SSH y scripts personales.'
