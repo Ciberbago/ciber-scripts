@@ -130,6 +130,10 @@ Al iniciar una shell interactiva de Fish aparecerá también una bienvenida
 colorida con estos comandos. Se instala en `~/.config/fish/conf.d/` y no
 sobrescribe tu `config.fish`.
 
+El bootstrap y `ciber-update` crean `~/.hushlogin` para ocultar el mensaje
+inicial por defecto de Termux y dejar visible solo la bienvenida de
+ciber-scripts.
+
 Para ver la ayuda de estos comandos:
 
 ```fish

@@ -80,6 +80,15 @@ setup_fish() {
     fi
 }
 
+hide_default_motd() {
+    # Oculta el mensaje inicial de Termux para dejar solo la bienvenida propia.
+    if touch "$HOME/.hushlogin" 2>/dev/null; then
+        printf 'MOTD de Termux desactivado: %s\n' "$HOME/.hushlogin"
+    else
+        warn 'No se pudo crear ~/.hushlogin.'
+    fi
+}
+
 install_user_scripts() {
     local source_dir="$1" destination name
     destination="$HOME/bin"
@@ -154,6 +163,7 @@ main() {
     install_packages
     setup_storage
     setup_fish
+    hide_default_motd
     download_repo
     show_summary
 }

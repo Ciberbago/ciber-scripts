@@ -52,6 +52,14 @@ command -v curl >/dev/null 2>&1 || die 'Necesitas curl. Ejecuta: pkg install cur
 command -v sha256sum >/dev/null 2>&1 || die 'Necesitas sha256sum. Ejecuta: pkg install coreutils'
 
 mkdir -p "$BIN_DIR" || die "No se pudo crear $BIN_DIR"
+
+# Oculta el MOTD por defecto de Termux para dejar solo la bienvenida propia.
+# No se toca en modo --check para no modificar nada al solo comprobar.
+if ((CHECK_ONLY == 0)); then
+    touch "$HOME/.hushlogin" 2>/dev/null || \
+        printf 'Aviso: no se pudo crear ~/.hushlogin.\n' >&2
+fi
+
 TEMP_DIR=$(mktemp -d "${TMPDIR:-/tmp}/ciber-update.XXXXXX") || die 'No se pudo crear un directorio temporal.'
 
 printf 'Descargando manifiesto...\n'

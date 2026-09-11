@@ -82,6 +82,8 @@ item 'scp -P 8022 archivo USUARIO@IP:~/storage/downloads/' \
 section 'BOOTSTRAP'
 item 'bash <(curl -L url.jaimelopez.top/termux)' \
     'Prepara Termux desde cero: paquetes, almacenamiento, Fish, SSH y scripts personales.'
+item '~/.hushlogin' \
+    'Oculta el mensaje inicial de Termux para dejar solo la bienvenida de ciber-scripts.'
 
 if [[ -n "$FILTER" ]]; then
     if ((FOUND == 0)); then
