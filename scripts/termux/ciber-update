@@ -197,3 +197,19 @@ fi
 ensure_packages
 
 printf '\nActualización completada.\n'
+
+# Recarga Fish para mostrar el greeting actualizado. En --check no se cambió
+# nada, así que no se recarga. Solo se hace exec si el padre directo es Fish
+# (las variables de Fish no se heredan); si no, solo se sugiere el comando.
+parent_shell() {
+    ps -o comm= -p "$PPID" 2>/dev/null | tr -d '[:space:]' || true
+}
+
+if ((CHECK_ONLY == 0)); then
+    if [[ "$(parent_shell)" == fish* ]]; then
+        printf 'Recargando Fish...\n'
+        exec fish
+    else
+        printf 'Ejecuta %sexec fish%s para recargar la shell.\n' "$B" "$R"
+    fi
+fi
