@@ -9,6 +9,18 @@ SCRIPT_NAME="ffm-tui"
 TEMP_DIR=""
 CURRENT_PID=""
 
+if [[ -t 1 && -z "${NO_COLOR:-}" ]] && command -v tput >/dev/null 2>&1; then
+    B=$(tput bold 2>/dev/null || true)
+    R=$(tput sgr0 2>/dev/null || true)
+    VERDE=$(tput setaf 2 2>/dev/null || true)
+    AMAR=$(tput setaf 3 2>/dev/null || true)
+    ROJO=$(tput setaf 1 2>/dev/null || true)
+    CIAN=$(tput setaf 6 2>/dev/null || true)
+    GRIS=$(tput setaf 8 2>/dev/null || true)
+else
+    B=""; R=""; VERDE=""; AMAR=""; ROJO=""; CIAN=""; GRIS=""
+fi
+
 cleanup() {
     if [[ -n "$CURRENT_PID" ]] && kill -0 "$CURRENT_PID" 2>/dev/null; then
         kill "$CURRENT_PID" 2>/dev/null || true
@@ -22,7 +34,7 @@ trap cleanup EXIT
 trap 'exit 130' INT TERM
 
 die() {
-    printf 'Error: %s\n' "$1" >&2
+    printf '%sError: %s%s\n' "$ROJO" "$1" "$R" >&2
     exit 1
 }
 
@@ -98,9 +110,9 @@ select_file() {
         die "No encontré vídeos en el directorio actual ni en ~/storage/downloads."
     fi
 
-    printf '\nVídeos disponibles:\n\n'
+    printf '\n%s%s%s\n\n' "$B$CIAN" 'Vídeos disponibles:' "$R"
     for i in "${!FILES[@]}"; do
-        printf '  %2d) %s\n' "$((i + 1))" "${FILES[$i]}"
+        printf '  %s%2d)%s %s\n' "$VERDE" "$((i + 1))" "$R" "${FILES[$i]}"
     done
     printf '\n'
 
@@ -111,7 +123,7 @@ select_file() {
             INPUT="${FILES[$((choice - 1))]}"
             return 0
         fi
-        printf 'Selección no válida.\n'
+        printf '%sSelección no válida.%s\n' "$AMAR" "$R"
     done
 }
 
@@ -121,27 +133,27 @@ show_info() {
     duration=$(video_duration "$INPUT")
     resolution=$(ffprobe -v error -select_streams v:0 \
         -show_entries stream=width,height -of csv=p=0:s=x "$INPUT" 2>/dev/null || true)
-    printf '\nArchivo:    %s\n' "$INPUT"
-    printf 'Tamaño:     %s\n' "$(format_bytes "$size")"
-    [[ -n "$duration" ]] && printf 'Duración:   %s s\n' "${duration%.*}"
-    [[ -n "$resolution" ]] && printf 'Resolución: %s\n' "$resolution"
+    printf '\nArchivo:    %s%s%s\n' "$B" "$INPUT" "$R"
+    printf 'Tamaño:     %s%s%s\n' "$VERDE" "$(format_bytes "$size")" "$R"
+    [[ -n "$duration" ]] && printf 'Duración:   %s%s s%s\n' "$VERDE" "${duration%.*}" "$R"
+    [[ -n "$resolution" ]] && printf 'Resolución: %s%s%s\n' "$VERDE" "$resolution" "$R"
 }
 
 choose_operation() {
     local choice
-    printf '\nOperación:\n'
-    printf '  1) Comprimir con mi preset (máximo 1080p, H.264, CRF 28)\n'
-    printf '  2) Comprimir sin cambiar la resolución\n'
-    printf '  3) Copiar sin recodificar\n'
-    printf '  4) Quitar audio\n'
-    printf '  q) Salir\n\n'
+    printf '\n%s%s%s\n' "$B$CIAN" 'Operación:' "$R"
+    printf '  %s1)%s Comprimir con mi preset (máximo 1080p, H.264, CRF 28)\n' "$VERDE" "$R"
+    printf '  %s2)%s Comprimir sin cambiar la resolución\n' "$VERDE" "$R"
+    printf '  %s3)%s Copiar sin recodificar\n' "$VERDE" "$R"
+    printf '  %s4)%s Quitar audio\n' "$VERDE" "$R"
+    printf '  %sq)%s Salir\n\n' "$VERDE" "$R"
 
     while true; do
         read -r -p 'Elige una operación: ' choice
         case "$choice" in
             1|2|3|4) OPERATION="$choice"; return 0 ;;
             q|Q) exit 0 ;;
-            *) printf 'Selección no válida.\n' ;;
+            *) printf '%sSelección no válida.%s\n' "$AMAR" "$R" ;;
         esac
     done
 }
@@ -163,10 +175,11 @@ output_for_operation() {
 confirm_output() {
     local answer
     if [[ -e "$OUTPUT" ]]; then
-        read -r -p "Ya existe '$OUTPUT'. ¿Sobrescribir? [s/N] " answer
+        printf '%sYa existe: %s%s\n' "$AMAR" "$OUTPUT" "$R"
+        read -r -p "¿Sobrescribir? [s/N] " answer
         [[ "$answer" =~ ^[sS]$ ]] || exit 0
     fi
-    printf '\nSalida: %s\n' "$OUTPUT"
+    printf '\nSalida: %s%s%s\n' "$VERDE" "$OUTPUT" "$R"
 }
 
 build_command() {
@@ -207,16 +220,16 @@ run_conversion() {
         > /dev/null 2>"$error_file" &
     CURRENT_PID=$!
 
-    printf '\nProcesando...\n'
+    printf '\n%sProcesando...%s\n' "$CIAN" "$R"
     while kill -0 "$CURRENT_PID" 2>/dev/null; do
         if [[ -n "$duration" && -f "$progress_file" ]]; then
             progress_us=$(awk -F= '$1 == "out_time_us" { value=$2 } END { print value + 0 }' "$progress_file")
             percent=$(awk -v current="$progress_us" -v total="$duration" \
                 'BEGIN { if (total > 0) printf "%.0f", current / 1000000 / total * 100; else print 0 }')
             ((percent > 99)) && percent=99
-            printf '\rProgreso: %3d%%' "$percent"
+            printf '\r%sProgreso: %3d%%%s' "$VERDE" "$percent" "$R"
         else
-            printf '\rProcesando %s' "${spinner_chars:spinner_index:1}"
+            printf '\r%sProcesando %s%s' "$CIAN" "${spinner_chars:spinner_index:1}" "$R"
             spinner_index=$(( (spinner_index + 1) % 4 ))
         fi
         sleep 0.5
@@ -228,14 +241,14 @@ run_conversion() {
     printf '\n'
 
     if ((status != 0)); then
-        printf 'FFmpeg falló:\n%s\n' "$(<"$error_file")" >&2
+        printf '%sFFmpeg falló:%s\n%s\n' "$ROJO" "$R" "$(<"$error_file")" >&2
         rm -f "$OUTPUT"
         return 1
     fi
 
-    printf 'Completado.\n'
-    printf 'Original: %s\n' "$(format_bytes "$(stat -c '%s' "$INPUT" 2>/dev/null || stat -f '%z' "$INPUT")")"
-    printf 'Resultado: %s\n' "$(format_bytes "$(stat -c '%s' "$OUTPUT" 2>/dev/null || stat -f '%z' "$OUTPUT")")"
+    printf '%sCompletado.%s\n' "$VERDE" "$R"
+    printf 'Original: %s%s%s\n' "$VERDE" "$(format_bytes "$(stat -c '%s' "$INPUT" 2>/dev/null || stat -f '%z' "$INPUT")")" "$R"
+    printf 'Resultado: %s%s%s\n' "$VERDE" "$(format_bytes "$(stat -c '%s' "$OUTPUT" 2>/dev/null || stat -f '%z' "$OUTPUT")")" "$R"
 }
 
 main() {

@@ -5,5 +5,6 @@ ffm-tui|scripts/termux/ffm-tui|700|bin/ffm-tui
 yt-tui|scripts/termux/yt-tui|700|bin/yt-tui
 termux-ssh|scripts/termux/termux-ssh|700|bin/termux-ssh
 net-tui|scripts/termux/net-tui|700|bin/net-tui
+ssh-tui|scripts/termux/ssh-tui|700|bin/ssh-tui
 ciber-greeting|scripts/termux/ciber-greeting.fish|644|.config/fish/conf.d/ciber-greeting.fish
 ciber-aliases|scripts/termux/ciber-aliases.fish|644|.config/fish/conf.d/ciber-aliases.fish

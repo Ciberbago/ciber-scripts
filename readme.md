@@ -125,7 +125,13 @@ ffm-tui       operaciones con FFmpeg
 yt-tui        descargas con yt-dlp
 termux-ssh    servidor SSH para controlar Termux desde el PC
 net-tui       utilidades rápidas de red (IP, ping, red local, WoL puntual)
+ssh-tui       conexiones SSH por alias (config local, sin contraseñas)
 ```
+
+`ssh-tui` conecta a tus sesiones SSH recurrentes por alias. La primera vez te
+ayuda a registrarlas; se guardan solo en `~/.config/ssh-tui/hosts` (permiso
+`600`) y nunca entran al repositorio. Las contraseñas las pide `ssh` al
+conectar, jamás se almacenan.
 
 Al iniciar una shell interactiva de Fish aparecerá también una bienvenida
 colorida con estos comandos. Se instala en `~/.config/fish/conf.d/` y no

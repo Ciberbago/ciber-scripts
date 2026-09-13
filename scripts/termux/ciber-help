@@ -80,6 +80,10 @@ item 'ssh -p 8022 USUARIO@IP' \
     'Comando para conectarte al teléfono desde el PC después de iniciar termux-ssh.'
 item 'scp -P 8022 archivo USUARIO@IP:~/storage/downloads/' \
     'Copia archivos del PC al almacenamiento compartido del teléfono.'
+item 'ssh-tui' \
+    'Conecta a tus sesiones SSH por alias; la primera vez te ayuda a registrarlas.'
+item 'ssh-tui alias' \
+    'Conecta directo sin menú. Las conexiones viven en ~/.config/ssh-tui/hosts (600).'
 
 section 'RED'
 item 'net-tui' \

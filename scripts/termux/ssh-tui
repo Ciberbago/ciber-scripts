@@ -1,0 +1,207 @@
+#!/usr/bin/env bash
+#
+# ssh-tui - conecta fácil a tus sesiones SSH recurrentes.
+#
+# Las conexiones se guardan SOLO en el teléfono, en
+# ~/.config/ssh-tui/hosts (permiso 600). Nada va al repositorio y nunca
+# se almacena ninguna contraseña: la pide ssh al conectar.
+
+set -u
+
+CONFIG_DIR="$HOME/.config/ssh-tui"
+HOSTS_FILE="$CONFIG_DIR/hosts"
+
+if [[ -t 1 && -z "${NO_COLOR:-}" ]] && command -v tput >/dev/null 2>&1; then
+    B=$(tput bold 2>/dev/null || true)
+    R=$(tput sgr0 2>/dev/null || true)
+    VERDE=$(tput setaf 2 2>/dev/null || true)
+    AMAR=$(tput setaf 3 2>/dev/null || true)
+    ROJO=$(tput setaf 1 2>/dev/null || true)
+    CIAN=$(tput setaf 6 2>/dev/null || true)
+    GRIS=$(tput setaf 8 2>/dev/null || true)
+else
+    B=""; R=""; VERDE=""; AMAR=""; ROJO=""; CIAN=""; GRIS=""
+fi
+
+die() {
+    printf '%sError: %s%s\n' "$ROJO" "$1" "$R" >&2
+    exit 1
+}
+
+pause() {
+    printf '\nPulsa Enter para continuar...'
+    read -r
+}
+
+title() {
+    printf '\n%s%s%s\n' "$B$CIAN" "$1" "$R"
+    printf '%s%s%s\n' "$GRIS" '----------------------------------------' "$R"
+}
+
+ensure_config() {
+    mkdir -p "$CONFIG_DIR" || die "No se pudo crear $CONFIG_DIR."
+    chmod 700 "$CONFIG_DIR"
+    if [[ ! -f "$HOSTS_FILE" ]]; then
+        : > "$HOSTS_FILE" || die "No se pudo crear $HOSTS_FILE."
+    fi
+    chmod 600 "$HOSTS_FILE"
+}
+
+host_count() {
+    grep -cE '[^[:space:]]' "$HOSTS_FILE" 2>/dev/null || true
+}
+
+valid_field() {
+    [[ -n "${1:-}" && "$1" != *"|"* ]]
+}
+
+ask_connection() {
+    local alias user host port answer
+    printf '\nNueva conexión (vacío para cancelar):\n'
+    read -r -p '  Alias (p. ej. servidor): ' alias
+    [[ -z "$alias" ]] && return 1
+    valid_field "$alias" || { printf '%sEl alias no puede contener |.%s\n' "$AMAR" "$R"; return 1; }
+    read -r -p '  Usuario: ' user
+    [[ -z "$user" ]] && return 1
+    valid_field "$user" || { printf '%sEl usuario no puede contener |.%s\n' "$AMAR" "$R"; return 1; }
+    read -r -p '  Host o IP: ' host
+    [[ -z "$host" ]] && return 1
+    valid_field "$host" || { printf '%sEl host no puede contener |.%s\n' "$AMAR" "$R"; return 1; }
+    read -r -p '  Puerto [22]: ' port
+    port="${port:-22}"
+    [[ "$port" =~ ^[0-9]+$ ]] && ((port >= 1 && port <= 65535)) || {
+        printf '%sPuerto no válido.%s\n' "$AMAR" "$R"
+        return 1
+    }
+    if awk -F'|' -v a="$alias" '$1 == a {found=1} END {exit !found}' "$HOSTS_FILE"; then
+        read -r -p "Ya existe '$alias'. ¿Reemplazar? [s/N] " answer
+        [[ "$answer" =~ ^[sS]$ ]] || return 1
+        awk -F'|' -v a="$alias" '$1 != a' "$HOSTS_FILE" > "$HOSTS_FILE.tmp" || true
+        mv "$HOSTS_FILE.tmp" "$HOSTS_FILE"
+    fi
+    printf '%s|%s|%s|%s\n' "$alias" "$user" "$host" "$port" >> "$HOSTS_FILE"
+    chmod 600 "$HOSTS_FILE"
+    printf '%sConexión guardada: %s%s\n' "$VERDE" "$alias" "$R"
+    return 0
+}
+
+first_run_wizard() {
+    local answer
+    (( $(host_count) > 0 )) && return 0
+    title 'Sin conexiones guardadas'
+    printf 'Vamos a registrar tus sesiones SSH.\n'
+    printf 'Solo se guarda alias, usuario, host y puerto.\n'
+    printf '%sNunca se guarda ninguna contraseña.%s\n' "$AMAR" "$R"
+    while true; do
+        ask_connection || true
+        (( $(host_count) > 0 )) || die 'No se registró ninguna conexión.'
+        read -r -p '¿Agregar otra? [S/n] ' answer
+        [[ "$answer" =~ ^[nN]$ ]] && break
+    done
+}
+
+list_hosts() {
+    local i=0 alias user host port
+    title 'Conexiones guardadas'
+    if (( $(host_count) == 0 )); then
+        printf 'No hay conexiones. Usa la opción 2 para agregar.\n'
+        return 1
+    fi
+    while IFS='|' read -r alias user host port; do
+        [[ -z "${alias:-}" ]] && continue
+        i=$((i + 1))
+        printf '  %s%2d)%s %s%s%s  %s%s@%s -p %s%s\n' \
+            "$VERDE" "$i" "$R" "$B" "$alias" "$R" "$GRIS" "$user" "$host" "$port" "$R"
+    done < "$HOSTS_FILE"
+    return 0
+}
+
+PICKED=""
+
+pick_host() {
+    local choice i=0 line
+    PICKED=""
+    list_hosts || return 1
+    printf '\n'
+    read -r -p 'Elige una conexión (q para salir): ' choice
+    [[ "$choice" == q || "$choice" == Q ]] && return 1
+    [[ "$choice" =~ ^[0-9]+$ ]] || { printf 'Selección no válida.\n'; return 1; }
+    while IFS= read -r line; do
+        [[ -z "$line" ]] && continue
+        i=$((i + 1))
+        if ((i == choice)); then
+            PICKED="$line"
+            return 0
+        fi
+    done < "$HOSTS_FILE"
+    printf 'Selección no válida.\n'
+    return 1
+}
+
+connect_line() {
+    local alias user host port
+    IFS='|' read -r alias user host port <<< "$1"
+    printf '\nConectando a %s%s%s (%s@%s -p %s)...\n' "$B" "$alias" "$R" "$user" "$host" "$port"
+    printf '%sLa contraseña la pedirá ssh; nunca se almacena.%s\n\n' "$GRIS" "$R"
+    exec ssh -p "$port" "$user@$host"
+}
+
+connect_alias() {
+    local line
+    line=$(awk -F'|' -v a="$1" '$1 == a {print; exit}' "$HOSTS_FILE")
+    [[ -n "$line" ]] || die "No existe la conexión: $1"
+    connect_line "$line"
+}
+
+remove_host() {
+    local alias answer
+    pick_host || return 0
+    alias="${PICKED%%|*}"
+    read -r -p "¿Eliminar '$alias'? [s/N] " answer
+    [[ "$answer" =~ ^[sS]$ ]] || return 0
+    awk -F'|' -v a="$alias" '$1 != a' "$HOSTS_FILE" > "$HOSTS_FILE.tmp" || true
+    mv "$HOSTS_FILE.tmp" "$HOSTS_FILE"
+    chmod 600 "$HOSTS_FILE"
+    printf 'Eliminada: %s\n' "$alias"
+}
+
+main_menu() {
+    local choice
+    while true; do
+        printf '\n%s%s%s\n' "$B$CIAN" 'ssh-tui — sesiones SSH' "$R"
+        printf '%s%s%s\n\n' "$GRIS" '============================' "$R"
+        printf '%s1)%s Conectar\n' "$VERDE" "$R"
+        printf '%s2)%s Agregar conexión\n' "$VERDE" "$R"
+        printf '%s3)%s Eliminar conexión\n' "$VERDE" "$R"
+        printf '%s4)%s Ver conexiones\n' "$VERDE" "$R"
+        printf '%sq)%s Salir\n\n' "$VERDE" "$R"
+
+        read -r -p 'Elige una opción: ' choice
+        case "$choice" in
+            1) if pick_host; then connect_line "$PICKED"; fi ;;
+            2) ask_connection || true; pause ;;
+            3) remove_host; pause ;;
+            4) list_hosts || true; pause ;;
+            q|Q) printf 'Hasta luego.\n'; return 0 ;;
+            *) printf 'Opción no válida.\n'; sleep 1 ;;
+        esac
+    done
+}
+
+main() {
+    ensure_config
+    if [[ $# -gt 0 ]]; then
+        case "$1" in
+            -h|--help)
+                printf 'Uso: ssh-tui [alias]\nSin argumentos abre el menú; con alias conecta directo.\n'
+                return 0
+                ;;
+            *) connect_alias "$1" ;;
+        esac
+        return 0
+    fi
+    first_run_wizard
+    main_menu
+}
+
+main "$@"

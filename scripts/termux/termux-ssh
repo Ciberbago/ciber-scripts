@@ -7,6 +7,18 @@ set -u
 SSH_PORT=8022
 HOME_DIR="${HOME:?No se pudo detectar HOME}"
 
+if [[ -t 1 && -z "${NO_COLOR:-}" ]] && command -v tput >/dev/null 2>&1; then
+    B=$(tput bold 2>/dev/null || true)
+    R=$(tput sgr0 2>/dev/null || true)
+    VERDE=$(tput setaf 2 2>/dev/null || true)
+    AMAR=$(tput setaf 3 2>/dev/null || true)
+    ROJO=$(tput setaf 1 2>/dev/null || true)
+    CIAN=$(tput setaf 6 2>/dev/null || true)
+    GRIS=$(tput setaf 8 2>/dev/null || true)
+else
+    B=""; R=""; VERDE=""; AMAR=""; ROJO=""; CIAN=""; GRIS=""
+fi
+
 is_installed() {
     command -v "$1" >/dev/null 2>&1
 }
@@ -22,11 +34,11 @@ ensure_openssh() {
     fi
 
     if ! is_installed pkg; then
-        printf 'Este script debe ejecutarse dentro de Termux.\n' >&2
+        printf '%sEste script debe ejecutarse dentro de Termux.%s\n' "$ROJO" "$R" >&2
         return 1
     fi
 
-    printf 'OpenSSH no está instalado. Instalándolo...\n'
+    printf '%sOpenSSH no está instalado. Instalándolo...%s\n' "$AMAR" "$R"
     pkg update -y && pkg install -y openssh
 }
 
@@ -52,33 +64,33 @@ show_connection() {
     user=$(get_user)
     ip=$(get_ip)
 
-    printf '\nDatos de conexión\n'
-    printf '%s\n' '-----------------'
-    printf 'Usuario: %s\n' "$user"
-    printf 'IP:      %s\n' "$ip"
-    printf 'Puerto:  %s\n' "$SSH_PORT"
+    printf '\n%s%s%s\n' "$B$CIAN" 'Datos de conexión' "$R"
+    printf '%s%s%s\n' "$GRIS" '-----------------' "$R"
+    printf 'Usuario: %s%s%s\n' "$VERDE" "$user" "$R"
+    printf 'IP:      %s%s%s\n' "$VERDE" "$ip" "$R"
+    printf 'Puerto:  %s%s%s\n' "$VERDE" "$SSH_PORT" "$R"
     printf '\nConectarte desde el PC:\n\n'
-    printf '  ssh -p %s %s@%s\n' "$SSH_PORT" "$user" "$ip"
+    printf '  %sssh -p %s %s@%s%s\n' "$VERDE" "$SSH_PORT" "$user" "$ip" "$R"
     printf '\nCopiar un vídeo al teléfono:\n\n'
-    printf '  scp -P %s video.mp4 %s@%s:~/storage/downloads/\n' "$SSH_PORT" "$user" "$ip"
+    printf '  %sscp -P %s video.mp4 %s@%s:~/storage/downloads/%s\n' "$VERDE" "$SSH_PORT" "$user" "$ip" "$R"
     printf '\nEjecutar ffm-tui remotamente:\n\n'
-    printf "  ssh -t -p %s %s@%s '~/bin/ffm-tui'\n" "$SSH_PORT" "$user" "$ip"
+    printf "  %sssh -t -p %s %s@%s '~/bin/ffm-tui'%s\n" "$VERDE" "$SSH_PORT" "$user" "$ip" "$R"
 }
 
 start_server() {
     ensure_openssh || return 1
 
     if server_running; then
-        printf 'El servidor SSH ya está ejecutándose.\n'
+        printf '%sEl servidor SSH ya está ejecutándose.%s\n' "$AMAR" "$R"
         show_connection
         return 0
     fi
 
     if sshd -p "$SSH_PORT"; then
-        printf 'Servidor SSH iniciado en el puerto %s.\n' "$SSH_PORT"
+        printf '%sServidor SSH iniciado en el puerto %s.%s\n' "$VERDE" "$SSH_PORT" "$R"
         show_connection
     else
-        printf 'No se pudo iniciar el servidor SSH.\n' >&2
+        printf '%sNo se pudo iniciar el servidor SSH.%s\n' "$ROJO" "$R" >&2
         return 1
     fi
 }
@@ -86,9 +98,9 @@ start_server() {
 stop_server() {
     if server_running; then
         pkill -x sshd
-        printf 'Servidor SSH detenido.\n'
+        printf '%sServidor SSH detenido.%s\n' "$AMAR" "$R"
     else
-        printf 'El servidor SSH no está ejecutándose.\n'
+        printf '%sEl servidor SSH no está ejecutándose.%s\n' "$AMAR" "$R"
     fi
 }
 
@@ -101,10 +113,10 @@ configure_password() {
 toggle_wake_lock() {
     if is_installed termux-wake-lock; then
         termux-wake-lock
-        printf 'Bloqueo de suspensión activado.\n'
+        printf '%sBloqueo de suspensión activado.%s\n' "$VERDE" "$R"
         printf 'Para liberarlo, usa la opción 6 o ejecuta termux-wake-unlock.\n'
     else
-        printf 'termux-wake-lock no está disponible en esta instalación.\n'
+        printf '%stermux-wake-lock no está disponible en esta instalación.%s\n' "$AMAR" "$R"
         printf 'Puedes continuar sin él; Android podría suspender Termux.\n'
     fi
 }
@@ -112,9 +124,9 @@ toggle_wake_lock() {
 release_wake_lock() {
     if is_installed termux-wake-unlock; then
         termux-wake-unlock
-        printf 'Bloqueo de suspensión liberado.\n'
+        printf '%sBloqueo de suspensión liberado.%s\n' "$VERDE" "$R"
     else
-        printf 'termux-wake-unlock no está disponible.\n'
+        printf '%stermux-wake-unlock no está disponible.%s\n' "$AMAR" "$R"
     fi
 }
 
@@ -122,21 +134,21 @@ main_menu() {
     local choice
     while true; do
         clear 2>/dev/null || true
-        printf 'Termux SSH\n'
-        printf '==========\n\n'
+        printf '%s%s%s\n' "$B$CIAN" 'Termux SSH' "$R"
+        printf '%s%s%s\n\n' "$GRIS" '==========' "$R"
         if server_running; then
-            printf 'Estado: ACTIVO (puerto %s)\n\n' "$SSH_PORT"
+            printf '%sEstado: ACTIVO (puerto %s)%s\n\n' "$VERDE" "$SSH_PORT" "$R"
         else
-            printf 'Estado: detenido\n\n'
+            printf '%sEstado: detenido%s\n\n' "$AMAR" "$R"
         fi
-        printf '1) Instalar/configurar OpenSSH\n'
-        printf '2) Configurar o cambiar contraseña\n'
-        printf '3) Iniciar servidor SSH\n'
-        printf '4) Detener servidor SSH\n'
-        printf '5) Mostrar datos de conexión\n'
-        printf '6) Activar bloqueo de suspensión\n'
-        printf '7) Liberar bloqueo de suspensión\n'
-        printf 'q) Salir\n\n'
+        printf '%s1)%s Instalar/configurar OpenSSH\n' "$VERDE" "$R"
+        printf '%s2)%s Configurar o cambiar contraseña\n' "$VERDE" "$R"
+        printf '%s3)%s Iniciar servidor SSH\n' "$VERDE" "$R"
+        printf '%s4)%s Detener servidor SSH\n' "$VERDE" "$R"
+        printf '%s5)%s Mostrar datos de conexión\n' "$VERDE" "$R"
+        printf '%s6)%s Activar bloqueo de suspensión\n' "$VERDE" "$R"
+        printf '%s7)%s Liberar bloqueo de suspensión\n' "$VERDE" "$R"
+        printf '%sq)%s Salir\n\n' "$VERDE" "$R"
 
         read -r -p 'Elige una opción: ' choice
         case "$choice" in
@@ -148,7 +160,7 @@ main_menu() {
             6) toggle_wake_lock; pause ;;
             7) release_wake_lock; pause ;;
             q|Q) printf 'Hasta luego.\n'; return 0 ;;
-            *) printf 'Opción no válida.\n'; sleep 1 ;;
+            *) printf '%sOpción no válida.%s\n' "$AMAR" "$R"; sleep 1 ;;
         esac
     done
 }

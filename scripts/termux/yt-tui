@@ -10,6 +10,18 @@ NO_PLAYLIST=1
 YTDLP_EXTRA_ARGS=()
 JS_RUNTIME=""
 
+if [[ -t 1 && -z "${NO_COLOR:-}" ]] && command -v tput >/dev/null 2>&1; then
+    B=$(tput bold 2>/dev/null || true)
+    R=$(tput sgr0 2>/dev/null || true)
+    VERDE=$(tput setaf 2 2>/dev/null || true)
+    AMAR=$(tput setaf 3 2>/dev/null || true)
+    ROJO=$(tput setaf 1 2>/dev/null || true)
+    CIAN=$(tput setaf 6 2>/dev/null || true)
+    GRIS=$(tput setaf 8 2>/dev/null || true)
+else
+    B=""; R=""; VERDE=""; AMAR=""; ROJO=""; CIAN=""; GRIS=""
+fi
+
 if [[ -f "$CONFIG_FILE" ]]; then
     # El archivo pertenece al usuario y permite definir arrays de argumentos.
     # shellcheck disable=SC1090
@@ -22,7 +34,7 @@ pause() {
 }
 
 die() {
-    printf 'Error: %s\n' "$1" >&2
+    printf '%sError: %s%s\n' "$ROJO" "$1" "$R" >&2
     exit 1
 }
 
@@ -48,7 +60,7 @@ ensure_dependencies() {
         die "Faltan yt-dlp y/o ffmpeg. Instálalos con el gestor de paquetes del sistema."
     fi
 
-    printf 'Faltan dependencias: %s\n' "${missing[*]}"
+    printf '%sFaltan dependencias:%s %s\n' "$AMAR" "$R" "${missing[*]}"
     printf 'Instalando python-yt-dlp, yt-dlp-ejs y ffmpeg con pkg...\n'
     pkg update -y && pkg install -y python-yt-dlp yt-dlp-ejs ffmpeg || \
         die "No se pudieron instalar las dependencias."
@@ -64,8 +76,8 @@ prepare_destination() {
 
 show_config_hint() {
     if [[ ! -f "$CONFIG_FILE" ]]; then
-        printf '\nConfiguración opcional:\n%s\n' "$CONFIG_FILE"
-        printf 'Puedes crearla más adelante para añadir argumentos extra a yt-dlp.\n'
+        printf '\n%sConfiguración opcional:%s\n%s\n' "$CIAN" "$R" "$CONFIG_FILE"
+        printf '%sPuedes crearla más adelante para añadir argumentos extra a yt-dlp.%s\n' "$GRIS" "$R"
     fi
 }
 
@@ -83,16 +95,16 @@ choose_url() {
 choose_type() {
     local choice
     while true; do
-        printf '\nTipo de descarga:\n'
-        printf '  1) Vídeo\n'
-        printf '  2) Audio\n'
-        printf '  q) Salir\n\n'
+        printf '\n%s%s%s\n' "$B$CIAN" 'Tipo de descarga:' "$R"
+        printf '  %s1)%s Vídeo\n' "$VERDE" "$R"
+        printf '  %s2)%s Audio\n' "$VERDE" "$R"
+        printf '  %sq)%s Salir\n\n' "$VERDE" "$R"
         read -r -p 'Elige una opción: ' choice
         case "$choice" in
             1) TYPE=video; return 0 ;;
             2) TYPE=audio; return 0 ;;
             q|Q) exit 0 ;;
-            *) printf 'Opción no válida.\n' ;;
+            *) printf '%sOpción no válida.%s\n' "$AMAR" "$R" ;;
         esac
     done
 }
@@ -100,13 +112,13 @@ choose_type() {
 choose_video_profile() {
     local choice
     while true; do
-        printf '\nCalidad de vídeo:\n'
-        printf '  1) Mejor disponible\n'
-        printf '  2) Hasta 360p\n'
-        printf '  3) Hasta 480p\n'
-        printf '  4) Hasta 720p\n'
-        printf '  5) Hasta 1080p\n'
-        printf '  q) Salir\n\n'
+        printf '\n%s%s%s\n' "$B$CIAN" 'Calidad de vídeo:' "$R"
+        printf '  %s1)%s Mejor disponible\n' "$VERDE" "$R"
+        printf '  %s2)%s Hasta 360p\n' "$VERDE" "$R"
+        printf '  %s3)%s Hasta 480p\n' "$VERDE" "$R"
+        printf '  %s4)%s Hasta 720p\n' "$VERDE" "$R"
+        printf '  %s5)%s Hasta 1080p\n' "$VERDE" "$R"
+        printf '  %sq)%s Salir\n\n' "$VERDE" "$R"
         read -r -p 'Elige una calidad: ' choice
         case "$choice" in
             1) VIDEO_FORMAT='bestvideo*+bestaudio/best'; return 0 ;;
@@ -115,7 +127,7 @@ choose_video_profile() {
             4) VIDEO_FORMAT='bv*[height<=720]+ba/b[height<=720]'; return 0 ;;
             5) VIDEO_FORMAT='bv*[height<=1080]+ba/b[height<=1080]'; return 0 ;;
             q|Q) exit 0 ;;
-            *) printf 'Opción no válida.\n' ;;
+            *) printf '%sOpción no válida.%s\n' "$AMAR" "$R" ;;
         esac
     done
 }
@@ -123,18 +135,18 @@ choose_video_profile() {
 choose_audio_profile() {
     local choice
     while true; do
-        printf '\nFormato de audio:\n'
-        printf '  1) MP3 a 192 kbps\n'
-        printf '  2) MP3 a 320 kbps\n'
-        printf '  3) M4A\n'
-        printf '  q) Salir\n\n'
+        printf '\n%s%s%s\n' "$B$CIAN" 'Formato de audio:' "$R"
+        printf '  %s1)%s MP3 a 192 kbps\n' "$VERDE" "$R"
+        printf '  %s2)%s MP3 a 320 kbps\n' "$VERDE" "$R"
+        printf '  %s3)%s M4A\n' "$VERDE" "$R"
+        printf '  %sq)%s Salir\n\n' "$VERDE" "$R"
         read -r -p 'Elige un formato: ' choice
         case "$choice" in
             1) AUDIO_ARGS=(-x --audio-format mp3 --audio-quality 192K); return 0 ;;
             2) AUDIO_ARGS=(-x --audio-format mp3 --audio-quality 320K); return 0 ;;
             3) AUDIO_ARGS=(-x --audio-format m4a); return 0 ;;
             q|Q) exit 0 ;;
-            *) printf 'Opción no válida.\n' ;;
+            *) printf '%sOpción no válida.%s\n' "$AMAR" "$R" ;;
         esac
     done
 }
@@ -163,18 +175,18 @@ run_download() {
     local log_file status
     log_file=$(mktemp "${TMPDIR:-/tmp}/yt-tui.XXXXXX") || die "No se pudo crear el registro temporal."
 
-    printf '\nDestino: %s\n' "$DOWNLOAD_DIR"
-    printf 'Iniciando descarga...\n\n'
+    printf '\nDestino: %s%s%s\n' "$VERDE" "$DOWNLOAD_DIR" "$R"
+    printf '%sIniciando descarga...%s\n\n' "$CIAN" "$R"
     "${CMD[@]}" 2>&1 | tee "$log_file"
     status=${PIPESTATUS[0]}
 
     if ((status == 0)); then
         rm -f "$log_file"
-        printf '\nDescarga completada.\n'
+        printf '\n%sDescarga completada.%s\n' "$VERDE" "$R"
     else
-        printf '\nLa descarga falló.\n' >&2
+        printf '\n%sLa descarga falló.%s\n' "$ROJO" "$R" >&2
         if grep -Eiq '429|too many requests|rate.?limit|http error 429|temporarily blocked|sign in|login required|authentication|cookies|confirm you.re human|javascript runtime|js challenge' "$log_file"; then
-            printf '\nPosible causa detectada:\n' >&2
+            printf '\n%sPosible causa detectada:%s\n' "$AMAR" "$R" >&2
             if grep -Eiq '429|too many requests|rate.?limit|http error 429|temporarily blocked' "$log_file"; then
                 printf '%s\n' '- El sitio puede estar limitando las solicitudes.' >&2
                 printf '%s\n' '- Prueba añadiendo pausas y cookies en ~/.config/yt-tui/config.' >&2

@@ -18,16 +18,27 @@ cleanup() {
 
 trap cleanup EXIT
 
+if [[ -t 1 && -z "${NO_COLOR:-}" ]] && command -v tput >/dev/null 2>&1; then
+    B=$(tput bold 2>/dev/null || true)
+    R=$(tput sgr0 2>/dev/null || true)
+    VERDE=$(tput setaf 2 2>/dev/null || true)
+    AMAR=$(tput setaf 3 2>/dev/null || true)
+    ROJO=$(tput setaf 1 2>/dev/null || true)
+    CIAN=$(tput setaf 6 2>/dev/null || true)
+else
+    B=""; R=""; VERDE=""; AMAR=""; ROJO=""; CIAN=""
+fi
+
 info() {
-    printf '\n==> %s\n' "$1"
+    printf '\n%s==> %s%s\n' "$B$CIAN" "$1" "$R"
 }
 
 warn() {
-    printf 'Aviso: %s\n' "$1" >&2
+    printf '%sAviso: %s%s\n' "$AMAR" "$1" "$R" >&2
 }
 
 die() {
-    printf 'Error: %s\n' "$1" >&2
+    printf '%sError: %s%s\n' "$ROJO" "$1" "$R" >&2
     exit 1
 }
 
@@ -122,7 +133,7 @@ install_user_scripts() {
     destination="$HOME/bin"
     mkdir -p "$destination" || die "No se pudo crear $destination."
 
-    for name in ciber-help ciber-update ffm-tui yt-tui termux-ssh net-tui; do
+    for name in ciber-help ciber-update ffm-tui yt-tui termux-ssh net-tui ssh-tui; do
         if [[ -e "$destination/$name" ]]; then
             printf 'Conservando existente: %s\n' "$destination/$name"
             continue
@@ -184,16 +195,17 @@ download_repo() {
 }
 
 show_summary() {
-    printf '\nInstalación terminada.\n'
+    printf '\n%sInstalación terminada.%s\n' "$VERDE" "$R"
     printf '\nScripts disponibles:\n'
-    printf '  ciber-help    ayuda y sintaxis de los scripts\n'
-    printf '  ciber-update  sincroniza scripts sin clonar el repo\n'
-    printf '  greeting      bienvenida colorida de Fish\n'
-    printf '  aliases       ls/ll/la/lt con eza en Fish\n'
-    printf '  ffm-tui       compresión y operaciones con FFmpeg\n'
-    printf '  yt-tui        descargas con yt-dlp\n'
-    printf '  termux-ssh    gestión del servidor SSH\n'
-    printf '  net-tui       utilidades rápidas de red\n'
+    printf '  %sciber-help%s    ayuda y sintaxis de los scripts\n' "$VERDE" "$R"
+    printf '  %sciber-update%s  sincroniza scripts sin clonar el repo\n' "$VERDE" "$R"
+    printf '  %sgreeting%s      bienvenida colorida de Fish\n' "$VERDE" "$R"
+    printf '  %saliases%s       ls/ll/la/lt con eza en Fish\n' "$VERDE" "$R"
+    printf '  %sffm-tui%s       compresión y operaciones con FFmpeg\n' "$VERDE" "$R"
+    printf '  %syt-tui%s        descargas con yt-dlp\n' "$VERDE" "$R"
+    printf '  %stermux-ssh%s    gestión del servidor SSH\n' "$VERDE" "$R"
+    printf '  %snet-tui%s       utilidades rápidas de red\n' "$VERDE" "$R"
+    printf '  %sssh-tui%s       conexiones SSH guardadas\n' "$VERDE" "$R"
     printf '\nIMPORTANTE: esta sesión sigue en Bash.\n'
     printf 'Abre una sesión NUEVA de Termux para entrar en Fish,\n'
     printf 'y verifícalo ahí con: echo $SHELL\n'
