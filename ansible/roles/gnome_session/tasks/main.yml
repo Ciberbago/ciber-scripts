@@ -37,7 +37,8 @@
     cmd: >-
       python3 {{ ciber_repo_root }}/scripts/common/dconf-validate.py
       {{ ((gnome_dconf | map(attribute='key') | list)
-          + (gnome_dconf_loads | map(attribute='path') | list)) | join(' ') }}
+          + (gnome_dconf_loads | rejectattr('relocatable', 'defined')
+             | map(attribute='path') | list)) | join(' ') }}
   register: dconf_validacion
   changed_when: false
   check_mode: false

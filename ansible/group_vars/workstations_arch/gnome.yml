@@ -58,7 +58,12 @@ gnome_dconf:
   - { key: /org/gnome/shell/keybindings/show-screenshot-ui, value: "['<Control>minus', 'Print']" }
 
   # --- libera el atajo de emoji de ibus para usar la extension ---
-  - { key: /org/freedesktop/ibus/panel/emoji/hotkey,   value: "@as []" }
+  #
+  # OJO: /desktop/ibus/... y NO /org/freedesktop/ibus/... El esquema se llama
+  # org.freedesktop.ibus.panel.emoji pero su path es /desktop/ibus/panel/emoji/.
+  # Mismo caso que logout-prompt: el id no dice donde vive. Con la ruta mala,
+  # ibus seguia quedandose con Super+. y el panel de emojis nunca abria.
+  - { key: /desktop/ibus/panel/emoji/hotkey,           value: "@as []" }
 
   # --- Super+V para el portapapeles (Copyous) ---
   #
@@ -78,7 +83,13 @@ gnome_dconf_loads:
   - { path: /org/gnome/shell/extensions/executor/,      src: dotfiles/arch/extensions/executor.conf }
   - { path: /org/gnome/shell/extensions/bring-out-submenu-of-power-off-logout/, src: dotfiles/arch/extensions/poweroffmenu.conf }
   - { path: /org/gnome/desktop/wm/keybindings/,         src: dotfiles/arch/keybindings.dconf }
-  - { path: /org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/, src: dotfiles/arch/custom-values.dconf }
+  # 'relocatable' excluye esta ruta del validador de dconf. No es un error: los
+  # atajos personalizados usan un esquema RELOCALIZABLE
+  # (org.gnome.settings-daemon.plugins.media-keys.custom-keybinding, en
+  # singular), que no declara 'path' en su XML porque GNOME lo instancia en
+  # custom0/, custom1/... El validador solo conoce esquemas con path fijo, asi
+  # que sin esta marca la reportaba como muerta cuando funciona perfectamente.
+  - { path: /org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/, src: dotfiles/arch/custom-values.dconf, relocatable: true }
 
 # Los atajos personalizados necesitan ademas la LISTA de rutas activas, que es
 # una sola tecla y no un volcado. El archivo la trae ya en formato GVariant.

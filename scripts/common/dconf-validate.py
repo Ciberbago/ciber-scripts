@@ -59,8 +59,13 @@ def leer_esquemas():
                 ruta = esquema.get("path")
                 ident = esquema.get("id")
                 if not ruta or not ident:
-                    # Los esquemas relocalizables no traen path: no se pueden
-                    # comprobar asi, y no los usamos.
+                    # Esquema RELOCALIZABLE: no declara path porque quien lo usa
+                    # decide donde instanciarlo (los atajos personalizados de
+                    # GNOME, por ejemplo, van en custom0/, custom1/...). No hay
+                    # forma de saber desde aqui donde acabaran, asi que se
+                    # omiten. Las rutas del repo que apunten a uno de estos se
+                    # marcan con 'relocatable: true' en gnome_dconf_loads para
+                    # que el rol no las mande a comprobar.
                     continue
                 claves = set()
                 for clave in esquema.iter("key"):
@@ -85,7 +90,10 @@ def main(argv):
     for entrada in argv:
         if entrada.endswith("/"):
             if entrada not in mapa:
-                problemas.append("  %s\n      ninguna extension o app tiene un esquema en esa ruta" % entrada)
+                problemas.append(
+                    "  %s\n      ninguna extension o app tiene un esquema con ese path"
+                    "\n      (si es un esquema relocalizable, marcalo con "
+                    "'relocatable: true' en gnome_dconf_loads)" % entrada)
             continue
 
         carpeta, _, nombre = entrada.rpartition("/")
