@@ -1,0 +1,46 @@
+# Maintainer: Ciberbago
+
+pkgname=grab
+pkgver=3.8.0
+pkgrel=1
+pkgdesc="A download manager designed for GNOME using GTK4 + libadwaita"
+arch=('x86_64')
+url="https://github.com/houssemko/Grab"
+license=('MIT')
+depends=('glibc'
+         'gcc-libs'
+         'gtk4'
+         'libadwaita'
+         'hicolor-icon-theme'
+         'yt-dlp')
+makedepends=('rust' 'cargo' 'git')
+source=("${pkgname}-${pkgver}.tar.gz::https://github.com/houssemko/Grab/archive/refs/tags/v${pkgver}.tar.gz")
+sha256sums=('SKIP')
+
+prepare() {
+    cd "Grab-${pkgver}"
+    cargo fetch --locked --target "$CHOST"
+}
+
+build() {
+    cd "Grab-${pkgver}"
+    export RUSTUP_TOOLCHAIN=stable
+    export CARGO_TARGET_DIR=target
+    
+    # Limpiar las variables de entorno de CFLAGS/LDFLAGS que rompen gettext-sys en Rust
+    unset CFLAGS
+    unset CXXFLAGS
+    unset LDFLAGS
+    
+    cargo build --frozen --release --all-targets
+}
+
+package() {
+    cd "Grab-${pkgver}"
+    
+    # Instalar el binario principal generado por cargo
+    install -Dm755 "target/release/grab" "${pkgdir}/usr/bin/grab"
+
+    # Licencia
+    install -Dm644 LICENSE -t "${pkgdir}/usr/share/licenses/${pkgname}"
+}
