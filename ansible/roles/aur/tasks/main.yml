@@ -148,8 +148,71 @@
   check_mode: false
   failed_when: false
 
+# --- PKGBUILDs propios (carpeta pkgbuilds/ del repo) ---
+#
+# Recetas de paquetes que no estan en el AUR. Se compilan con makepkg y quedan
+# instalados como cualquier otro paquete: aparecen en 'pacman -Qm' igual que los
+# del AUR, y pacman -Syu no los toca.
+#
+# Van en ESTE rol y dentro del mismo bloque que el AUR a proposito: makepkg
+# necesita el permiso NOPASSWD temporal para instalar dependencias de
+# compilacion, y ese permiso ya se pone y se retira aqui. Un rol aparte tendria
+# que duplicar todo ese manejo.
+
+- name: Comprobar que los PKGBUILD existen en el repo
+  ansible.builtin.stat:
+    path: "{{ ciber_repo_root }}/{{ local_packages_dir }}/{{ item }}/PKGBUILD"
+  loop: "{{ local_packages }}"
+  register: localpkg_stat
+  become: false
+
+- name: Fallar con la lista de PKGBUILD que faltan
+  # Aqui SI se falla, a diferencia del AUR. Que un paquete del AUR desaparezca es
+  # cosa de terceros y no debe tumbar la corrida; que falte un PKGBUILD del
+  # propio repo es el repo contradiciendose, y se arregla en una linea.
+  ansible.builtin.assert:
+    that: localpkg_stat.results | default([]) | rejectattr('stat.exists') | list | length == 0
+    fail_msg: >-
+      Estan en local_packages pero no tienen PKGBUILD en {{ local_packages_dir }}/:
+      {{ localpkg_stat.results | default([]) | rejectattr('stat.exists')
+         | map(attribute='item') | list | join(', ') }}
+    quiet: true
+
+- name: Ver que paquetes locales hay que compilar
+  # Compara la version declarada en el PKGBUILD contra la instalada: sale 0 si
+  # coinciden (no hay nada que hacer) y distinto de 0 si hay que compilar. Asi
+  # actualizar un paquete es subir pkgrel en el PKGBUILD y volver a aplicar.
+  #
+  # executable /bin/bash y no sh: los PKGBUILD usan arrays (depends=(), source=())
+  # que solo existen en bash.
+  #
+  # OJO con los PKGBUILD tipo -git que definen pkgver(): ahi la version se calcula
+  # al compilar, no al leer el archivo, asi que esta comparacion nunca dira "al
+  # dia" y se recompilaran en cada corrida.
+  ansible.builtin.shell:
+    executable: /bin/bash
+    cmd: |
+      cd {{ (ciber_repo_root ~ '/' ~ local_packages_dir ~ '/' ~ item) | quote }} || exit 1
+      declarada=$(. ./PKGBUILD >/dev/null 2>&1; echo "$pkgver-$pkgrel")
+      instalada=$(pacman -Q {{ item | quote }} 2>/dev/null | awk '{print $2}')
+      echo "declarada=${declarada:-?} instalada=${instalada:-ninguna}"
+      [ -n "$instalada" ] && [ "$declarada" = "$instalada" ]
+  loop: "{{ local_packages }}"
+  loop_control:
+    label: "{{ item }}"
+  register: localpkg_check
+  changed_when: false
+  check_mode: false
+  failed_when: false
+  become: false
+
 - name: Compilar del AUR
-  when: yay_check.rc != 0 or (aur_check.results | rejectattr('rc', 'equalto', 0) | list | length > 0)
+  # El bloque tambien tiene que correr cuando lo unico pendiente son PKGBUILDs
+  # del repo: son los que necesitan el permiso NOPASSWD que se pone aqui dentro.
+  when: >-
+    yay_check.rc != 0
+    or (aur_check.results | default([]) | rejectattr('rc', 'equalto', 0) | list | length > 0)
+    or (localpkg_check.results | default([]) | rejectattr('rc', 'equalto', 0) | list | length > 0)
   block:
     - name: Permitir pacman sin password temporalmente
       ansible.builtin.copy:
@@ -196,6 +259,9 @@
           tarda: "Varios minutos. Los paquetes -git y los dkms son los lentos"
           avance: >-
             'ciber-watch' muestra los procesos de compilacion en curso cada 5 s
+      # Sin este 'when' el banner salia con la lista vacia cuando lo unico
+      # pendiente eran PKGBUILDs del repo, que tambien entran a este bloque.
+      when: aur_check.results | default([]) | rejectattr('rc', 'equalto', 0) | list | length > 0
 
     - name: Instalar paquetes del AUR con yay
       # No aborta el play si uno falla. Compilar el AUR toma minutos, y perder
@@ -222,6 +288,66 @@
             existe, quitalo de aur_packages en packages.yml.
       when: yay_result.results | rejectattr('rc', 'equalto', 0) | list | length > 0
 
+    # --- PKGBUILDs del repo ---
+
+    - name: Que sigue - compilar PKGBUILDs del repo
+      ansible.builtin.debug:
+        msg:
+          sigue: >-
+            Compilar con makepkg:
+            {{ localpkg_check.results | default([]) | rejectattr('rc', 'equalto', 0)
+               | map(attribute='item') | list }}
+          por_que: >-
+            {{ localpkg_check.results | default([]) | rejectattr('rc', 'equalto', 0)
+               | map(attribute='stdout') | map('trim') | list }}
+      when: localpkg_check.results | default([]) | rejectattr('rc', 'equalto', 0) | list | length > 0
+
+    - name: Copiar los PKGBUILD a un directorio de compilacion
+      # No se compila dentro del checkout: makepkg deja src/, pkg/ y el
+      # .pkg.tar.zst en el directorio actual, y eso pelearia con el
+      # 'git checkout -qf' con el que arranca cada corrida.
+      ansible.builtin.copy:
+        src: "{{ ciber_repo_root }}/{{ local_packages_dir }}/{{ item.item }}/"
+        dest: "/tmp/ciber-pkg-{{ item.item }}/"
+        remote_src: true
+        mode: preserve
+      loop: "{{ localpkg_check.results | default([]) | rejectattr('rc', 'equalto', 0) | list }}"
+      loop_control:
+        label: "{{ item.item }}"
+      become: false
+
+    - name: Compilar e instalar los PKGBUILD del repo
+      # -f sobrescribe un .pkg.tar.zst que haya quedado de una corrida
+      # interrumpida, donde el 'always' de limpieza no alcanzo a ejecutarse. Sin
+      # el, makepkg se niega a seguir con un error que no dice que sobra un
+      # archivo viejo.
+      #
+      # become false: makepkg se niega a correr como root. Las dependencias las
+      # instala con el NOPASSWD temporal de mas arriba.
+      ansible.builtin.command:
+        cmd: makepkg -sif --noconfirm --needed
+        chdir: "/tmp/ciber-pkg-{{ item.item }}"
+      loop: "{{ localpkg_check.results | default([]) | rejectattr('rc', 'equalto', 0) | list }}"
+      loop_control:
+        label: "{{ item.item }}"
+      become: false
+      changed_when: true
+      failed_when: false
+      register: localpkg_build
+
+    - name: Reportar PKGBUILDs que fallaron
+      ansible.builtin.debug:
+        msg:
+          fallaron: >-
+            {{ localpkg_build.results | default([]) | rejectattr('rc', 'equalto', 0)
+               | map(attribute='item.item') | list }}
+          que_hacer: >-
+            Para ver el error completo, en la maquina:
+            cd /tmp/ciber-pkg-<nombre> && makepkg -si
+            (ese directorio se borra al final de cada corrida, vuelve a copiarlo
+            desde {{ local_packages_dir }}/ del repo)
+      when: localpkg_build.results | default([]) | rejectattr('rc', 'equalto', 0) | list | length > 0
+
   always:
     - name: Retirar el permiso NOPASSWD
       ansible.builtin.file:
@@ -233,4 +359,11 @@
       ansible.builtin.file:
         path: /tmp/ciber-build-yay
         state: absent
+      become: false
+
+    - name: Limpiar los directorios de compilacion de los PKGBUILD
+      ansible.builtin.file:
+        path: "/tmp/ciber-pkg-{{ item }}"
+        state: absent
+      loop: "{{ local_packages }}"
       become: false

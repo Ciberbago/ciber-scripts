@@ -1,0 +1,10 @@
+[Unit]
+Description=Aviso de que fallo el montaje del NAS
+# Sin seccion [Install] a proposito: esta unidad no se habilita ni arranca en
+# boot. La dispara el 'OnFailure=' de run-media-nas.mount, y para eso basta con
+# que el archivo este instalado en /etc/systemd/system. Por eso tampoco hace
+# falta agregarla a systemd_units_enabled.
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/nas-aviso run-media-nas.mount

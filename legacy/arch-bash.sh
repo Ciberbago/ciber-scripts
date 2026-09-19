@@ -161,7 +161,7 @@ dls "${sdconfig}/lts.conf"                       /boot/loader/entries/lts.conf
 dls "${sdconfig}/80-gaming.conf"                 /etc/sysctl.d/80-gaming.conf
 dls "${sdconfig}/99-cachyos-settings.conf"       /etc/sysctl.d/99-cachyos-settings.conf
 dls "${sdconfig}/00-timeout.conf"                /etc/systemd/system.conf.d/00-timeout.conf
-dls "${sdconfig}/zram-generator.conf"            /usr/lib/systemd/arch/zram-generator.conf
+dls "${sdconfig}/zram-generator.conf"            /usr/lib/systemd/zram-generator.conf
 dls "${sdconfig}/30-zram.rules"                  /usr/lib/udev/rules.d/30-zram.rules
 
 #<-------Scripts y programas------->
@@ -169,7 +169,7 @@ dls "${sdconfig}/30-zram.rules"                  /usr/lib/udev/rules.d/30-zram.r
 for s in gnome ext gnomeconfig hideapps removeapps appimages aur firefoxconfig postinstall; do
     dl "${scriptsv}/${s}.sh" "$HOME/${s}.sh" 0755
 done
-dl  "${scriptsv}/mediainfo.sh"   "$HOME/.local/share/nautilus/scripts/arch/mediainfo.sh" 0755
+dl  "${scriptsv}/mediainfo.sh"   "$HOME/.local/share/nautilus/scripts/mediainfo.sh" 0755
 dls "${scriptsv}/wallpaper.sh"   /usr/local/bin/wallpaper                           0755
 dls "${scriptsv}/archbootgen.sh" /usr/local/bin/archbootgen                         0755
 

@@ -43,7 +43,7 @@ system_files:
   - { src: systemd/arch/80-gaming.conf,            dest: /etc/sysctl.d/80-gaming.conf }
   - { src: systemd/arch/99-cachyos-settings.conf,  dest: /etc/sysctl.d/99-cachyos-settings.conf }
   - { src: systemd/arch/00-timeout.conf,           dest: /etc/systemd/system.conf.d/00-timeout.conf }
-  - { src: systemd/arch/zram-generator.conf,       dest: /usr/lib/systemd/arch/zram-generator.conf }
+  - { src: systemd/arch/zram-generator.conf,       dest: /usr/lib/systemd/zram-generator.conf }
   - { src: systemd/arch/30-zram.rules,             dest: /usr/lib/udev/rules.d/30-zram.rules }
 
 # --- Scripts que se instalan como comandos en /usr/local/bin ---
@@ -61,6 +61,12 @@ cli_tools:
     desc: >-
       Regenera las entradas de systemd-boot detectando los kernels instalados.
       Hay que correrlo con sudo. Util despues de instalar o quitar un kernel.
+  - src: scripts/arch/nas-aviso.sh
+    dest: /usr/local/bin/nas-aviso
+    desc: >-
+      Explica por que fallo el montaje del NAS y manda una notificacion al
+      escritorio. No se ejecuta a mano: lo dispara el OnFailure= de
+      run-media-nas.mount a traves de ciber-nas-aviso.service.
   - src: scripts/common/ciber-watch.sh
     dest: /usr/local/bin/ciber-watch
     desc: >-
@@ -70,4 +76,4 @@ cli_tools:
 
 # --- Scripts de Nautilus (menu contextual del explorador) ---
 nautilus_scripts:
-  - { src: scripts/arch/mediainfo.sh,  dest: ~/.local/share/nautilus/scripts/arch/mediainfo.sh }
+  - { src: scripts/arch/mediainfo.sh,  dest: ~/.local/share/nautilus/scripts/mediainfo.sh }

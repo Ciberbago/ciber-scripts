@@ -1,0 +1,5 @@
+---
+# PKGBUILDs propios, versionados en el repo. Ver pkgbuilds/README.md.
+# Vacia por defecto para que el rol no haga nada si la distro no los usa.
+local_packages: []
+local_packages_dir: pkgbuilds

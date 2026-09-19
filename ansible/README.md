@@ -30,6 +30,7 @@ para el mantenimiento normal.
 |---|---|---|
 | Agregar/quitar un paquete | `packages.yml` | 1 línea |
 | Agregar un paquete del AUR | `packages.yml` → `aur_packages` | 1 línea |
+| Agregar un PKGBUILD propio | carpeta en `pkgbuilds/` + `packages.yml` → `local_packages` | 1 línea |
 | Agregar un dotfile | pongo el archivo en `dotfiles/` + `files.yml` | 1 línea |
 | Agregar config a `/etc` | pongo el archivo en el repo + `files.yml` | 1 línea |
 | Agregar config a `/etc` con variables | plantilla en `roles/system_files/templates/` + `files.yml` → `system_templates` | 1 línea |
@@ -40,6 +41,7 @@ para el mantenimiento normal.
 | Agregar una extensión de GNOME | `gnome.yml` | 1 línea |
 | Agregar un alias de fish | `shell.yml` | 1 línea |
 | Guardar la config de un plugin de fish | volcar con `fish-dump-universals.fish` + `shell.yml` | 1 línea |
+| Agregar un archivo de credenciales | `credentials.yml` | 1 entrada |
 | Cambiar zona horaria, shell, timeouts | `main.yml` | 1 línea |
 
 Después de editar, aplicas con `ciber-apply`. Si el cambio ya está en GitHub,
@@ -161,6 +163,85 @@ Si quieres las dos cosas en la misma pantalla, con `tmux`:
 tmux new-session 'ciber-apply' \; split-window -v -p 25 'ciber-watch' \; attach
 ```
 
+
+## Credenciales (lo único que el playbook no puede resolver solo)
+
+Hay secretos que no pueden vivir en el repo — el usuario y contraseña del NAS,
+por ejemplo. El rol `credentials` crea cada archivo con valores de ejemplo
+(`CAMBIAME`) en modo `0600` y **nunca lo sobrescribe si ya existe**, para que un
+`ciber-apply` no borre la contraseña real.
+
+Se declara en `credentials.yml`:
+
+```yaml
+credential_files:
+  - dest: "{{ ciber_home }}/.credentials"
+    desc: "NAS por CIFS (//192.168.7.210/nas)"
+    pista: "Es el usuario del recurso samba, no el de esta máquina."
+    contenido: |
+      username=CAMBIAME
+      password=CAMBIAME
+```
+
+Mientras siga diciendo `CAMBIAME` avisan **dos** mecanismos independientes:
+
+1. **El playbook**, al final de cada `ciber-apply`, con un bloque
+   `*** ACCION REQUERIDA ***` en el resumen.
+2. **systemd**, cuando el montaje falla de verdad. `run-media-nas.mount` lleva
+   `OnFailure=ciber-nas-aviso.service`, que ejecuta `nas-aviso` y manda una
+   notificación crítica al escritorio, además de dejar el motivo y las últimas
+   líneas del journal grabadas.
+
+Los dos hacen falta. El del playbook lo ves cuando instalas la máquina; el de
+systemd te alcanza meses después, cuando el NAS deja de montarse y ya no te
+acuerdas de que este archivo existía.
+
+Por qué importaba: la unidad trae `nofail` y solo intenta montar cuando alguien
+entra a `/run/media/nas`, así que el fallo era **completamente mudo**. Ni el
+arranque ni el playbook decían nada, y el error real quedaba en el journal con un
+mensaje de CIFS que ni menciona el archivo de credenciales.
+
+Detalles de implementación que no son obvios:
+
+- La comprobación usa `grep -q`, que no imprime nada. Leer el archivo con
+  `slurp` o `lookup('file')` expondría la contraseña en la salida de Ansible.
+- El archivo de credenciales **no lleva comentarios**. `mount.cifs` busca ahí
+  las claves `username`/`password`/`domain` y no está documentado que tolere
+  líneas de comentario.
+- `nas-aviso` saca la ruta del archivo de la propia unidad
+  (`systemctl show -p Options`), en vez de tenerla escrita otra vez.
+- La notificación se limita a una cada 10 minutos: el automount reintenta cada
+  vez que alguien toca la carpeta, y un gestor de archivos abierto ahí la toca
+  solo.
+- `ciber-nas-aviso.service` no tiene sección `[Install]` ni está en
+  `systemd_units_enabled`. `OnFailure=` no necesita que la unidad esté
+  habilitada, solo instalada.
+
+
+## PKGBUILDs propios (paquetes que no están en el AUR)
+
+Las recetas viven en `pkgbuilds/<pkgname>/PKGBUILD` y se declaran en
+`packages.yml`:
+
+```yaml
+local_packages:
+  - mi-paquete
+```
+
+Se compilan con `makepkg` y quedan instaladas como cualquier otro paquete
+(aparecen en `pacman -Qm`, igual que las del AUR). Actualizar una es subir
+`pkgver`/`pkgrel` en su `PKGBUILD` y volver a aplicar: el rol compara la versión
+declarada contra la instalada y solo recompila cuando difieren.
+
+Está dentro del rol `aur`, no en uno propio, porque ahí ya se resuelve el
+problema difícil: `makepkg` se niega a correr como root pero necesita `sudo`
+para las dependencias de compilación, y el rol ya pone y retira un `NOPASSWD`
+temporal acotado a `/usr/bin/pacman`.
+
+Los detalles, las limitaciones (los `-git` con `pkgver()` no se pueden comparar)
+y por qué no se usó un repo propio de pacman con `repo-add` están en
+[`pkgbuilds/README.md`](../pkgbuilds/README.md).
+
 ## Etiquetas
 
 | Tag | Qué hace |
@@ -168,6 +249,7 @@ tmux new-session 'ciber-apply' \; split-window -v -p 25 'ciber-watch' \; attach
 | `pacman`, `base` | pacman.conf, makepkg.conf, timezone, shell, grupos |
 | `packages` | paquetes de repos oficiales |
 | `user` | grupos extra y shell del usuario |
+| `credentials` | archivos de secretos con valores de ejemplo + aviso si siguen sin rellenar |
 | `files` | dotfiles + config de /etc + comandos de /usr/local/bin |
 | `system`, `dotfiles`, `tools` | subconjuntos de `files` |
 | `systemd` | unidades |

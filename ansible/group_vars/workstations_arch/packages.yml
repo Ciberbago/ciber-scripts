@@ -185,6 +185,14 @@ aur_packages:
   # 'yay -Ss 8812au' antes de agregarlo.
   - gnome-extensions-cli
 
+# PKGBUILDs propios: recetas de paquetes que no estan en el AUR y viven en la
+# carpeta pkgbuilds/ del repo. El nombre tiene que ser el mismo del directorio Y
+# el de pkgname, porque con el se pregunta 'pacman -Q' para saber si ya esta.
+#
+# Actualizar uno = subir pkgver/pkgrel en su PKGBUILD y volver a aplicar.
+# Ver pkgbuilds/README.md.
+local_packages: []
+
 # AppImages via AM
 appimage_packages:
   - blender

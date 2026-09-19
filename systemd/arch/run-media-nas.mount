@@ -2,6 +2,12 @@
 Description=Selfhosted samba share
 Requires=network-online.target
 After=network-online.target
+# Si el montaje falla, systemd arranca esta unidad, que explica el motivo en el
+# journal y manda una notificacion al escritorio. Sin esto el fallo era mudo:
+# 'nofail' evita que el arranque se queje y el automount solo intenta montar
+# cuando alguien entra a la carpeta, asi que el error solo existia en el
+# journal, con un mensaje de CIFS que ni menciona el archivo de credenciales.
+OnFailure=ciber-nas-aviso.service
 
 [Mount]
 What=//192.168.7.210/nas

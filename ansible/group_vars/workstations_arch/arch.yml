@@ -99,3 +99,4 @@ ciber_tags:
   - { tag: fish,     desc: "Solo aliases, funciones y plugins de fish" }
   - { tag: boot,     desc: "Solo las entradas de systemd-boot" }
   - { tag: gnome,    desc: "Solo GNOME. OJO: es de ciber-session, no de ciber-apply" }
+  - { tag: credentials, desc: "Comprobar rapido si queda algun archivo de credenciales sin rellenar" }
