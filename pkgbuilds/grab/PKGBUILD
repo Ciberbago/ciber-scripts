@@ -13,7 +13,7 @@ depends=('glibc'
          'libadwaita'
          'hicolor-icon-theme'
          'yt-dlp')
-makedepends=('rust' 'cargo' 'git')
+makedepends=('rust' 'cargo')
 source=("${pkgname}-${pkgver}.tar.gz::https://github.com/houssemko/Grab/archive/refs/tags/v${pkgver}.tar.gz")
 sha256sums=('SKIP')
 
@@ -27,20 +27,34 @@ build() {
     export RUSTUP_TOOLCHAIN=stable
     export CARGO_TARGET_DIR=target
     
-    # Limpiar las variables de entorno de CFLAGS/LDFLAGS que rompen gettext-sys en Rust
+    # Limpiar flags C/C++ que interfieren con crates C embebidos
     unset CFLAGS
     unset CXXFLAGS
     unset LDFLAGS
     
-    cargo build --frozen --release --all-targets
+    # Solo compilamos el binario de release (--bin grab en vez de --all-targets)
+    cargo build --frozen --release --bin grab
 }
 
 package() {
     cd "Grab-${pkgver}"
     
-    # Instalar el binario principal generado por cargo
+    # Instalar binario principal
     install -Dm755 "target/release/grab" "${pkgdir}/usr/bin/grab"
 
     # Licencia
     install -Dm644 LICENSE -t "${pkgdir}/usr/share/licenses/${pkgname}"
+
+    # Entrada de escritorio para GNOME Activities
+    install -Dm644 /dev/stdin "${pkgdir}/usr/share/applications/${pkgname}.desktop" <<EOF
+[Desktop Entry]
+Name=Grab
+Comment=A download manager designed for GNOME
+Exec=grab
+Icon=download
+Terminal=false
+Type=Application
+Categories=Network;FileTransfer;
+StartupNotify=true
+EOF
 }
