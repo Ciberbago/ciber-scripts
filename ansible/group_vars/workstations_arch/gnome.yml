@@ -64,6 +64,10 @@ gnome_dconf:
   # Mismo caso que logout-prompt: el id no dice donde vive. Con la ruta mala,
   # ibus seguia quedandose con Super+. y el panel de emojis nunca abria.
   - { key: /desktop/ibus/panel/emoji/hotkey,           value: "@as []" }
+  # El panel sale junto al cursor de texto y no en la esquina de la barra
+  # superior, que es el default ('top-bar'). Va aqui y no en un volcado porque
+  # es una sola clave.
+  - { key: /org/gnome/shell/extensions/emoji-copy/window-location, value: "'cursor'" }
 
   # --- Super+V para el portapapeles (Copyous) ---
   #
