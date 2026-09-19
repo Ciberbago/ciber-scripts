@@ -24,7 +24,18 @@ gnome_dconf:
   - { key: /org/gnome/desktop/wm/preferences/button-layout, value: "'appmenu:minimize,maximize,close'" }
 
   # --- sesion: sin confirmacion al apagar, con boton de logout ---
-  - { key: /org/gnome/SessionManager/logout-prompt,    value: "false" }
+  #
+  # OJO con la ruta. El esquema se llama 'org.gnome.SessionManager', asi que
+  # /org/gnome/SessionManager/ parece lo obvio y es lo que estuvo aqui durante
+  # meses. Pero su atributo path es /org/gnome/gnome-session/:
+  #
+  #   <schema id="org.gnome.SessionManager" path="/org/gnome/gnome-session/">
+  #
+  # El id de un esquema y su ruta dconf no tienen por que coincidir. Con la
+  # ruta mala, dconf escribia el valor igual (no valida nada), el playbook
+  # reportaba ok, y el ajuste nunca se aplico. De ahi la tarea de validacion
+  # que corre al final del rol gnome_session.
+  - { key: /org/gnome/gnome-session/logout-prompt,     value: "false" }
   - { key: /org/gnome/shell/always-show-log-out,       value: "true" }
 
   # --- sin suspender pantalla (idle-delay es uint32) ---
@@ -48,6 +59,17 @@ gnome_dconf:
 
   # --- libera el atajo de emoji de ibus para usar la extension ---
   - { key: /org/freedesktop/ibus/panel/emoji/hotkey,   value: "@as []" }
+
+  # --- Super+V para el portapapeles (Copyous) ---
+  #
+  # GNOME trae Super+V y Super+M apuntando los dos al panel de notificaciones.
+  # Se le quita la V y se deja la M: si se vaciara la lista entera, las
+  # notificaciones se quedarian sin atajo de teclado.
+  - { key: /org/gnome/shell/keybindings/toggle-message-tray, value: "['<Super>m']" }
+  # El default de Copyous era <Super><Shift>v. Ojo: el orden importa, primero
+  # hay que liberar la V de GNOME o las dos cosas compiten por la misma tecla.
+  # Van en la misma lista y dconf las aplica en orden, asi que queda resuelto.
+  - { key: /org/gnome/shell/extensions/copyous/open-clipboard-dialog-shortcut, value: "['<Super>v']" }
 
 # Volcados de dconf completos (configuracion de extensiones y atajos).
 # 'src' es relativo a la raiz del repo; si el archivo no existe se omite.

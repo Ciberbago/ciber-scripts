@@ -17,6 +17,38 @@
     label: "{{ item.key }}"
   become: false
 
+- name: Validar que las claves de dconf tienen un esquema detras
+  # 'dconf write' no valida nada: escribe la ruta que le des, exista o no un
+  # esquema que la respalde, y devuelve exito. El modulo dconf hace lo mismo, asi
+  # que una ruta equivocada se ve EXACTAMENTE igual que un exito.
+  #
+  # Paso de verdad: /org/gnome/SessionManager/logout-prompt. El esquema se llama
+  # org.gnome.SessionManager pero vive en /org/gnome/gnome-session/. El ajuste
+  # estuvo meses sin aplicarse y el playbook decia ok en cada corrida.
+  #
+  # Esto no cambia nada, solo reporta. No falla la corrida: puede haber claves de
+  # extensiones que todavia no estan instaladas en esta pasada.
+  #
+  # Se pasa como 'cmd' con join y no como 'argv' con una lista de Jinja: sin
+  # jinja2_native, una expresion que devuelve una lista se convierte a texto y
+  # Ansible la partiria por las comas, dejando argumentos rotos. Las rutas dconf
+  # no llevan espacios, asi que unirlas con espacio es seguro.
+  ansible.builtin.command:
+    cmd: >-
+      python3 {{ ciber_repo_root }}/scripts/common/dconf-validate.py
+      {{ ((gnome_dconf | map(attribute='key') | list)
+          + (gnome_dconf_loads | map(attribute='path') | list)) | join(' ') }}
+  register: dconf_validacion
+  changed_when: false
+  check_mode: false
+  failed_when: false
+  become: false
+
+- name: Reportar claves de dconf que no hacen nada
+  ansible.builtin.debug:
+    msg: "{{ dconf_validacion.stdout_lines }}"
+  when: dconf_validacion.rc != 0
+
 - name: Comprobar que los volcados de dconf existen en el repo
   ansible.builtin.stat:
     path: "{{ ciber_repo_root }}/{{ item.src }}"

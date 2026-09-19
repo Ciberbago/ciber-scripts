@@ -242,6 +242,60 @@ Los detalles, las limitaciones (los `-git` con `pkgver()` no se pueden comparar)
 y por qué no se usó un repo propio de pacman con `repo-add` están en
 [`pkgbuilds/README.md`](../pkgbuilds/README.md).
 
+
+## La trampa de dconf: el id del esquema no es la ruta
+
+`dconf write` **no valida nada**. Escribe la ruta que le des, exista o no un
+esquema detrás, y devuelve éxito. El módulo `dconf` de Ansible hace lo mismo:
+reporta `ok`, el valor queda guardado en la base, y GNOME nunca se entera.
+
+El caso real: el repo declaraba
+
+```yaml
+- { key: /org/gnome/SessionManager/logout-prompt, value: "false" }
+```
+
+El esquema se llama `org.gnome.SessionManager`, así que la ruta parecía
+evidente. No lo era:
+
+```xml
+<schema id="org.gnome.SessionManager" path="/org/gnome/gnome-session/">
+```
+
+El id y la ruta son cosas distintas y aquí no coinciden. El ajuste estuvo meses
+sin aplicarse mientras el playbook informaba éxito en cada corrida. Se detectó
+por casualidad, al notar que la confirmación al apagar seguía saliendo.
+
+La señal que lo delata: `dconf read` y `gsettings get` devuelven valores
+distintos para la "misma" clave.
+
+```bash
+dconf read /org/gnome/SessionManager/logout-prompt    # false
+gsettings get org.gnome.SessionManager logout-prompt  # true
+```
+
+Para que no vuelva a pasar, el rol `gnome_session` corre
+`scripts/common/dconf-validate.py` sobre **todas** las claves de `gnome_dconf` y
+las rutas de `gnome_dconf_loads`, y reporta las que no tienen esquema detrás.
+Cuando el nombre de la clave sí existe en otro esquema, dice cuál: normalmente
+esa es la ruta que hacía falta.
+
+```
+Claves dconf que NO hacen nada (1 de 24):
+  /org/gnome/SessionManager/logout-prompt
+      no hay ningun esquema en /org/gnome/SessionManager/
+      'logout-prompt' si existe en: /org/gnome/gnome-session/
+```
+
+No falla la corrida y no cambia nada: solo informa. Puede haber claves de
+extensiones que aún no estaban instaladas en esa pasada.
+
+Para averiguar a mano la ruta de un esquema:
+
+```bash
+grep -rn 'id="org.gnome.LoQueSea"' /usr/share/glib-2.0/schemas/*.xml
+```
+
 ## Etiquetas
 
 | Tag | Qué hace |
