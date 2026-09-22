@@ -1,8 +1,8 @@
 # Maintainer: Ciberbago
 
 pkgname=grab
-pkgver=3.8.0
-pkgrel=2
+pkgver=4.2.1
+pkgrel=3
 pkgdesc="A download manager designed for GNOME using GTK4 + libadwaita"
 arch=('x86_64')
 url="https://github.com/houssemko/Grab"
