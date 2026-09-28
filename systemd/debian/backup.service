@@ -39,6 +39,10 @@ Type=oneshot
 # borra la linea 'Type=oneshot' y esta de TimeoutStartSec: sin Type= el default
 # es 'simple', que es exactamente como ha estado corriendo.
 TimeoutStartSec=infinity
+# El limite de 90 s que traia systemd ya no da miedo porque el script es otro: el
+# de datos empaqueta 200 MB, no 9 GB, y tarda ~30 s en vez de los 3675 s medidos
+# arriba. Se deja 'infinity' igual por prudencia -- un dia un stack con mucha mas
+# base, o un disco lento, y el limite invisible seria el que mate el respaldo.
 
 # El token del bot de Telegram y el chat ID salen de aqui, no del script. El
 # guion inicial ('-') hace que systemd NO falle la unidad si el archivo no
@@ -46,7 +50,10 @@ TimeoutStartSec=infinity
 # variable, en vez de un error cripcico de systemd sobre un archivo ausente.
 EnvironmentFile=-/etc/ciber/backup.env
 
-ExecStart=/usr/local/bin/backup.sh
+# Apunta al script de respaldo de DATOS, no a uno que tambien sincronice musica:
+# eso vive en backup-musica.service, con su propio timer. Ver el comentario de
+# /usr/local/bin/backup-musica.sh para por que se separaron.
+ExecStart=/usr/local/bin/backup-datos.sh
 
 [Install]
 WantedBy=multi-user.target

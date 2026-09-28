@@ -53,7 +53,7 @@
     # cuando systemd arranca todoist-precise.timer, el primer disparo falla.
     - { role: env_files,             tags: [secrets, files] }
     - { role: cli_tools_debian,      tags: [files, tools] }
-    # Despues de cli_tools: backup.service apunta a /usr/local/bin/backup.sh y
+    # Despues de cli_tools: backup.service apunta a /usr/local/bin/backup-datos.sh y
     # todoist-precise.service a /usr/local/bin/todoist.sh. Habilitar una unidad
     # cuyo ExecStart no existe deja un servicio que falla en el primer disparo.
     - { role: systemd_units_debian,  tags: [systemd] }
@@ -111,10 +111,17 @@
           - "Cierra sesion y vuelve a entrar: el grupo 'docker' y el shell fish"
           - "aplican en el proximo login."
           - ""
-          - "Falta un paso manual: conectar Tailscale."
-          - "  sudo tailscale up"
-          - "(no se automatiza porque abre un navegador para autenticar; hacerlo"
-          - " sin interaccion pediria guardar una auth key en el repo)"
+          - "Faltan dos pasos manuales, en este orden."
+          - ""
+          - "1. Conectar Tailscale:"
+          - "     sudo tailscale up"
+          - "   (no se automatiza porque abre un navegador para autenticar; hacerlo"
+          - "    sin interaccion pediria guardar una auth key en el repo)"
+          - ""
+          - "2. Los stacks de /opt/docker NO se clonan aqui, a proposito: es otro"
+          - "   repositorio y tragar un fallo de clon dejaria el servidor sin"
+          - "   servicios y sin aviso. Ver docs/nuevo-servidor.md para el flujo"
+          - "   completo, desde formatear hasta arrancar."
           - ""
           - "Para ver TODO lo que quedo instalado y como usarlo:"
           - "  ciber-help              la lista completa, con colores"

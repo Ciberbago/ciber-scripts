@@ -51,39 +51,19 @@
 # systemd_units_started), no aqui: asi toda la gestion de unidades vive en un
 # solo lugar y se ve de un vistazo que arranca en boot.
 
-- name: Crear el directorio de stacks
-  ansible.builtin.file:
-    path: "{{ docker_stacks_dir }}"
-    state: directory
-    # BUG ORIGINAL: 'sudo chown jaime /opt/docker' hardcodeaba el usuario, asi
-    # que en cualquier maquina donde el usuario no se llamara jaime el chown
-    # fallaba y el clone posterior se hacia como root.
-    owner: "{{ ciber_user }}"
-    group: "{{ ciber_user }}"
-    mode: "0755"
-  become: true
-
-- name: Clonar o actualizar los stacks de docker
-  # BUG ORIGINAL: 'git clone' a secas fallaba en la segunda corrida con
-  # "destination path already exists and is not an empty directory". El modulo
-  # git es idempotente: clona si no hay nada y hace fetch+checkout si ya esta.
-  #
-  # update: true con version HEAD equivale al 'git pull --ff-only' del script.
-  ansible.builtin.git:
-    repo: "{{ docker_stacks_repo }}"
-    dest: "{{ docker_stacks_dir }}"
-    update: true
-    version: HEAD
-  become: true
-  become_user: "{{ ciber_user }}"
-  register: docker_stacks
-  # Un servidor sin acceso a GitHub no deberia tumbar el resto del playbook.
-  failed_when: false
-
-- name: Avisar si no se pudieron traer los stacks
-  ansible.builtin.debug:
-    msg: >-
-      No se pudo clonar/actualizar {{ docker_stacks_repo }} en
-      {{ docker_stacks_dir }}. Revisa la conexion o los permisos y vuelve a
-      correr 'ciber-apply --tags docker'.
-  when: docker_stacks.failed | default(false)
+# El repo de stacks (/opt/docker) YA NO SE CLONA AQUI. Es un paso manual aparte,
+# documentado en docs/nuevo-servidor.md, y con razon:
+#
+#   - Es otro repositorio, con su propio ciclo de vida. Un playbook que deja de
+#     funcionar porque un repo privado no se pudo clonar no cumple su trabajo.
+#   - Este playbook se aplica a un servidor Debian limpio que todavia no tiene nada
+#     de esto. QueClone de servicios ahi es mezclar dos pasos
+#     que el usuario quiere ver por separado.
+#   - 'failed_when: false' sobre el clon de un repo PRIVADO es el peor de los dos
+#     mundos: si no hay credenciales, git falla, la tarea se traga el error y el
+#     servidor queda con /opt/docker vacio sin mas aviso que una linea de debug.
+#     Un fallo mudo en la etapa de recuperacion de desastres es exactamente lo que
+#     no debe pasar.
+#
+# Lo que si sigue haciendo este rol: instalar Docker Engine, containerd y los
+# plugins buildx/compose desde el repo APT oficial, que es su trabajo de verdad.

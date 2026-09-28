@@ -37,6 +37,10 @@ para el mantenimiento normal.
 | Describir un comando en la ayuda | campo `desc:` en `files.yml` | 1 línea |
 | Cambiar la versión de Docker/Tailscale/neovim | `services.yml` | 1 línea |
 | Declarar un secreto nuevo | `secrets.yml` (sólo el nombre de la clave, **nunca el valor**) | 1 línea |
+| Cambiar **qué** se respalda de un stack | `scripts/debian/data-map.conf` | 1 línea |
+| Añadir un script de respaldo | lo pongo en `scripts/debian/` + `files.yml` → `cli_tools` | 1 línea |
+| Añadir un timer de respaldo | dejo el `.timer` en `systemd/debian/` + su nombre en `systemd.yml` | 1 línea |
+| Cambiar la ruta de la música que se sincroniza | `scripts/debian/backup-musica.sh` (tiene default arriba) | 1 línea |
 | Desactivar Docker o Tailscale por completo | `services.yml` → `docker_enabled: false` | 1 línea |
 | Cambiar zona horaria o shell | `group_vars/all/main.yml` | 1 línea |
 
@@ -140,18 +144,42 @@ Además de `systemd_service`, tampoco están disponibles en 2.14:
 
 | Bug | Efecto que tenía | Cómo queda |
 |---|---|---|
-| `newgrp docker` a mitad del script | `newgrp` **reemplaza** el shell: el clone de `ciber-docker`, los plugins de neovim, el `chsh` a fish, los timers y los 15 aliases **nunca se ejecutaban** | El grupo se asigna con el módulo `user` y aplica en el próximo login |
+| `newgrp docker` a mitad del script | `newgrp` **reemplaza** el shell: el clone de los stacks, los plugins de neovim, el `chsh` a fish, los timers y los aliases **nunca se ejecutaban** | El grupo se asigna con el módulo `user` y aplica en el próximo login |
 | `systemctl --user enable todoist-check.timer` | El archivo descargado se llamaba `todoist-precise.timer`: el enable fallaba **siempre** | El nombre sale de `systemd.yml` y el rol verifica que la unidad exista |
 | `funcsave subirrtl88xxau-aircrack-dkms-git` | Un nombre de paquete de Arch pegado por copy/paste: la función `subir` nunca se guardaba | Los aliases se generan desde una lista YAML a `conf.d/ciber.fish` |
 | `fisher install …` sin instalar fisher | Los tres plugins fallaban con "Unknown command" | El rol `fisher` corre antes que `shell_fish` |
-| `dl … /usr/local/bin/backup.sh` sin sudo | Permiso denegado: `backup.service` apuntaba a un archivo inexistente | El rol `cli_tools_debian` escribe con `become: true` |
-| `git clone /opt/docker` sin guarda | Fallaba en la segunda corrida ("directory not empty") | Módulo `git`, idempotente |
-| `chown jaime /opt/docker` | Usuario hardcodeado | `owner: {{ ciber_user }}` |
+| `dl … /usr/local/bin/backup.sh` sin sudo | Permiso denegado: `backup.service` apuntaba a un archivo inexistente | El rol `cli_tools_debian` escribe con `become: true`. El script que se instala ahí es hoy `backup-datos.sh` |
+| `git clone /opt/docker` sin guarda | Fallaba en la segunda corrida ("directory not empty") | **Ya no se clona aquí.** Ver más abajo |
+| `chown jaime /opt/docker` | Usuario hardcodeado | **Ya no se clona aquí.** Ver más abajo |
 | `sed` sobre `sources.list` | Perdía `contrib`, y reescribía el archivo en cada corrida | `apt_components` declarativo; la segunda corrida sale verde |
 | Sin shebang | Ejecutado directamente corría con `dash`, donde sus arrays y `[[ ]]` no existen | `#!/usr/bin/env bash` |
 | `Type=oneshot # comentario` en `backup.service` | systemd **no** admite comentarios al final de una directiva, así que descartaba el valor con un warning y aplicaba el default (`Type=simple`). El backup **sí corría**; el efecto era ruido en el journal y un tipo de servicio distinto al pretendido | Comentarios en su propia línea, más `TimeoutStartSec=infinity` (ver nota abajo) |
 | Sin `enable-linger` | **No es un bug, es un cambio de comportamiento.** En el servidor `Linger=no`: el timer de Todoist sólo corre mientras hay una sesión abierta | `systemd_user_linger: true` en `systemd.yml`. Ponlo en `false` para dejarlo como está |
 | `curl \| sh` para Docker y Tailscale | Quedaban fuera de `apt upgrade`; había que reinstalar a mano | Repos APT oficiales con llave verificada |
+
+### El repo de stacks ya no se clona aquí
+
+Hasta el 2026-09-28 el rol `docker` clonaba `ciber-docker` en `/opt/docker` con el
+módulo `git` y sus variables `docker_stacks_repo` / `docker_stacks_dir`. Ya no lo
+hace, y las dos variables desaparecieron con él.
+
+El motivo no fue que el clon fallara, sino que **tragar el fallo era peor que no
+intentar nada**: `failed_when: false` sobre un repositorio **privado** significa
+que, sin credenciales de GitHub, `git` falla, la tarea lo ignora y el servidor
+termina con `/opt/docker` vacío con una sola línea de `debug` que nadie lee. Un
+fallo mudo en la etapa de recuperación de desastres es justo lo que no debe pasar.
+
+El flujo real son pasos separados, y así está documentado en
+[`docs/nuevo-servidor.md`](../docs/nuevo-servidor.md):
+
+```
+formateo -> Debian limpio -> ciber-apply -> clonar los stacks -> restaurar datos -> arrancar
+```
+
+`ciber-apply` deja el sistema, Docker y las unidades del respaldo. Lo de los stacks
+va aparte, a mano. El respaldo de datos **lee** `/opt/docker` (y falla con un
+mensaje claro si no está), pero nunca lo escribe: hay un `git checkout` que deja
+las bases de datos en 644 y tumba las escrituras de las apps que corren dentro.
 
 ### Nota sobre `Type=` en `backup.service`
 

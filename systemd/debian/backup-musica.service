@@ -1,0 +1,21 @@
+[Unit]
+Description=Sincronizar la música a Google Drive
+Documentation=file:///opt/ciber-scripts/docs/nuevo-servidor.md
+After=network.target
+Requires=network-online.target
+
+[Service]
+Type=oneshot
+# A las 04:00 y no a las 18:00, que es cuando corre el de datos. Los dos usan
+# rclone contra el mismo remoto de Drive y contra el mismo disco, así que juntos en
+# una ventana se pelearían por el ancho de banda y por el I/O del disco.
+#
+# Type=oneshot + TimeoutStartSec=infinity por el mismo motivo que en backup.service:
+# con el default (90 s) el servicio se mataría a mitad de una sincronización de
+# 7 GB, sin más aviso que un "failed" en systemctl --failed.
+EnvironmentFile=-/etc/ciber/backup.env
+ExecStart=/usr/local/bin/backup-musica.sh
+TimeoutStartSec=infinity
+
+[Install]
+WantedBy=multi-user.target

@@ -16,9 +16,14 @@
 systemd_units_dir: systemd/debian
 
 # Unidades de sistema a habilitar en boot. Acepta las que vienen con los
-# paquetes (docker, tailscaled) y las del repo (backup).
+# paquetes (docker, tailscaled) y las del repo (backup, backup-musica).
+#
+# backup y backup-musica estan separadas a proposito: una empaqueta los datos de
+# los stacks y va a las 18:00, la otra sincroniza 7 GB de musica y va a las 04:00.
+# Juntas se pelearian por el disco y por el ancho de banda de Drive.
 systemd_units_enabled:
   - backup.timer
+  - backup-musica.timer
   - docker.service
   - containerd.service
   - tailscaled.service

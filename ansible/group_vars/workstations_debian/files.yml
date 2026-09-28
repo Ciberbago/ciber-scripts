@@ -31,7 +31,17 @@ user_dirs:
 nautilus_scripts: []
 
 # --- Archivos de sistema: /etc ---
-system_files: []
+system_files:
+  # Que se respalda de cada stack. Lo lee backup-datos.sh.
+  #
+  # Aqui y no en el repo de stacks porque la POLITICA de respaldo es de esta
+  # maquina, no del repo: que 'uptime-kuma' no sirva de nada en un restore es una
+  # decision de este servidor. Ademas asi el script y el mapa que lee estan en el
+  # mismo repo y se versionan juntos: el formato del mapa es un contrato entre los
+  # dos, y separados se desincronizan sin avisar.
+  - src: scripts/debian/data-map.conf
+    dest: /etc/ciber/data-map.conf
+    mode: "0644"
   # El repo trae dotfiles/debian/sshd y dotfiles/debian/sshd_config, pero el
   # script de bash NUNCA los instalaba: estaban ahi sin usarse. No los activo
   # por mi cuenta porque tocar la config de SSH en un servidor remoto es la
@@ -49,12 +59,24 @@ cli_tools:
   # BUG ORIGINAL: estos dos se descargaban a /usr/local/bin SIN sudo, asi que
   # siempre fallaban con "permiso denegado" y el backup nunca se instalaba.
   # Aqui el rol usa become: true para todo /usr/local/bin.
-  - src: scripts/debian/backupdebian.sh
-    dest: /usr/local/bin/backup.sh
+  - src: scripts/debian/backup-datos.sh
+    dest: /usr/local/bin/backup-datos.sh
     desc: >-
-      Respaldo diario: tarball de /opt/docker a Google Drive y sync de la
-      musica. Lo dispara backup.timer a las 18:00. A mano, con
-      'systemctl start --no-block backup.service'.
+      Respaldo de los datos de los stacks, no de su codigo. Empaqueta solo lo que
+      declara /etc/ciber/data-map.conf, saca copia consistente de cada base SQLite y
+      sube un tarball a Drive con su sha256. Lo dispara backup.timer a las 18:00. A
+      mano, con '--dry-run' para ver que se empaquetaria.
+  - src: scripts/debian/restore.sh
+    dest: /usr/local/bin/restore.sh
+    desc: >-
+      Restaura un respaldo sobre el repo de stacks. Verifica el sha256 contra el
+      MANIFEST antes de tocar nada y deja los permisos que los contenedores
+      necesitan. Necesita sudo: 'sudo restore.sh --latest --dry-run'.
+  - src: scripts/debian/backup-musica.sh
+    dest: /usr/local/bin/backup-musica.sh
+    desc: >-
+      Sincroniza la musica del disco externo a Google Drive. Lo dispara
+      backup-musica.timer a las 04:00, aparte del de datos a proposito.
   - src: scripts/debian/todoist.sh
     dest: /usr/local/bin/todoist.sh
     desc: >-

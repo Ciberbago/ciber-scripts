@@ -23,13 +23,16 @@ docker_packages:
   - docker-ce-cli
   - containerd.io
   - docker-buildx-plugin
-  # El script viejo no instalaba compose. Los stacks de ciber-docker son
+  # El script viejo no instalaba compose. Los stacks de este servidor usan
   # docker-compose.yml, asi que sin este plugin no se pueden levantar.
   - docker-compose-plugin
 
-# Repo de stacks que se clona en /opt/docker
-docker_stacks_repo: https://github.com/Ciberbago/ciber-docker.git
-docker_stacks_dir: /opt/docker
+# NOTA: aqui ya no hay variables del repo de stacks (/opt/docker). Se quitaron el
+# 2026-09-28 junto con el clon que las usaba (ver el rol docker y
+# docs/nuevo-servidor.md). El repo se clona a mano, y el respaldo de datos lo lee de
+# ahi con un default en el propio script -- las unidades de systemd son archivos
+# planos, no plantillas, asi que no hay forma de pasarle una variable de aqui sin
+# templatizarlas.
 
 # --- Tailscale ---
 tailscale_enabled: true

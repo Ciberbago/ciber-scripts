@@ -45,9 +45,8 @@ apt_keyrings_dir: /etc/apt/keyrings
 #
 # BUG ORIGINAL: el script hacia 'usermod -aG docker $USER' y despues
 # 'newgrp docker'. newgrp REEMPLAZA el shell actual, asi que todo lo que seguia
-# en el script -- el clone de ciber-docker, los plugins de neovim, el chsh a
-# fish, los timers y los 15 aliases -- nunca se ejecutaba. El grupo aplica en el
-# proximo login y punto.
+# en el script -- los plugins de neovim, el chsh a fish, los timers y los aliases --
+# nunca se ejecutaba. El grupo aplica en el proximo login y punto.
 ciber_extra_groups:
   - docker
 
@@ -56,7 +55,8 @@ ciber_extra_groups:
 # las que se usan a diario.
 ciber_tags:
   - { tag: packages, desc: "Solo instalar y quitar paquetes" }
-  - { tag: docker,   desc: "Solo Docker y el repo de stacks de /opt/docker" }
+  - { tag: docker,   desc: "Solo instalar Docker, containerd y sus plugins" }
+  - { tag: backup,   desc: "Solo los scripts y unidades del respaldo: datos y musica" }
   - { tag: systemd,  desc: "Solo unidades: copiarlas, recargar y habilitarlas" }
   - { tag: secrets,  desc: "Solo crear los .env vacios. Util al migrar: no toca los scripts" }
   - { tag: dotfiles, desc: "Solo los archivos de configuracion del HOME" }

@@ -1,0 +1,15 @@
+[Unit]
+Description=Sincronizar la música a Google Drive a diario
+
+[Timer]
+# 04:00, separado del de datos (18:00). Ver el comentario de backup-musica.service.
+# Persistent=true: si el servidor estuvo apagado a esa hora, dispara al arrancar en
+# vez de saltarse el día. La música cambia poco, así que perder una sincronización
+# entera no es grave, pero un Persistent=false la pierde en silencio cada vez que
+# el servidor se reinicia de madrugada.
+OnCalendar=*-*-* 04:00:00
+Persistent=true
+Unit=backup-musica.service
+
+[Install]
+WantedBy=timers.target
