@@ -211,7 +211,24 @@ informe() {
         datos=$((datos + 1))
         if [[ "$src" == UUID=* || "$src" == LABEL=* || "$src" == PARTUUID=* ]]; then
             local clave="${src#*=}"; clave="${clave#*\\}"
-            if ! dispositivos | cut -f5 | grep -qxF "$clave"; then
+            # awk -F'\037' y NO 'cut -f5'. Dos motivos, y el primero es el que
+            # rompe de verdad:
+            #
+            #   - Los campos de 'dispositivos' van separados por 0x1F, y 'cut'
+            #     usa el TAB. Con 0x1F, 'cut -f5' ve UN solo campo y devuelve la
+            #     linea ENTERA. El grep no encontraba nunca el UUID, asi que
+            #     toda entrada declarada por UUID salia como 'NO EXISTE' aunque
+            #     el disco estuviera delante, montado y escribiendo.
+            #   - Y aunque 'cut' usara el separador correcto, el UUID es el campo
+            #     6, no el 5:  1=path 2=pk 3=tipo 4=fs 5=label 6=uuid 7=size
+            #     8=modelo.
+            #
+            # No lo cazo ninguna prueba porque el sandbox usaba un fstab falso
+            # con UUIDs INVENTADOS, y ahi 'NO EXISTE' era la respuesta correcta
+            # por el motivo equivocado. Solo se ve con un fstab de verdad, que es
+            # donde se usa. Medido el 2026-09-28 en el servidor, con /media/hdd
+            # montado y aun asi marcado como inexistente.
+            if ! dispositivos | awk -F'\037' '{ print $6 }' | grep -qxF "$clave"; then
                 estado="${ROJO}NO EXISTE${R}"
                 Ausentes+=("$e")
             else
