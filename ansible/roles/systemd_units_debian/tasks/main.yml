@@ -141,6 +141,25 @@
     name: "{{ item }}"
     enabled: true
   loop: "{{ systemd_units_enabled | select('in', unidades_conocidas) | list }}"
+  when: not item.endswith('.timer')
+  become: true
+
+- name: Habilitar y arrancar timers
+  # Un timer habilitado y PARADO no dispara nunca. 'systemctl enable' solo crea el
+  # symlink de arranque en boot; no arranca nada. Sin esta tarea, un timer nuevo se
+  # queda en 'inactive (dead)' con 'Trigger: n/a' hasta que se reinicie la
+  # maquina, y su primer disparo no ocurre.
+  #
+  # Medido el 2026-09-28: backup-musica.timer aparecia en 'systemctl list-timers'
+  # con '-' en la columna NEXT, o sea habilitado y sin programar. backup.timer no lo
+  # sufferia porque ya venia corriendo de antes, asi que el bug llevaba tiempo
+  # escondido y solo se ve al anadir el primer timer nuevo.
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    enabled: true
+    state: started
+  loop: "{{ systemd_units_enabled | select('in', unidades_conocidas) | list }}"
+  when: item.endswith('.timer')
   become: true
 
 - name: Habilitar y arrancar unidades
@@ -192,6 +211,22 @@
     enabled: true
     scope: user
   loop: "{{ systemd_user_units_enabled }}"
+  when: not item.endswith('.timer')
+  become: false
+
+# El mismo bug que el de sistema, y por el mismo motivo: 'systemctl --user enable'
+# no arranca nada, solo crea el symlink de boot. Medido el 2026-09-28:
+# todoist-precise.timer salia inactive despues de aplicar, o sea que el notificador
+# de Todoist no disparaba desde el primer apply. Y no era el linger, que es lo que
+# se suele suspectar primero.
+- name: Habilitar y arrancar timers de usuario
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    enabled: true
+    state: started
+    scope: user
+  loop: "{{ systemd_user_units_enabled }}"
+  when: item.endswith('.timer')
   become: false
 
 - name: Habilitar y arrancar unidades de usuario
