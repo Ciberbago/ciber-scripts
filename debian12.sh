@@ -100,19 +100,44 @@ export ANSIBLE_CONFIG="${DEST}/ansible/ansible.cfg"
 export PYTHONUNBUFFERED=1
 export ANSIBLE_FORCE_COLOR=1
 
-echo "==> Aplicando el playbook (te va a pedir el password de sudo)" | tee -a "$LOGFILE"
-
 # Inventario propio de Debian, no el de Arch: ver ansible/inventory-debian.ini
-CMD="ansible-playbook -i ansible/inventory-debian.ini --ask-become-pass"
+CMD="sudo -v && ansible-playbook -i ansible/inventory-debian.ini"
 CMD+=" --extra-vars 'ciber_branch=${RAMA}'"
 CMD+=" ansible/site-debian.yml"
 for arg in "$@"; do
     CMD+=" $(printf '%q' "$arg")"
 done
 
+# Por que 'sudo -v' y no --ask-become-pass.
+#
+# Con --ask-become-pass, Ansible pide la contraseña POR STDIN en mitad de la corrida.
+# Medido el 2026-09-28: la petición sale ('BECOME password:' en el log) pero cuando
+# este script se ejecuta como 'wget -O - ... | bash' no hay quien la responda, y la
+# primera tarea con 'become' falla con 'sudo: a password is required'. Es la segunda
+# vez que un stdin que no es un terminal tumba la corrida; la primera fue el
+# 'dl sin sudo' que ya está en el README.
+#
+# 'sudo -v' pide la contraseña UNA vez, aquí, en un momento en que sí hay quien
+# teclee, y deja el timestamp cacheado. A partir de ahí Ansible llama a 'sudo -n'
+# (no interactivo) en cada tarea con become y el timestamp resuelve solo.
+#
+# Y NO se sustituye por correr el playbook entero con sudo, que sería lo obvious:
+# el rol dotfiles hace 'dest: {{ item.dest | expanduser }}' con 'become: false'.
+# Corriendo como root, '~' resuelve a /root y los dotfiles del usuario -
+# nvim, micro, los plugins de vim-plug- se instalan en el home equivocado sin decir
+# nada. El playbook tiene que correr como el usuario; solo las tareas que piden
+# become deben ser root.
+#
+# Si la corrida dura mas que timestamp_timeout, alguna tarea del final volveria a
+# pedir contraseña. En un servidor limpio el playbook tarda 1-3 min y el default es
+# 15, asi que sobra; en una maquina ya aprovisionada va en segundos.
+
+echo "==> Aplicando el playbook (te va a pedir el password de sudo UNA VEZ, al principio)" | tee -a "$LOGFILE"
 if command -v script &>/dev/null; then
     # 'script' da un pseudo-terminal: la salida sale en vivo Y queda en el log.
     # -q sin banners, -a append, -e devuelve el codigo de salida del hijo.
+    # 'sudo -v' tiene que ir DENTRO de este mismo comando para compartir el tty (y
+    # con el, el timestamp) con el playbook.
     script -q -a -e -c "$CMD" "$LOGFILE"
 else
     eval "$CMD"
