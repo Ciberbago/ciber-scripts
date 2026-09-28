@@ -54,7 +54,32 @@ if [[ $EUID -eq 0 ]]; then
     echo "    /root." >&2
     exit 1
 fi
-if ! sudo -v; then
+# A partir de aqui se usa sudo, y sudo necesita un terminal para preguntar la
+# contrasena. Este script se ejecuta como 'wget -O - url | bash', asi que su stdin es
+# el pipe por el que le llega el propio script, y no hay por donde escribir. Se
+# comprueba ANTES de la primera llamada a sudo para que el error salga aqui y no
+# repetido en tres sitios distintos.
+if ! : < /dev/tty 2>/dev/null; then
+    cat >&2 <<'SINTTY'
+
+  ERROR: esto necesita un terminal para poder escribir el password de sudo, y aqui
+         no hay ninguno (/dev/tty no existe o no se puede abrir).
+
+         Pasa lo mismo si se lanza desde cron, desde un pipeline sin terminal, o
+         desde un IDE que no lo presta. Descargalo y ejecútalo en un terminal de
+         verdad:
+
+             wget -O ~/debian12.sh https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/debian12.sh
+             bash ~/debian12.sh
+
+SINTTY
+    exit 1
+fi
+
+# El '<' explicito es por legibilidad mas que por necesidad: sudo abre /dev/tty por
+# su cuenta. Se pone para que quede claro de donde sale la contrasena, porque es el
+# punto exacto que rompio dos veces.
+if ! sudo -v < /dev/tty; then
     echo "!!! Este usuario necesita sudo" >&2
     exit 1
 fi
@@ -101,43 +126,59 @@ export PYTHONUNBUFFERED=1
 export ANSIBLE_FORCE_COLOR=1
 
 # Inventario propio de Debian, no el de Arch: ver ansible/inventory-debian.ini
-CMD="sudo -v && ansible-playbook -i ansible/inventory-debian.ini"
+CMD="ansible-playbook -i ansible/inventory-debian.ini"
 CMD+=" --extra-vars 'ciber_branch=${RAMA}'"
 CMD+=" ansible/site-debian.yml"
 for arg in "$@"; do
     CMD+=" $(printf '%q' "$arg")"
 done
 
-# Por que 'sudo -v' y no --ask-become-pass.
+# --- Autenticarse ANTES, y fuera de 'script' ----------------------------------
 #
-# Con --ask-become-pass, Ansible pide la contraseña POR STDIN en mitad de la corrida.
-# Medido el 2026-09-28: la petición sale ('BECOME password:' en el log) pero cuando
-# este script se ejecuta como 'wget -O - ... | bash' no hay quien la responda, y la
-# primera tarea con 'become' falla con 'sudo: a password is required'. Es la segunda
-# vez que un stdin que no es un terminal tumba la corrida; la primera fue el
-# 'dl sin sudo' que ya está en el README.
+# Por que esto va aparte, y no dentro del comando que se pasa a 'script'. Es el bug
+# mas reincidente de este bootstrap, y tiene dos veces la misma raiz: un stdin que no
+# es un terminal.
 #
-# 'sudo -v' pide la contraseña UNA vez, aquí, en un momento en que sí hay quien
-# teclee, y deja el timestamp cacheado. A partir de ahí Ansible llama a 'sudo -n'
-# (no interactivo) en cada tarea con become y el timestamp resuelve solo.
+# Cuando se ejecuta como 'wget -O - url | bash', bash recibe el SCRIPT por el pipe y
+# todo lo que lanza hereda ese stdin. 'script' le da al hijo un pseudo-terminal (que
+# es lo que se quiere, para tener salida en vivo), pero lo alimenta desde SU PROPIO
+# stdin: o sea, desde el pipe, ya agotado. Medido el 2026-09-28:
 #
-# Y NO se sustituye por correr el playbook entero con sudo, que sería lo obvious:
-# el rol dotfiles hace 'dest: {{ item.dest | expanduser }}' con 'become: false'.
-# Corriendo como root, '~' resuelve a /root y los dotfiles del usuario -
-# nvim, micro, los plugins de vim-plug- se instalan en el home equivocado sin decir
-# nada. El playbook tiene que correr como el usuario; solo las tareas que piden
-# become deben ser root.
+#   - Con '--ask-become-pass', la peticion sale ('BECOME password:' en el log) y a
+#     continuacion el warning de la tarea siguiente. No hay nada escrito en medio.
+#   - Con 'sudo -v' DENTRO de 'script', igual: el prompt sale, tecleas, y el Enter
+#     se registra solo porque a sudo le llega EOF y no tu teclado.
+#
+# La salida es leer la contrasena de /dev/tty, que es el terminal real de verdad, en
+# un paso separado donde no hay 'script' de por medio. 'sudo -v' deja el timestamp
+# cacheado y a partir de ahi Ansible llama a 'sudo -n' en cada tarea con become, que
+# el timestamp resuelve solo: el playbook no vuelve a preguntar.
+#
+# Y NO se sustituye por correr el playbook entero con sudo, que seria lo obvious: el
+# rol dotfiles hace 'dest: {{ item.dest | expanduser }}' con 'become: false'. Corriendo
+# como root, '~' resuelve a /root y los dotfiles del usuario - nvim, micro, los
+# plugins de vim-plug- se instalan en el home equivocado sin decir nada. El playbook
+# corre como el usuario; solo las tareas con become son root.
 #
 # Si la corrida dura mas que timestamp_timeout, alguna tarea del final volveria a
-# pedir contraseña. En un servidor limpio el playbook tarda 1-3 min y el default es
+# pedir contrasena. En un servidor limpio el playbook tarda 1-3 min y el default es
 # 15, asi que sobra; en una maquina ya aprovisionada va en segundos.
+# Se revalida el timestamp aqui, y no solo al principio del script, porque entre el
+# 'sudo -v' inicial y este punto ha pasado el 'apt install' y el clon del repo. Si
+# esa parte tardara mas que timestamp_timeout (15 min por defecto), sin esto el
+# playbook volveria a pedir la contrasena a mitad -- y a mitad, dentro de 'script',
+# no hay quien la responda. Ver el comentario de mas arriba.
+if ! sudo -v < /dev/tty; then
+    echo "ERROR: no se pudo autenticar con sudo" >&2
+    exit 1
+fi
 
-echo "==> Aplicando el playbook (te va a pedir el password de sudo UNA VEZ, al principio)" | tee -a "$LOGFILE"
+echo "==> Aplicando el playbook" | tee -a "$LOGFILE"
+
+# Aqui ya no se pide nada, asi que 'script' solo aporta la salida en vivo y el log.
+# Que su entrada sea el pipe da igual: el playbook no lee de stdin.
 if command -v script &>/dev/null; then
-    # 'script' da un pseudo-terminal: la salida sale en vivo Y queda en el log.
     # -q sin banners, -a append, -e devuelve el codigo de salida del hijo.
-    # 'sudo -v' tiene que ir DENTRO de este mismo comando para compartir el tty (y
-    # con el, el timestamp) con el playbook.
     script -q -a -e -c "$CMD" "$LOGFILE"
 else
     eval "$CMD"
