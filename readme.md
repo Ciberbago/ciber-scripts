@@ -14,6 +14,7 @@ tu distro: [Debian](ansible/README-debian.md) · [Arch](ansible/README.md)
 | Reaplicar solo una parte | `ciber-apply --tags packages` |
 | Ver el progreso, en otra terminal | `ciber-watch` |
 | Poner las credenciales | `nano /etc/ciber/backup.env` + `sudo ciber-secrets` |
+| Montar un disco de datos | `sudo ciber-disco` (menú; a mano, no va en el playbook) |
 
 Debajo está el resto, por distro.
 

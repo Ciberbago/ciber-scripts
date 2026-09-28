@@ -24,6 +24,8 @@ El de Debian, que es el otro servidor, está en
 | Ver las etiquetas | `ciber-apply --list-tags` |
 | Ver el progreso, en otra terminal | `ciber-watch` |
 | Terminar la config de GNOME | `ciber-session` (dentro de la sesión) |
+| Montar un disco de datos | `sudo ciber-disco` (menú; los discos no van en el playbook) |
+| Ver los discos sin tocar nada | `ciber-disco list` |
 
 ## Instalación en una máquina limpia
 
@@ -62,6 +64,7 @@ para el mantenimiento normal.
 | Agregar una unidad de systemd | dejo el `.service` en `systemd/` | **0 líneas** |
 | Habilitar una unidad en boot | `systemd.yml` | 1 línea |
 | Agregar un comando a `/usr/local/bin` | pongo el script en `scripts/` + `files.yml` | 1 línea |
+| **Montar un disco de datos** | **nada: `sudo ciber-disco`** | **a mano, 1 vez** |
 | Cambiar un ajuste de GNOME | `gnome.yml` | 1 línea |
 | Agregar una extensión de GNOME | `gnome.yml` | 1 línea |
 | Agregar un alias de fish | `shell.yml` | 1 línea |
@@ -71,6 +74,33 @@ para el mantenimiento normal.
 
 Después de editar, aplicas con `ciber-apply`. Si el cambio ya está en GitHub,
 `ciber-apply` lo trae solo (hace `git pull` antes de aplicar).
+
+### Discos de datos: por qué NO están en el playbook
+
+Es la única cosa del sistema que no se declara en ningún archivo de
+configuración, y es deliberado.
+
+`/etc/fstab` no sobrevive a un respaldo: es por máquina, y un UUID escrito en
+git acaba siendo el de otro equipo. Peor aún, un UUID que no corresponde al
+disco conectado **deja el sistema en emergency shell en cada arranque**,
+esperando un disco que no va a aparecer, con una consola de emergencia y
+nada más.
+
+Así que el playbook instala el comando y ya:
+
+```bash
+sudo ciber-disco        # menú: elige el disco, el punto de montaje, y listo
+ciber-disco list        # qué hay declarado, qué falta, qué no está montado
+```
+
+El menú escribe `UUID=` (no `/dev/sdX`, que depende del orden de detección) y
+`nofail` con `x-systemd.device-timeout=10` (para que un disco desconectado no
+espere los 90 segundos por defecto). Antes de dejar la línea puesta compara los
+errores de `findmnt --verify` con los que ya había: si el cambio no empeora el
+archivo, lo acepta aunque el fstab ya viniera roto.
+
+Lo único que **no** hace es tocar las entradas de `/`, `/boot` y los `swap`:
+solo edita líneas suyas, las que marcó con `#ciber-disco`.
 
 ### Unidades de systemd: por qué son 0 líneas
 

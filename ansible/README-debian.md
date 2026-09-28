@@ -28,6 +28,8 @@ Para los servicios, el otro repo: [cyber-docker](https://github.com/Ciberbago/ci
 | Ver el progreso, en otra terminal | `ciber-watch` |
 | Poner las credenciales | `nano /etc/ciber/backup.env` y luego `sudo ciber-secrets` |
 | Ver si falta alguna credencial | `sudo ciber-secrets` |
+| Montar el disco de multimedia | `sudo ciber-disco` (menú; los discos no van en el playbook) |
+| Ver los discos sin tocar nada | `ciber-disco list` |
 
 Las etiquetas: `packages` `docker` `files` `tools` `systemd` `secrets` `dotfiles`
 `fish` `neovim` `tailscale` `apt` `base` `system` `user` `editor` `shell` `red`.
@@ -57,6 +59,37 @@ en un servidor no hay escritorio.
 El camino completo, de formatear hasta los servicios funcionando, está en
 [`docs/nuevo-servidor.md`](../docs/nuevo-servidor.md).
 
+## El disco de multimedia
+
+Es lo único del servidor que **no** se declara en ningún archivo del playbook, y
+es a propósito. El fstab no sobrevive a un respaldo, y un UUID escrito en git
+termina siendo el de otra máquina; peor, un UUID que no corresponde al disco
+conectado deja el servidor **en emergency shell en cada arranque**, esperando un
+disco que no va a aparecer.
+
+Lo instala el playbook como comando:
+
+```bash
+sudo ciber-disco        # menú: elige el disco y el punto de montaje
+ciber-disco list        # qué está declarado, qué falta, qué no está montado
+```
+
+El menú escribe `UUID=` en vez de `/dev/sdaX`, y `nofail` con
+`x-systemd.device-timeout=10` para que un disco desconectado no espere los 90
+segundos por defecto ni deje el arranque a medias. Antes de dejar la línea
+puesta compara los errores de `findmnt --verify` con los que ya había, y vuelve
+atrás si el cambio los aumenta.
+
+No toca nunca las entradas de `/`, `/boot` ni los `swap`: solo edita líneas
+suyas, las que marcó con `#ciber-disco`.
+
+**El punto `/media/hdd` no vuelve de un respaldo**, pero tampoco hace falta que
+vuelva: el mismo menú lo vuelve a declarar. Lo que sí importa es saber que,
+hasta que se monte, los stacks que lo usan (jellyfin, navidrome, komga, sabnzbd,
+deluge, metube y el samba) siguen arrancando y escribiendo sobre un directorio
+vacío. Por eso `site-debian.yml` mira el fstab al terminar cada corrida y avisa
+si algún punto de datos quedó sin montar.
+
 ## Cambiar algo
 
 Todo se edita en `group_vars/workstations_debian/`. Nunca hace falta tocar un rol
@@ -76,6 +109,7 @@ para el mantenimiento normal.
 | Declarar un secreto nuevo | `secrets.yml` (solo el nombre de la clave, **nunca el valor**) | 1 línea |
 | Cambiar **qué** se respalda de un stack | `scripts/debian/data-map.conf` | 1 línea |
 | Añadir un script o un timer de respaldo | `scripts/debian/` + `files.yml` / `systemd.yml` | 1 línea |
+| **Montar o quitar un disco de datos** | **nada: `sudo ciber-disco`** | **a mano, 1 vez** |
 | Desactivar Docker o Tailscale | `services.yml` → `docker_enabled: false` | 1 línea |
 
 Un `.timer` nuevo necesita además su nombre en `systemd.yml`: habilitarlo no lo
@@ -122,6 +156,7 @@ sudo ciber-apply --tags secrets   # solo crea los .env, no toca los scripts
 | El respaldo no avisó | casi siempre es el token: `sudo ciber-secrets` |
 | El respaldo falló | `grep INCOMPLETO /var/tmp/MANIFEST.txt` |
 | `apt` no lee sus fuentes | `sudo rm -f /etc/apt/sources.list.d/docker.list` y re-aplica |
+| Los stacks de media no ven nada | `ciber-disco list`: disco declarado y sin montar |
 
 ## Más detalle
 

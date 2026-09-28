@@ -53,6 +53,24 @@
     # postinstall.sh.
 
   post_tasks:
+    # El disco de datos NO se declara en este playbook, a proposito. Se instala
+    # el comando y lo ejecuta uno, una vez, en cada maquina. Se avisa al final
+    # porque es el ultimo momento en que se lee en serio, y porque el resumen de
+    # abajo es de lo que se acorda uno despues de aplicar.
+    - name: Discos de datos
+      ansible.builtin.debug:
+        msg:
+          - "Si tienes discos de datos, agregalos con:  sudo ciber-disco"
+          - "Es un menu: lista los discos libres, preguntas el punto de montaje"
+          - "y escribe la linea. Ver el estado sin tocar nada:  ciber-disco list"
+          - "No van en este archivo a proposito: un UUID equivocado en git"
+          - "dejaria la maquina sin arrancar."
+      # El condition sale de la propia lista cli_tools en vez de una variable
+      # mas que mantener: si el comando no esta declarado en files.yml, el aviso
+      # no aparece, y no hay forma de que se contradigan.
+      when: "'/usr/local/bin/ciber-disco' in (cli_tools | map(attribute='dest') | list)"
+      tags: always
+
     - name: Resumen
       ansible.builtin.debug:
         msg:

@@ -95,3 +95,14 @@ cli_tools:
     desc: >-
       Dice que credenciales faltan por poner en los .env. Con sudo revisa
       tambien los de root. Sale con codigo 1 si falta algo.
+  # El MISMO script en las dos distros: scripts/common/. No hay nada de Debian ni
+  # de Arch en su interior, solo util-linux y systemd, que ya estan en las dos.
+  - src: scripts/common/ciber-disco.sh
+    dest: /usr/local/bin/ciber-disco
+    desc: >-
+      Agrega discos de datos a /etc/fstab sin editarlo a mano, con menu
+      interactivo. Los discos NO se declaran en el playbook a proposito: un UUID
+      equivocado en git deja el servidor sin arrancar, y el hardware es por
+      maquina. Escribe UUID= y nofail, y valida con 'findmnt --verify' antes de
+      dejar la linea puesta. A mano: 'ciber-disco list' para ver el estado sin
+      cambiar nada.

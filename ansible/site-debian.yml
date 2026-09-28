@@ -67,6 +67,64 @@
     - { role: shell_fish,            tags: [shell, fish] }
 
   post_tasks:
+    # ---- Discos de datos -----------------------------------------------------
+    #
+    # Aqui esto NO es un aviso generico: se mira el fstab de verdad. Un disco de
+    # datos que esta declarado pero no montado deja a los stacks de media
+    # escribiendo sobre un directorio vacio, y eso no rompe nada de forma
+    # visible: Docker crea el punto de montaje, los contenedores arrancan
+    # igual, y lo que falla son las pelis.
+    - name: Ver que discos de datos estan declarados y sin montar
+      ansible.builtin.shell:
+        # Solo puntos de montaje de bloques: las entradas que empiezan por '//'
+        # son de red (el NAS) y las montan las unidades de systemd, no el fstab.
+        # Los campos se separan con el espacio, que es lo que acepta mount(8).
+        cmd: |
+          awk '!/^[[:space:]]*(#|$)/ && $2 != "/" && $2 != "/boot" \
+               && $2 != "/boot/efi" && $3 != "swap" && $3 != "none" \
+               && $1 !~ /^\/\// { print $2 }' /etc/fstab |
+          while read -r mp; do
+            [ -n "$mp" ] || continue
+            findmnt -n -o TARGET --target "$mp" 2>/dev/null | grep -qxF "$mp" \
+              || echo "$mp"
+          done
+      register: discos_sin_montar
+      changed_when: false
+      tags: always
+
+    - name: FALTAN DISCOS DE DATOS POR MONTAR
+      ansible.builtin.debug:
+        msg:
+          - "=============================================================="
+          - "  ACCION REQUERIDA: hay discos de datos sin montar"
+          - "=============================================================="
+          - ""
+          - "Declarados en /etc/fstab, pero no montados ahora mismo:"
+          # join y no el stdout_lines a pelo: suelta el repr de la lista de
+          # Python, con corchetes y comillas, que en una tabla de este tamaño
+          # queda fatal. Es el mismo truco que usa site.yml con las
+          # credenciales pendientes.
+          - "{{ discos_sin_montar.stdout_lines | join(', ') }}"
+          - ""
+          - "Con el disco sin montar, los stacks que lo usan siguen arrancando"
+          - "y escribiendo sobre un directorio vacio, sin dar ningun error:"
+          - "es el fallo mas silencioso que hay en este servidor."
+          - ""
+          - "Comprueba con:  mount | grep -E '{{ discos_sin_montar.stdout_lines | join('|') }}'"
+          - ""
+          - "Si el disco esta bien pero no monta, mira el journal. Si no esta"
+          - "conectado, declaralo con el menu:  sudo ciber-disco"
+      when: discos_sin_montar.stdout | length > 0
+      tags: always
+
+    - name: Discos de datos, como agregarlos
+      ansible.builtin.debug:
+        msg:
+          - "Discos de datos: van a /etc/fstab a mano, no en el playbook."
+          - "Para agregar uno:  sudo ciber-disco"
+          - "Para ver el estado sin tocar nada:  ciber-disco list"
+      tags: always
+
     # Va ANTES del resumen normal a proposito: lo ultimo que queda en pantalla
     # es lo que la gente lee, y esto es lo unico que exige una accion manual.
     - name: FALTAN CREDENCIALES POR PONER

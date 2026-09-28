@@ -265,3 +265,45 @@ aparecen `ciber-session`, `wallpaper`, `archbootgen` y las etiquetas `aur` y
 
 Detecta en tiempo de ejecución qué comandos existen en el `PATH`, así que
 tampoco anuncia nada que no esté instalado en esa máquina concreta.
+
+`ciber-disco` sigue el mismo camino: es un script en `scripts/common/`, declarado
+una vez en cada `files.yml`. Dentro no hay nada de una distro ni de la otra, solo
+`util-linux` y systemd, que ya están en las dos.
+
+### Por qué `/etc/fstab` no está en ningún archivo de configuración
+
+Es lo más raro del repo: hay un comando entero dedicado a algo que no se
+automatiza.
+
+Un `UUID=` equivocado en git deja la máquina **en emergency shell en cada
+arranque**, esperando un disco que no va a aparecer. Y el hardware es por equipo:
+un disco de juegos en Arch y uno de multimedia en Debian no tienen nada que ver.
+Lo peor no es un disco que no monte, es un servidor que no arranca, y a
+veces a trescientas leguas de donde estás.
+
+Así que el playbook instala el comando, y el fstab lo escribe una persona una vez
+en cada máquina. Lo que sí se automatiza es todo lo que se puede:
+
+- el `desc` de `files.yml`, que sale solo en `ciber-help`
+- el aviso del resumen de `site.yml`, condicionado a que el comando esté en
+  `cli_tools` (no a una variable más que mantener y que se contradiga)
+- el aviso de `site-debian.yml`, que **sí mira el fstab de verdad**: lista los
+  puntos de datos declarados y no montados. Sin eso, `/media/hdd` sin montar
+  deja los siete stacks de media escribiendo sobre un directorio vacío, y
+  ninguno da error
+
+Y dentro del script, lo que protege de escribir mal:
+
+- `UUID=` en vez de `/dev/sdX`, que depende del orden de detección del kernel
+- `nofail` y `x-systemd.device-timeout=10`, para que un disco desconectado no
+  espere los 90 segundos por defecto
+- copia del fstab antes de cada escritura, y se quedan las cinco últimas
+- `findmnt --verify` **antes y después**: si el número de errores crece, vuelve
+  atrás. Comparar y no solo "si falla, revertir" es lo que permite usar el
+  comando en una máquina cuyo fstab ya venía roto, que si no no agregaría nada
+- solo edita líneas marcadas con `#ciber-disco`: las de `/`, `/boot` y los
+  `swap` quedan fuera, y `rm` se niega a borrar una línea escrita a mano
+
+La lección de esto, escrita para el que lea `site-debian.yml` dentro de un año:
+`/etc/fstab` es de la máquina, no del repositorio. Igual que la contraseña del
+gestor.

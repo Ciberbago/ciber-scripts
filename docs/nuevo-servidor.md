@@ -16,7 +16,8 @@ después de un fallo, así que los pasos van numerados y se pueden seguir uno a 
 | [6. rclone](#6-rclone) | Copiar el `rclone.conf` del servidor viejo | Siempre, o no hay respaldo |
 | [7. Restaurar](#7-restaurar-y-arrancar) | `restore.sh` y levantar | Siempre |
 
-Y al final: [qué no vuelve de un respaldo](#qué-no-vuelve-de-un-respaldo) ·
+Y al final: [montar el disco](#montar-el-disco-de-multimedia) ·
+[qué no vuelve de un respaldo](#qué-no-vuelve-de-un-respaldo) ·
 [si algo falla](#si-algo-falla) · [lo que no se ha probado](#lo-que-este-respaldo-todavía-no-ha-demostrado)
 
 ---
@@ -216,9 +217,41 @@ rm -rf /mnt/prueba
 docker ps --format '{{.Names}}\t{{.Status}}' | grep -v Up    # no debería listar nada
 systemctl --failed --no-pager        # sin unidades fallidas
 sudo ciber-secrets                   # credenciales completas
+ciber-disco list                     # discos de datos: declarados y montados
 ```
 
 Y en el navegador, el dashboard y cada app.
+
+## Montar el disco de multimedia
+
+El fstab no está en el repo ni en el respaldo, y no por descuido. Un UUID
+escrito en git acaba siendo el de otra máquina, y uno que no corresponde al
+disco conectado deja el servidor **en emergency shell en cada arranque**,
+esperando un disco que no va a aparecer. Así que la línea la escribe una persona,
+una vez, en cada máquina:
+
+```bash
+sudo ciber-disco        # menú: lista los discos libres, pregunta el punto de montaje
+ciber-disco list        # ver el estado sin tocar nada
+```
+
+Escribe `UUID=` en vez de `/dev/sdX` (que depende del orden de detección) y
+`nofail` con `x-systemd.device-timeout=10`, para que un disco desconectado no
+espere los 90 segundos por defecto. Antes de dejar la línea puesta compara los
+errores de `findmnt --verify` con los que ya había y vuelve atrás si el cambio
+empeora el archivo.
+
+La línea se queda marcada con `#ciber-disco` encima, y por eso `rm` solo borra
+las suyas: las de `/`, `/boot` y los `swap` no se tocan ni se avisan.
+
+```bash
+sudo ciber-disco rm /media/hdd          # deshacer
+```
+
+Mientras el disco no esté montado, los stacks que lo usan siguen arrancando y
+escribiendo sobre un directorio vacío, sin dar ningún error. Por eso
+`site-debian.yml` revisa el fstab al terminar cada corrida y avisa si algún
+punto de datos quedó sin montar.
 
 ## Qué NO vuelve de un respaldo
 
@@ -229,7 +262,7 @@ Tampoco:
 |---|---|
 | **El `.env` de los stacks** | A propósito. Va al gestor de contraseñas, no al Drive. |
 | **Los puertos y rutas** | Vienen en el `.env`, y cambian de una máquina a otra. |
-| **El disco externo** (`EXTERNO`) | Los stacks que lo montan son `deemix`, `jdown2`, `jelly`, `komga`, `navi`, `samba` y `torrent`. Sin el disco montado, Docker crea el punto de montaje vacío **y puede dejar el directorio con permisos de root**. Se ve enseguida, pero conviene saberlo antes. |
+| **El disco externo** (`EXTERNO`) | Los stacks que lo montan son `deemix`, `jdown2`, `jelly`, `komga`, `navi`, `samba` y `torrent`. Sin el disco montado, Docker crea el punto de montaje vacío **y puede dejar el directorio con permisos de root**. Se ve enseguida, pero conviene saberlo antes. La línea del fstab tampoco vuelve, y a propósito: se recupera sola con `sudo ciber-disco` (ver abajo). |
 | **Los metadatos de Jellyfin** | 825 MB de carátulas, que se reconstruyen reescaneando la biblioteca. Lo que sí se guarda es su base de configuración, usuarios, historial y plugins. El reescaneo de ~780 GB tarda horas. |
 | **`webtop`, `uptime-kuma`, `navi`, `torrent`, `scrutiny`** | `data-map.conf` los marca `OFF` con el motivo. `uptime-kuma` en concreto solo vale para las notificaciones mientras vive, no para un restore. |
 | **`metube`** | No tiene almacenamiento persistente: su base vive en la capa del contenedor y se pierde al recrearlo. Aceptado a conciencia. |
