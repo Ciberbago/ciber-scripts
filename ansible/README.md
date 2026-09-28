@@ -26,6 +26,7 @@ El de Debian, que es el otro servidor, está en
 | Terminar la config de GNOME | `ciber-session` (dentro de la sesión) |
 | Montar un disco de datos | `sudo ciber-disco` (menú; los discos no van en el playbook) |
 | Ver los discos sin tocar nada | `ciber-disco list` |
+| Averiguar por qué no monta algo | `sudo disks-diagnostico` (informe de solo lectura) |
 
 ## Instalación en una máquina limpia
 

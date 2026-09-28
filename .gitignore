@@ -9,3 +9,17 @@
 
 # Logs que dejan el bootstrap y ciber-apply
 ciber*.log
+
+# Configuraciones de los scripts de Termux. VIVEN EN EL TELEFONO, en
+# ~/.config/yt-tui/ y ~/.config/ssh-tui/, fuera de este arbol: el mecanismo es
+# ese, no esto.
+#
+# 'yt-tui' carga su config con 'source', o sea que es shell y es donde acaban
+# cookies y tokens si alguien los anade. Por lo mismo el 'hosts' de ssh-tui
+# tiene dentro las sesiones. Nada de esto debe estar jamas en un repo publico.
+#
+# Estas lineas son la red por si alguien copia una config aqui dentro copiando
+# desde el movil, que es como se cuelan estas cosas. Si el archivo aparece con
+# otro nombre, esto no lo evita: por eso el aviso de los scripts.
+scripts/termux/yt-tui/config
+scripts/termux/ssh-tui/hosts

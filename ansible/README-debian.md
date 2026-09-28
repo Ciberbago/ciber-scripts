@@ -30,6 +30,7 @@ Para los servicios, el otro repo: [cyber-docker](https://github.com/Ciberbago/ci
 | Ver si falta alguna credencial | `sudo ciber-secrets` |
 | Montar el disco de multimedia | `sudo ciber-disco` (menú; los discos no van en el playbook) |
 | Ver los discos sin tocar nada | `ciber-disco list` |
+| Averiguar por qué no monta algo | `sudo disks-diagnostico` (informe de solo lectura) |
 
 Las etiquetas: `packages` `docker` `files` `tools` `systemd` `secrets` `dotfiles`
 `fish` `neovim` `tailscale` `apt` `base` `system` `user` `editor` `shell` `red`.

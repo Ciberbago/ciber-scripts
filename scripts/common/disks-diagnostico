@@ -1,0 +1,253 @@
+#!/usr/bin/env bash
+#
+# disks-diagnostico - COMO ESTAN LOS DISCOS Y LOS MONTAJES AHORA MISMO.
+#
+# NO monta. NO desmonta. NO edita /etc/fstab. NO hace chown. NO para servicios.
+# Lo unico que escribe es el informe, y solo si le pasas un nombre de archivo.
+# Es seguro correrlo con sudo: no cambia nada de la maquina.
+#
+#   sudo ./disks-diagnostico                  # a pantalla
+#   sudo ./disks-diagnostico > ~/diag.txt
+#
+# Por que existe: la seccion 4 dice QUE MONTO CADA COSA Y DE DONDE. Sin eso,
+# cualquier conclusion sobre el fstab es una suposicion. Con eso, es un hecho:
+# una unidad montada desde el fstab tiene FragmentPath en /run/systemd/generator
+# y SourcePath=/etc/fstab; una de archivo real, en /etc/systemd/system.
+#
+# Sin 'set -e' a proposito: si un paso falla porque algo no existe en ESTA
+# maquina, el informe entero tiene que llegar igual.
+
+set -uo pipefail
+
+# Sin root, varias comprobaciones mienten: '[ -w ]' prueba root cuando eres
+# root, y 'test -w' contra un fuse lo resuelve el daemon. Se avisa y se sigue.
+[[ "$(id -u)" -eq 0 ]] || echo "AVISO: sin sudo, algunas comprobaciones sera menos (permisos sobre todo)"
+
+U="${SUDO_USER:-$USER}"
+
+# 'runuser' no siempre esta en el PATH: en Debian vive en /usr/sbin, que el
+# usuario normal no tiene. Sin el, la comprobacion de escritura de la seccion 6
+# contestaba 'no' a todo, porque el fallo del comando se confundia con un
+# permiso denegado. Se busca en varios sitios, y si de verdad no aparece, la
+# seccion lo DICE en vez de mentir.
+RUNUSER=''
+for c in runuser /usr/sbin/runuser /sbin/runuser /usr/bin/runuser; do
+    if command -v "$c" >/dev/null 2>&1; then RUNUSER="$c"; break; fi
+done
+
+# Y para no confundir 'el usuario no puede' con 'no he podido preguntar':
+# primero se comprueba que runuser funciona, y solo despues se acepta su
+# respuesta.
+puede_escribir() {
+    local mp="$1"
+    if [[ -z "$RUNUSER" ]]; then
+        printf 'no se pudo comprobar (no hay runuser)\n'
+        return
+    fi
+    if ! "$RUNUSER" -u "$U" -- true 2>/dev/null; then
+        printf 'no se pudo comprobar (runuser fallo)\n'
+        return
+    fi
+    if "$RUNUSER" -u "$U" -- test -w "$mp" 2>/dev/null; then
+        printf 'SI PUEDE escribir\n'
+    else
+        printf 'NO PUEDE escribir\n'
+    fi
+}
+
+# Los puntos de montaje que de verdad importan. Montar el listado completo de
+# 'findmnt' mete por medio /proc, /sys, /dev/pts y los contenedores de systemd:
+# docenas de pseudoarchivosystems que no son discos y que solo hacen ruido.
+puntos_de_interes() {
+    {
+        # los que declara el fstab
+        awk '!/^[[:space:]]*(#|$)/ { print $2 }' /etc/fstab 2>/dev/null
+        # los de /run/media, que es donde udisks y el fstab a mano montan
+        ls -1 /run/media 2>/dev/null | sed 's|^|/run/media/|'
+        # cualquier montaje que venga de un dispositivo de bloque de verdad
+        findmnt -rn -o TARGET,SOURCE 2>/dev/null | awk '$2 ~ /^\/dev\// { print $1 }'
+    } | sort -u | while read -r mp; do
+        [[ -n "$mp" && -d "$mp" ]] && printf '%s\n' "$mp"
+    done
+}
+
+# --- 1. Contexto -----------------------------------------------------------
+echo "### 1. CONTEXTO"
+echo "fecha       : $(date -Is)"
+echo "kernel      : $(uname -r)"
+echo "systemd     : $(systemctl --version 2>/dev/null | head -1)"
+echo "uptime      : $(uptime -p 2>/dev/null)"
+echo "sesion      : ${XDG_SESSION_TYPE:-<sin sesion>} / ${XDG_CURRENT_DESKTOP:-<sin escritorio>}"
+echo "usuario     : $U"
+echo "distro      : $(. /etc/os-release 2>/dev/null && echo "${PRETTY_NAME:-?}")"
+
+# --- 2. El fstab literal ---------------------------------------------------
+echo
+echo "### 2. /etc/fstab TAL CUAL"
+if [[ -r /etc/fstab ]]; then
+    nl -ba /etc/fstab
+else
+    echo "  no se puede leer /etc/fstab"
+fi
+
+# --- 3. Hardware -----------------------------------------------------------
+echo
+echo "### 3. DISCOS Y PARTICIONES"
+lsblk -o NAME,PATH,PKNAME,TYPE,SIZE,ROTA,MODEL,SERIAL,FSTYPE,LABEL,UUID \
+    --pairs 2>/dev/null | tr -d '"' | sed 's/^/  /'
+echo
+echo "-- puntos que declara el fstab --"
+awk '!/^[[:space:]]*(#|$)/ { printf "  %-44s -> %s\n", $1, $2 }' /etc/fstab 2>/dev/null
+
+# --- 4. QUIEN MONTO QUE ---------------------------------------------------
+echo
+echo "### 4. QUIEN MONTO CADA COSA   <<<<  LA QUE IMPORTA"
+puntos_de_interes | while read -r mp; do
+    u="$(systemd-escape --path "$mp" 2>/dev/null).mount"
+    # El '--' no es opcional: la raiz se escapa como '-.mount', y systemctl
+    # parsea ese '-' inicial como una opcion sua y se queja. Sin el, la raiz
+    # sale como 'SIN UNIDAD', que es justo la conclusion contraria de la real.
+    frag="$(systemctl show -p FragmentPath --value -- "$u" 2>/dev/null)"
+    src="$(systemctl show -p SourcePath   --value -- "$u" 2>/dev/null)"
+
+    echo "-- $mp"
+    echo "     unidad    : $u"
+    if [[ "$frag" == /run/systemd/generator/* || "$src" == /etc/fstab ]]; then
+        echo "     ORIGEN    : FSTAB  (systemd la genero al arrancar)"
+    elif [[ -n "$frag" ]]; then
+        echo "     ORIGEN    : ARCHIVO DE UNIDAD  ($frag)"
+    else
+        echo "     ORIGEN    : SIN UNIDAD  -> lo monto un programa o una persona"
+    fi
+    echo "     montado   : $(systemctl is-active -- "$u" 2>/dev/null || echo desconocido)"
+    echo "     desde     : $(systemctl show -p ActiveEnterTimestamp --value -- "$u" 2>/dev/null || echo '-')"
+    echo "     quiere    : What=$(systemctl show -p What --value -- "$u" 2>/dev/null)"
+    echo "     opciones  : $(systemctl show -p Options --value -- "$u" 2>/dev/null)"
+    echo "     en arranque: $(systemctl is-enabled -- "$u" 2>/dev/null || echo '(no aplica)')"
+done
+
+# --- 5. Opciones reales ---------------------------------------------------
+echo
+echo "### 5. MONTAJES REALES (opciones efectivas, no las del fstab)"
+findmnt -o TARGET,SOURCE,FSTYPE,OPTIONS 2>/dev/null | sed 's/^/  /'
+
+# --- 6. Propiedad real ---------------------------------------------------
+# '[ -w ]' bajo sudo prueba ROOT, no el usuario, y contestaria 'si' siempre.
+# Por eso la pregunta se le hace al usuario real con runuser.
+echo
+echo "### 6. PROPIEDAD Y PERMISOS REALES (uid/gid numericos)"
+puntos_de_interes | while read -r mp; do
+    echo "-- $mp"
+    ls -ldn "$mp" 2>/dev/null | sed 's/^/     /'
+    printf '     %-10s' "$U"; puede_escribir "$mp" | sed 's/^/ /'
+    echo "     contenido (5 lineas de muestra):"
+    ls -ln "$mp" 2>/dev/null | head -6 | sed 's/^/     /'
+done
+
+# --- 7. Procesos con el disco abierto ------------------------------------
+# Si algo mas tiene el NTFS abierto, ntfs-3g lo rechaza: solo admite uno.
+echo
+echo "### 7. PROCESOS CON EL DISCO ABIERTO"
+# Se saltan la raiz y /boot: 'fuser -vm /' no pregunta por el disco, pregunta
+# por TODO el sistema, y lista los trescientos procesos de fish del servidor.
+# Para un disco de datos si es util, y sale limpio.
+puntos_de_interes | while read -r mp; do
+    case "$mp" in /|/boot|/boot/efi) continue ;; esac
+    echo "-- $mp"
+    if command -v fuser >/dev/null 2>&1; then
+        fuser -vm "$mp" 2>&1 | sed 's/^/     /'
+    else
+        echo "     (fuser no instalado: los procesos con el disco abierto no se ven)"
+    fi
+done
+echo
+echo "-- servicios de escritorio que suelen montar discos --"
+for s in udisks2 udisks udiskie gvfsd-fuse; do
+    st="$(systemctl is-active "$s" 2>/dev/null || true)"
+    printf '  %-12s %s\n' "$s" "${st:-desconocido}"
+done
+
+# --- 8. Que dijo el arranque ---------------------------------------------
+# El journal POR UNIDAD, y no un grep de 'mount' por todo el journal: 'mount'
+# aparece dentro de la salida de Ansible, de systemd y de media centena de
+# mensajes mas, y el grep devuelve mas ruido que datos. La unidad de montaje es
+# exacta.
+#
+# OJO: 'journalctl -u -.mount' funciona sin '--' (a diferencia de 'systemctl
+# show'), y con '--' se queja. Por eso aqui no lo lleva.
+echo
+echo "### 8. LO QUE DIJO EL ARRANQUE, UNIDAD POR UNIDAD"
+puntos_de_interes | while read -r mp; do
+    u="$(systemd-escape --path "$mp" 2>/dev/null).mount"
+    echo "-- $mp   (unidad: $u)"
+    echo "     arranque actual:"
+    journalctl -b -u "$u" --no-pager 2>/dev/null | tail -10 | sed 's/^/       /'
+    echo "     arranque anterior (por si el montaje es de un reinicio viejo):"
+    journalctl -b -1 -u "$u" --no-pager 2>/dev/null | tail -6 | sed 's/^/       /'
+done
+echo
+echo "-- fallos de montaje en el arranque actual --"
+journalctl -b --no-pager 2>/dev/null \
+    | grep -iE 'failed to mount|could not mount|mounting .* timed out|dependency failed.*mount' \
+    | tail -20 | sed 's/^/  /'
+
+# --- 9. Unidades y drop-ins que se me pueden haber pasado -----------------
+echo
+echo "### 9. UNIDADES .mount / .automount Y DROP-INS"
+echo "-- archivos de unidad de montaje que existen DE VERDAD --"
+echo "   (un .mount aqui gana por precedencia a lo que genere el fstab)"
+ls -l /etc/systemd/system/*.mount /etc/systemd/system/*.automount 2>/dev/null | sed 's/^/   /'
+echo
+echo "/etc/fstab.d/ (drop-ins de fstab, los lee systemd ademas de /etc/fstab):"
+if [[ -d /etc/fstab.d ]]; then ls -l /etc/fstab.d/ | sed 's/^/   /'; else echo "   (no existe)"; fi
+echo
+echo "/run/systemd/generator/ (unidades que systemd genero LEYENDO el fstab):"
+ls -1 /run/systemd/generator/*.mount 2>/dev/null | sed 's/^/   /' || echo "   (ninguna)"
+echo
+echo "-- montajes cargados, sin los internos de systemd, docker y /dev --"
+# Sin lookahead: grep -E no lo soporta y avisaba por stderr. Ademas se cuela
+# /var/lib/docker/overlay2, que en un servidor son cuarenta lineas.
+systemctl list-units --all --no-pager '*.mount' '*.automount' 2>/dev/null \
+    | grep -vE '/run/credentials|/run/docker|/var/lib/docker|/dev/|/proc/|/sys/|/run/systemd/' \
+    | sed 's/^/   /'
+
+# --- 10. Validacion ------------------------------------------------------
+echo
+echo "### 10. VALIDACION DEL FSTAB ACTUAL"
+findmnt --verify --verbose 2>&1 | sed 's/^/  /'
+
+# --- Resumen -------------------------------------------------------------
+# Solo cuenta los montajes QUE IMPORTAN (los de puntos_de_interes), no las
+# ochenta unidades de montaje que tiene cualquier maquina con docker: contando
+# todas, el resumen decia 79 montajes 'de otro origen' y eso no dice nada. Lo
+# que interesa es si ALGUNO de los que tocan un disco de datos vino de donde no
+# deberia.
+echo
+echo "### RESUMEN PARA LEER DE UN VISTAZO"
+gen=0
+otros=()
+sin_unidad=()
+while read -r mp; do
+    u="$(systemd-escape --path "$mp" 2>/dev/null).mount"
+    frag="$(systemctl show -p FragmentPath --value -- "$u" 2>/dev/null)"
+    src="$(systemctl show -p SourcePath --value -- "$u" 2>/dev/null)"
+    if [[ "$frag" == /run/systemd/generator/* || "$src" == /etc/fstab ]]; then
+        gen=$((gen + 1))
+        echo "  FSTAB    $mp"
+    elif [[ -n "$frag" ]]; then
+        otros+=("$mp")
+        echo "  UNIDAD   $mp   ($frag)"
+    else
+        sin_unidad+=("$mp")
+        echo "  SIN .mount   $mp   -> lo monto un programa o una persona"
+    fi
+done < <(puntos_de_interes)
+
+echo
+echo "  de los que importan: $gen del fstab, ${#otros[@]} de un archivo de unidad, ${#sin_unidad[@]} sin unidad"
+echo
+if ((${#sin_unidad[@]} > 0)); then
+    echo "  ATENCION: estos puntos NO los monto el fstab:"
+    printf '    %s\n' "${sin_unidad[@]}"
+    echo "  Si creias que los montaba el fstab, ya sabes por que fallan."
+fi

@@ -106,3 +106,12 @@ cli_tools:
       maquina. Escribe UUID= y nofail, y valida con 'findmnt --verify' antes de
       dejar la linea puesta. A mano: 'ciber-disco list' para ver el estado sin
       cambiar nada.
+  - src: scripts/common/disks-diagnostico
+    dest: /usr/local/bin/disks-diagnostico
+    desc: >-
+      Informe de solo lectura de como estan los discos y los montajes AHORA. No
+      monta, no desmonta y no edita nada. La seccion 'QUIEN MONTO CADA COSA' dice
+      de donde sale cada montaje (del fstab, de un archivo de unidad, o de un
+      programa) y la de permisos si de verdad puedes escribir, no lo que parece.
+      Para cuando /media/hdd no aparece y no sabes si es que no monto o que el
+      punto quedo vacio. Con sudo.

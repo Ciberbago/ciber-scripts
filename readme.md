@@ -4,7 +4,7 @@ Este repositorio deja configurado un equipo desde cero: sistema, paquetes,
 unidades, credenciales y respaldos.
 
 **Para lo que haces la mayoría de las veces**, empieza por la tabla de tareas de
-tu distro: [Debian](ansible/README-debian.md) · [Arch](ansible/README.md)
+tu distro: [Debian](ansible/README-debian.md) · [Arch](ansible/README.md) · [Termux](docs/termux.md)
 
 | Quiero… | |
 |---|---|
@@ -115,3 +115,25 @@ Incluye cosas como:
 - Red
     - wakeonlan
     - tailscale
+
+## Termux
+
+Lo mismo pero en el teléfono: Fish, servidor SSH y siete comandos para vídeo,
+descargas y red. Es la única parte del repo que **no** se instala con Ansible,
+porque Termux no tiene `sudo` ni `/etc`.
+
+```
+bash <(curl -L url.jaimelopez.top/termux)
+```
+
+El script instala los paquetes, pide el permiso de almacenamiento, deja Fish como
+shell y pone los comandos en `~/bin` con permisos `700`. **Conserva** lo que ya
+exista, así que para actualizarlos está `ciber-update`, que sí sobrescribe.
+
+Los siete comandos: `ciber-help` (que es la ayuda en el propio teléfono),
+`ciber-update`, `ffm-tui` para vídeo, `yt-tui` para descargas, `termux-ssh` para
+el servidor SSH del móvil (puerto 8022), `net-tui` para red y Wake-on-LAN, y
+`ssh-tui` para tus conexiones guardadas por alias.
+
+La guía completa, con lo que hace cada uno, dónde guarda sus cosas y los problemas
+que salen, está en [docs/termux.md](docs/termux.md).
