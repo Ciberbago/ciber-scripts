@@ -9,13 +9,18 @@ wget -O - url.jaimelopez.top/debian | bash
 Eso instala Ansible, clona el repo y aplica `site-debian.yml`. Todo corre sin
 sesión gráfica, así que se puede hacer por SSH.
 
-Al terminar quedan dos pasos manuales:
+Al terminar quedan **tres** pasos manuales:
 
 1. **Cerrar sesión y volver a entrar.** El grupo `docker` y el shell `fish`
    aplican en el próximo login, no en el actual.
 2. **`sudo tailscale up`.** El playbook instala y habilita `tailscaled`, pero no
    lo conecta: `tailscale up` abre un navegador para autenticar. Hacerlo sin
    interacción exigiría guardar una *auth key* dentro del repo.
+3. **Rellenar `/etc/ciber/backup.env`** (abajo, sección de secretos) y **clonar el
+   repo de stacks en `/opt/docker`**, que ya no lo hace este playbook a propósito.
+
+Para el camino completo, de formatear hasta los servicios funcionando, con los
+respaldos de por medio, ver [`docs/nuevo-servidor.md`](../docs/nuevo-servidor.md).
 
 A diferencia de Arch, aquí **no hay `ciber-session`**: ese comando configura
 GNOME y en un servidor no hay escritorio.
@@ -170,7 +175,9 @@ termina con `/opt/docker` vacío con una sola línea de `debug` que nadie lee. U
 fallo mudo en la etapa de recuperación de desastres es justo lo que no debe pasar.
 
 El flujo real son pasos separados, y así está documentado en
-[`docs/nuevo-servidor.md`](../docs/nuevo-servidor.md):
+[`docs/nuevo-servidor.md`](../docs/nuevo-servidor.md). El porqué de este cambio,
+con los cuatro bugs de datos que salieron por el camino, está en
+[`docs/migracion-backup-2026-09-28.md`](../docs/migracion-backup-2026-09-28.md):
 
 ```
 formateo -> Debian limpio -> ciber-apply -> clonar los stacks -> restaurar datos -> arrancar
