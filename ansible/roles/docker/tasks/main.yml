@@ -16,7 +16,7 @@
   # referencia tal cual desde signed-by=. No hace falta desarmarla con gpg.
   ansible.builtin.get_url:
     url: "{{ docker_gpg_url }}"
-    dest: "{{ apt_keyrings_dir }}/docker.asc"
+    dest: "{{ docker_keyring }}"
     owner: root
     group: root
     # 0644 y no 0600: apt corre como _apt (usuario sin privilegios) al
@@ -25,10 +25,61 @@
     mode: "0644"
   become: true
 
+- name: Ver si la fuente de Docker tiene alguna linea que no sea la nuestra
+  # get.docker.com deja /etc/apt/sources.list.d/docker.list apuntando al MISMO source
+  # pero con signed-by=/etc/apt/keyrings/docker.gpg, en formato binario. Eso es
+  # exactamente lo que hay que retirar antes de escribir la nuestra.
+  #
+  # 'grep -v' imprime las lineas que NO son la nuestra, asi que cualquier salida es
+  # linea ajena. Se mira eso y no "esta el fichero bien?" porque el fallo de apt es
+  # el de TENER una linea ajena, no el de faltar la nuestra: un fichero con las dos
+  # lineas -- la vieja y la que acaba de anadir el modulo -- ya esta roto, y por eso
+  # un "si contiene la nuestra, no lo toco" lo dejaria roto.
+  ansible.builtin.shell: |
+    grep -vF 'signed-by={{ docker_keyring }}' /etc/apt/sources.list.d/docker.list || true
+  register: docker_lineas_ajenas
+  changed_when: false
+  failed_when: false
+  become: true
+
+- name: Quitar la fuente heredada de Docker si contradice la nueva
+  # ESTA ES LA TAREA QUE ARREGLA EL CONFLICTO.
+  #
+  # Medido el 2026-09-28 en un servidor que ya traia Docker de get.docker.com: el
+  # fichero *.list se quedaba con DOS lineas para el mismo source, una con
+  # signed-by=docker.gpg y la otra con signed-by=docker.asc, y apt respondia
+  #
+  #     E:Conflicting values set for option Signed-By regarding source
+  #     https://download.docker.com/linux/debian/ bookworm:
+  #     /etc/apt/keyrings/docker.gpg != /etc/apt/keyrings/docker.asc
+  #     E:The list of sources could not be read.
+  #
+  # Que no es solo que falle Docker. 'apt update' deja de poder LEER la lista de
+  # fuentes, asi que se cae el indice completo y con el cualquier 'apt install' de
+  # cualquier paquete falla. Y el mensaje no dice nada de 'signed-by', asi que sin
+  # este comentario el siguiente que lo vea pierde el rato igual.
+  #
+  # El criterio es que no quede ninguna linea ajena, de forma que la segunda corrida
+  # se queda verde en vez de borrar y recrear la fuente en cada apply: ese es el
+  # criterio de este repo, 'la segunda corrida sale verde'.
+  ansible.builtin.file:
+    path: /etc/apt/sources.list.d/docker.list
+    state: absent
+  when: docker_lineas_ajenas.stdout | length > 0
+  become: true
+
+- name: Quitar la llave .gpg que dejo get.docker.com, ya sin uso
+  # Se va con la fuente heredada: sin linea que la referencie, un keyring suelto en
+  # /etc/apt/keyrings no hace nada, pero confunde al que lea el directorio.
+  ansible.builtin.file:
+    path: "{{ apt_keyrings_dir }}/docker.gpg"
+    state: absent
+  become: true
+
 - name: Agregar el repo de Docker
   ansible.builtin.apt_repository:
     repo: >-
-      deb [arch={{ docker_deb_arch }} signed-by={{ apt_keyrings_dir }}/docker.asc]
+      deb [arch={{ docker_deb_arch }} signed-by={{ docker_keyring }}]
       {{ docker_repo_url }} {{ ciber_debian_codename }} stable
     filename: docker
     state: present

@@ -18,6 +18,10 @@
 docker_enabled: true
 docker_gpg_url: https://download.docker.com/linux/debian/gpg
 docker_repo_url: https://download.docker.com/linux/debian
+# Ruta de la llave. En una variable y no escrita a mano en dos sitios porque el rol
+# la usa para installarla y para el signed-by= del sources.list, y si las dos
+# disagree el conflicto que se describe en el rol docker aparece solo.
+docker_keyring: "{{ apt_keyrings_dir }}/docker.asc"
 docker_packages:
   - docker-ce
   - docker-ce-cli
