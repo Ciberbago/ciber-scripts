@@ -413,9 +413,30 @@ if [ "$UPLOAD" = "1" ]; then
     log "sube     $RCLONE_DIR"
     # --checksum: si Drive ya tiene el mismo archivo, no lo resubre. Si el token
     # de rclone esta caducado se avisa y se sigue: la copia local ya esta hecha.
-    if rclone copy "$TAR" "$RCLONE_DIR" --checksum -v 2>&1 | sed -ne '/Transferred:/,$ p'; then
-      rclone copy "$MANIFEST" "google:rclone/docker/MANIFEST.txt" --checksum 2>/dev/null \
-        || warn "no se pudo subir el MANIFEST"
+    # SIN PIPE para comprobar el resultado. El estado de salida de un pipeline es el
+    # del ULTIMO comando, y con '| sed' ese ultimo es sed, que siempre sale con 0:
+    # un rclone fallido se daba por buena la subida y no saltava ni un aviso.
+    # Medido el 2026-09-28, y era el MANIFEST el que se quedaba sin subir.
+    if rclone copy "$TAR" "$RCLONE_DIR" --checksum -v > "$STAGE/rclone.log" 2>&1; then
+      sed -ne '/Transferred:/,$ p' "$STAGE/rclone.log"
+
+      # El destino es el DIRECTORIO, no 'google:rclone/docker/MANIFEST.txt'. En
+      # 'rclone copy' el destino es una carpeta, asi que poner el nombre del archivo
+      # hace que rclone intente crear un directorio con ese nombre, y si ya existe
+      # como archivo falla con 'is a file not a directory'. rclone pone el nombre
+      # local tal cual, que aqui ya es MANIFEST.txt.
+      #
+      # Y si esto falla es FALLO y no aviso: sin el MANIFEST, el tarball de Drive no
+      # se puede verificar al restaurar, y restore.sh avisaria de que no hay sha256
+      # de referencia y seguiria adelante. Un respaldo que no se puede comprobar es
+      # medio respaldo.
+      if ! rclone copy "$MANIFEST" "$RCLONE_DIR" --checksum >> "$STAGE/rclone.log" 2>&1; then
+        warn "el tarball subio pero el MANIFEST no. En Drive NO se podra verificar."
+        sed 's/^/    /' "$STAGE/rclone.log" | tail -3
+        aviso "❌ Backup: subio el tarball pero no el MANIFEST, asi que el respaldo
+de Drive no se puede verificar al restaurar. El local si: $LOCAL"
+        exit 1
+      fi
     else
       warn "rclone fallo al subir. El tarball esta en $LOCAL."
       aviso "❌ Backup: fallo la subida a Drive. El tarball quedo en $LOCAL
