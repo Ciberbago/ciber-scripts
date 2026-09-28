@@ -84,6 +84,37 @@ if ! sudo -v < /dev/tty; then
     exit 1
 fi
 
+#<-------Reparar el indice de apt------->
+# Por que esto va PRIMERO, antes del primer 'apt-get update'.
+#
+# El playbook deja el repo de Docker con signed-by=docker.asc. Si la maquina ya
+# venia de get.docker.com, que es lo que hace el script de bash viejo, su
+# docker.list tiene la linea con docker.gpg. Una corrida anterior del playbook que
+# llego a anadir la suya y fallo al leer el indice deja el fichero con LAS DOS lineas
+# para el mismo source, y ahi apt deja de poder leer la lista de fuentes.
+#
+# Medido el 2026-09-28, dos veces seguidas en este servidor:
+#
+#   - La primera: fallo la tarea 'docker : Agregar el repo de Docker' con
+#     'E:Conflicting values set for option Signed-By'.
+#   - La segunda: al reintentar, fallo ANTES del playbook, en este mismo
+#     'apt-get update', con el mismo error. El arreglo estaba en el playbook, que ya
+#     no llega a ejecutarse.
+#
+# El bootstrap se auto-repara para que ese estado no deje la maquina en un
+# pantano. Se borra el fichero entero, no la linea: el playbook lo vuelve a escribir
+# con la suya, y asi no depende de acertar cual de las dos era la buena. Y como el
+# rol docker tambien lo comprueba, el arreglo sigue valiendo para las corridas
+# siguientes y para el que se applieque a mano.
+DOCKER_LIST="/etc/apt/sources.list.d/docker.list"
+if [ -f "$DOCKER_LIST" ] && [ "$(grep -c 'download.docker.com' "$DOCKER_LIST" 2>/dev/null || echo 0)" -gt 1 ]; then
+    echo "==> Reparando la fuente de Docker duplicada ($DOCKER_LIST)"
+    echo "    $(grep -c 'download.docker.com' "$DOCKER_LIST") lineas para el mismo source con"
+    echo "    signed-by distintos: apt no puede ni leer la lista. Se borra el"
+    echo "    fichero y el playbook lo vuelve a escribir."
+    sudo rm -f "$DOCKER_LIST"
+fi
+
 #<-------Dependencias minimas------->
 echo "==> Instalando ansible y git"
 sudo apt-get update
