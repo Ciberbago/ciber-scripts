@@ -175,13 +175,65 @@ fi
 
 echo "==> Aplicando el playbook" | tee -a "$LOGFILE"
 
-# Aqui ya no se pide nada, asi que 'script' solo aporta la salida en vivo y el log.
-# Que su entrada sea el pipe da igual: el playbook no lee de stdin.
-if command -v script &>/dev/null; then
-    # -q sin banners, -a append, -e devuelve el codigo de salida del hijo.
-    script -q -a -e -c "$CMD" "$LOGFILE"
-else
-    eval "$CMD"
+# --- Ejecutar, SIN 'script' ----------------------------------------------------
+#
+# 'script' no vale aqui, y es la tercera version del mismo bug. Se usa para tener
+# salida en vivo y dejar log, y las dos cosas las hace tambien un pipe a 'tee', sin
+# el problema que 'script' si tiene.
+#
+# El problema: 'script' CREA un pseudo-terminal y se lo da al hijo como terminal
+# controladora. Medido en este servidor:
+#
+#     directamente          tty = la del usuario
+#     en un pipe a tee      tty = la del usuario   (igual)
+#     dentro de script      tty = /dev/pts/8      (OTRA)
+#
+# Y sudo 1.9 guarda el timestamp de autenticacion POR TTY (tty_tickets, activo por
+# defecto). El 'sudo -v' de arriba deja el ticket en la tty del usuario; Ansible
+# llama a 'sudo -H -S -n -u root' desde la tty que le da script, que es otra, asi
+# que no encuentra ticket, no tiene password que leer y falla con exactamente:
+#
+#     sudo: a password is required
+#
+# Medido el 2026-09-28, tres veces seguidas, con tres teoria distintas y la misma
+# causa debajo: un pipe donde no habia terminal (--ask-become-pass), despues el
+# prompt alimentado desde el pipe (sudo -v dentro de script), y ahora la tty.
+#
+# Un pipe a 'tee' no cambia la tty controladora, asi que el ticket de 'sudo -v'
+# sigue valiendo y el 'sudo -n' de cada tarea pasa. Se pierde el pseudo-terminal,
+# que solo hacia falta para el color: Ansible lo fuerza con ANSIBLE_FORCE_COLOR.
+
+set +e
+eval "$CMD" 2>&1 | tee -a "$LOGFILE"
+RC="${PIPESTATUS[0]}"   # el de ansible-playbook, no el de tee
+set -e
+
+# Antes esto imprimia SIEMPRE "=== Listo ===" y salia con 0, porque el codigo de
+# salida se perdia: lo unico que quedaba al final era un 'echo'. Un playbook a medias
+# -- que es justo lo que pasa si algo falla a la mitad -- se anunciaba comoInstalled.
+if [ "$RC" -ne 0 ]; then
+    cat <<'FALLO'
+
+=== El playbook fallo (codigo de salida arriba) ===
+
+  No se completo la configuracion. Lo que quedo a medias esta en el log:
+
+FALLO
+    echo "    ${LOGFILE}" | sed 's/^/    /'
+    cat <<'FALLO2'
+
+  Mira el final del log para ver en que tarea se paro. Con el repo ya instalado,
+  se puede reintentar solo la parte que falle, sin volver a arrancar de cero:
+
+    ansible-playbook -i ansible/inventory-debian.ini ansible/site-debian.yml --tags <tag>
+    ansible-playbook -i ansible/inventory-debian.ini ansible/site-debian.yml --list-tags
+
+  y un simulacro de lo que cambiaria, sin tocar nada:
+
+    ansible-playbook -i ansible/inventory-debian.ini ansible/site-debian.yml --check --diff
+
+FALLO2
+    exit "$RC"
 fi
 
 cat <<'FIN'
@@ -219,7 +271,7 @@ Para cambiar algo, edita el repo y vuelve a aplicar:
 
 FIN
 echo "Logs:"
-echo "  ${LOGFILE}       la corrida del playbook (via script, con pty)"
+echo "  ${LOGFILE}       la corrida del playbook, con el codigo de salida"
 echo "  /var/log/apt/history.log  cada paquete instalado, con fecha"
 echo
 echo "Para ver el progreso en vivo, en otra sesion SSH:  ciber-watch"
