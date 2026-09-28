@@ -1,6 +1,21 @@
 # Bienvenido
 
-Este es un repositorio personal
+Este repositorio deja configurado un equipo desde cero: sistema, paquetes,
+unidades, credenciales y respaldos.
+
+**Para lo que haces la mayoría de las veces**, empieza por la tabla de tareas de
+tu distro: [Debian](ansible/README-debian.md) · [Arch](ansible/README.md)
+
+| Quiero… | |
+|---|---|
+| Ver qué hay instalado | `ciber-help` |
+| Aplicar cambios | `ciber-apply` (nunca con `sudo`) |
+| Ver qué cambiaría sin tocar nada | `ciber-apply --check --diff` |
+| Reaplicar solo una parte | `ciber-apply --tags packages` |
+| Ver el progreso, en otra terminal | `ciber-watch` |
+| Poner las credenciales | `nano /etc/ciber/backup.env` + `sudo ciber-secrets` |
+
+Debajo está el resto, por distro.
 
 ## Arch linux
 
@@ -16,7 +31,8 @@ aplica el playbook. Despues del primer login en GNOME hay que ejecutar
 
 La configuracion se edita en `ansible/group_vars/all/` (paquetes, dotfiles,
 unidades de systemd, ajustes de GNOME, aliases). Ver
-[ansible/README.md](ansible/README.md) para la guia de mantenimiento.
+[ansible/README.md](ansible/README.md) para la guia de mantenimiento, y
+[docs/por-que-arch.md](docs/por-que-arch.md) para las decisiones que hay detras.
 
 Comandos que quedan instalados:
 
@@ -73,6 +89,11 @@ clona el repo y aplica el playbook. La configuración vive en
 `ansible/group_vars/workstations_debian/` y se documenta en
 [ansible/README-debian.md](ansible/README-debian.md). El script viejo en bash
 puro quedó en `legacy/debian-bash.sh`.
+
+Este repo además tiene el **respaldo de los datos** de los servicios, que están
+en el otro repo: [cyber-docker](https://github.com/Ciberbago/ciber-docker). El
+runbook de montar un servidor nuevo de cero, con los respaldos de por medio, está
+en [docs/nuevo-servidor.md](docs/nuevo-servidor.md).
 
 
 Incluye cosas como:

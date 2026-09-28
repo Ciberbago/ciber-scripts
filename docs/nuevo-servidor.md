@@ -4,6 +4,23 @@ Este es el camino completo, en orden, desde una máquina recién formateada hast
 los servicios levantados. Está escrito para leerlo a las tantas de la madrugada
 después de un fallo, así que los pasos van numerados y se pueden seguir uno a uno.
 
+## Índice
+
+| Paso | Qué es | Cuándo lo necesitas |
+|---|---|---|
+| [1. Clave SSH](#1-clave-ssh-en-github) | Copia la clave pública a GitHub | Solo para el repo **privado** de stacks |
+| [2. Sistema y Docker](#2-sistema-docker-y-el-respaldo) | `wget -O - url.jaimelopez.top/debian \| bash` | El primero, siempre |
+| [3. Credenciales](#3-credenciales-del-respaldo) | Rellenar `/etc/ciber/backup.env` | Antes de las 18:00 |
+| [4. Repo de stacks](#4-repo-de-stacks) | `git clone` a `/opt/docker` | Siempre, y **a mano** |
+| [5. `.env` de los stacks](#5-env-de-los-stacks) | Los 41 valores, del gestor | Siempre |
+| [6. rclone](#6-rclone) | Copiar el `rclone.conf` del servidor viejo | Siempre, o no hay respaldo |
+| [7. Restaurar](#7-restaurar-y-arrancar) | `restore.sh` y levantar | Siempre |
+
+Y al final: [qué no vuelve de un respaldo](#qué-no-vuelve-de-un-respaldo) ·
+[si algo falla](#si-algo-falla) · [lo que no se ha probado](#lo-que-este-respaldo-todavía-no-ha-demostrado)
+
+---
+
 ```
   1. Clave SSH en GitHub          (manual)   ← solo para el repo PRIVADO de stacks
   2. Sistema + Docker              (automático)  ← el bootstrap y el playbook

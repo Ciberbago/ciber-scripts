@@ -9,6 +9,13 @@ Lo que **no** cambia: la arquitectura de secretos (`/etc/ciber/backup.env`,
 `ciber-secrets`, el fallo ruidoso con `${VAR:?}`) ni el resto del playbook. Ese
 trabajo se respetó tal cual; los cambios deliberados están abajo.
 
+---
+
+*Archivo fechado. Es la bitácora de una sesión del 2026-09-28 y describes cómo
+quedó el respaldo ese día. Si buscas el estado actual, mira
+[`por-que-debian.md`](../docs/por-que-debian.md) o el
+[README-debian.md](../ansible/README-debian.md).*
+
 ## Reglas que no hay que deshacer
 
 1. **Este playbook no clona ni escribe en `/opt/docker`.** Ni `git clone`, ni
