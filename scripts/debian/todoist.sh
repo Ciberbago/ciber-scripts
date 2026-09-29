@@ -3,9 +3,13 @@
 # Notificador de tareas de Todoist a Telegram. Lo dispara todoist-precise.timer
 # cada minuto, como unidad de USUARIO (systemctl --user).
 #
-# SECRETOS: los tres tokens NO estan en este archivo. Se leen de
+# SECRETOS: los tokens NO estan en este archivo. Se leen de
 # ~/.config/ciber/todoist.env, que Ansible crea vacio con permisos 0600 y que
 # nunca entra al repositorio.
+#
+# Ahi viven ademas TELEGRAM_CHAT_ID y TELEGRAM_THREAD_TAREAS. El segundo es
+# opcional y dice a que topic del grupo van los recordatorios; sin el, van a
+# General, que es el comportamiento de antes de separar los servicios.
 #
 # El archivo va en el HOME y no en /etc como el de backup.sh porque esta unidad
 # corre como usuario, no como root: no podria leer un archivo 0600 de root.
@@ -25,6 +29,15 @@ set -u
 : "${TELEGRAM_CHAT_ID:?falta TELEGRAM_CHAT_ID en ~/.config/ciber/todoist.env}"
 
 CHAT_ID="$TELEGRAM_CHAT_ID"
+# Topic de destino, opcional: sin TELEGRAM_THREAD_TAREAS el recordatorio va a
+# General, que es como se comportaba antes de separar los servicios en topics.
+# Se filtra a vacio si no es un numero, porque un valor mal escrito no puede
+# hacer que el notificador -- que corre cada minuto -- empiece a fallar en
+# silencio contra la API.
+THREAD_ID="${TELEGRAM_THREAD_TAREAS:-}"
+case "$THREAD_ID" in
+    ''|*[!0-9]*) THREAD_ID='' ;;
+esac
 FILE_NOTIFIED="/tmp/todoist_notified.txt"
 
 # Obtener proyectos
@@ -61,10 +74,16 @@ process_tasks() {
                 
                 MESSAGE="⏰ *Recordatorio:* $content - 🕐 $pdttime - 📁 $project_name"
                 
+                # El topic solo se anade si hay id: mandar message_thread_id=""
+                # a Telegram es un 400, no un "sin topic".
+                local THREAD_ARG=()
+                [ -n "$THREAD_ID" ] && THREAD_ARG=(-d "message_thread_id=$THREAD_ID")
+
                 curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMessage" \
                     -d "chat_id=$CHAT_ID" \
                     -d "text=$MESSAGE" \
-                    -d "parse_mode=Markdown" > /dev/null
+                    -d "parse_mode=Markdown" \
+                    ${THREAD_ARG[@]+"${THREAD_ARG[@]}"} > /dev/null
             fi
         fi
     done

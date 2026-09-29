@@ -39,6 +39,9 @@
 #   RCLONE_DEST        carpeta destino en Drive        (google:rclone/docker/)
 #   BACKUP_ENV_FILE    credenciales del bot            (/etc/ciber/backup.env)
 #
+# En BACKUP_ENV_FILE hay una clave mas, TELEGRAM_THREAD_BACKUP, que dice a que
+# topic del grupo van los avisos. Es opcional: sin ella van a General.
+#
 # Se sube con nombre fijo a proposito: el historial de versiones de Drive es la
 # retencion, asi que no hace falta rotar copias.
 
@@ -106,12 +109,29 @@ ENV_FILE="${BACKUP_ENV_FILE:-/etc/ciber/backup.env}"
 : "${TELEGRAM_CHAT_ID:?falta TELEGRAM_CHAT_ID en $ENV_FILE}"
 TG_TOKEN="$TELEGRAM_TOKEN"
 TG_CHAT="$TELEGRAM_CHAT_ID"
+# El grupo de Telegram es un foro y cada servicio tiene su topic, para que el
+# OK verde de las 18:00 no se mezcle con la lavadora ni con opencode. Esta
+# variable es OPCIONAL a proposito: si no esta, el aviso va a General, que es
+# como funcionaba antes. Es lo que permite que este script siga siendo portable
+# a otra maquina cuyo /etc/ciber/backup.env todavia no tenga la clave.
+#
+# El ':?' de arriba NO se usa aqui a proposito: si el topic faltara, el
+# respaldo -- que es lo importante -- no debe dejar de hacerse por un detalle de
+# las notificaciones. Un topic mal escrito es la misma situacion: Telegram
+# devuelve 400 y el aviso se pierde, pero el respaldo sigue.
+TG_THREAD="${TELEGRAM_THREAD_BACKUP:-}"
+case "$TG_THREAD" in
+  ''|*[!0-9]*) TG_THREAD='' ;;
+esac
 # Sin token no se avisa y el backup sigue: notificar no es un requisito para
 # respaldar. Los scripts viejos traian un bot y un chat ID hardcodeados que no
 # Coincidian con el .env.
 aviso() {
+  local extra=()
+  [ -n "$TG_THREAD" ] && extra=(--data-urlencode "message_thread_id=$TG_THREAD")
   curl -s -m 20 -X POST "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" \
-    --data-urlencode "chat_id=$TG_CHAT" --data-urlencode "text=$1" >/dev/null 2>&1
+    --data-urlencode "chat_id=$TG_CHAT" --data-urlencode "text=$1" \
+    ${extra[@]+"${extra[@]}"} >/dev/null 2>&1
 }
 log()  { printf '%s\n' "$*"; }
 warn() { printf 'AVISO  %s\n' "$*" >&2; }

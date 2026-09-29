@@ -49,9 +49,21 @@ ENV_FILE="${BACKUP_ENV_FILE:-/etc/ciber/backup.env}"
 : "${TELEGRAM_TOKEN:?falta TELEGRAM_TOKEN en $ENV_FILE}"
 : "${TELEGRAM_CHAT_ID:?falta TELEGRAM_CHAT_ID en $ENV_FILE}"
 
+# Topic de destino. Comparte archivo y clave con backup-datos.sh a proposito: los
+# dos respaldos son el mismo asunto y van al mismo topic. Opcional; sin ella el
+# aviso cae en General. Mismo criterio que ahi: un topic mal escrito no puede
+# hacer que el respaldo se pare, asi que se filtra a vacio y se sigue.
+TG_THREAD="${TELEGRAM_THREAD_BACKUP:-}"
+case "$TG_THREAD" in
+  ''|*[!0-9]*) TG_THREAD='' ;;
+esac
+
 aviso() {
+  local extra=()
+  [ -n "$TG_THREAD" ] && extra=(--data-urlencode "message_thread_id=$TG_THREAD")
   curl -s -m 20 -X POST "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage" \
-    --data-urlencode "chat_id=$TELEGRAM_CHAT_ID" --data-urlencode "text=$1" >/dev/null 2>&1
+    --data-urlencode "chat_id=$TELEGRAM_CHAT_ID" --data-urlencode "text=$1" \
+    ${extra[@]+"${extra[@]}"} >/dev/null 2>&1
 }
 
 # ── El disco externo puede no estar ──────────────────────────────────────────
