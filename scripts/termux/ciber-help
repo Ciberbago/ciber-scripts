@@ -84,6 +84,8 @@ item '~/bin/termux-url-opener' \
     'Lo que Android llama al compartir. No se edita: delega en yt-share.'
 item 'yt-share (log)' \
     'Sin Termux:API no hay notificación, pero todo queda en ~/.local/state/yt-share/ultimo.log'
+item 'termux-media-scan RUTA' \
+    'Mete lo descargado en la galería. El nombre no es termux-media-scanner, y la ruta debe ser la real, no un symlink.'
 
 section 'SSH'
 item 'termux-ssh' \

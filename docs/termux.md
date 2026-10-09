@@ -215,8 +215,26 @@ dejando nota en el log.
 El log va a `600` a propósito: lleva la línea de comando completa, y esa puede
 llevar cookies de `~/.config/yt-tui/config`.
 
+**Que salga en la galería.** Al terminar, `yt-share` pasa el archivo por
+`termux-media-scan`, que es lo que avisa al `MediaStore`. Sin eso el vídeo queda
+en disco pero Android no lo muestra en la galería, porque escribir un archivo no
+registra nada en el índice.
+
+Dos detalles que no son evidentes:
+
+- El comando se llama **`termux-media-scan`**, no `termux-media-scanner`.
+- Hay que darle la **ruta real**, no la del enlace. `~/storage/shared` es un
+  symlink a `/storage/emulated/0`, y el scanner corre en el proceso de la app
+  Termux:API, no en el nuestro: si le pasas el symlink no lo reconoce. El
+  script lo resuelve con `realpath` antes de llamar.
+
+Si `yt-dlp` no consigue la ruta final, escanea la carpeta entera con `-r`, que
+en algunos Android funciona cuando escanear el archivo suelto no.
+
 **Sin Termux:API también funciona.** Compartir un enlace **no** necesita esa
-app, solo el aviso. Si no está instalada, el script calla y deja el log.
+app: ni para los avisos ni para el escaneo a la galería. Lo único que se pierde
+es el aviso, y que lo descargado aparezca en la galería sin abrir la terminal.
+Si no está instalada, el script calla, deja todo en el log y ya está.
 
 **Cuando falla.** Detecta en el log los motivos habituales y los dice en la
 notificación: el sitio limitando peticiones (429), un vídeo privado o de
@@ -305,6 +323,11 @@ En el teléfono, todo bajo `$HOME`:
 | Log de compartir | `~/.local/state/yt-share/ultimo.log`, modo `600` |
 | Descargas y vídeos | `~/storage/downloads/` (el almacenamiento de Android) |
 
+`scripts/termux/packages` incluye `termux-api`, que pone el comando
+`termux-media-scan`. La app Termux:API que hace el trabajo de verdad no está en
+ninguna lista, porque es un APK y se instala desde F-Droid o GitHub, no con
+`pkg`.
+
 El `manifest` del repo es lo que dice qué archivo va dónde y con qué permisos;
 `ciber-update` lo lee, así que para agregar un comando nuevo basta una línea ahí
 y el archivo en `scripts/termux/`.
@@ -322,6 +345,7 @@ y el archivo en `scripts/termux/`.
 | Al compartir, sale un diálogo de error en vez de descargar | Falta `~/bin/termux-url-opener`. Lo pone `ciber-update`; a mano: `ciber-update --yes` |
 | Al compartir, `env: ... no such file or directory`, código 127 | Shebang con `/usr/bin/env`, que en Android no existe. Run y codeload ya lo traen con la ruta absoluta; si reaparece, es que alguien lo editó a mano. Comprobación: `sed -n 1p ~/bin/termux-url-opener` |
 | Al compartir, no suena la notificación | Falta la app Termux:API. La descarga funciona igual, y queda en el log |
+| El vídeo se descarga pero no sale en la galería | Falta la app Termux:API, que es la que indexa. Con ella puesta, `termux-media-scan ~/storage/downloads/yt-share/` a mano lo resuelve |
 | Al compartir, el vídeo sale en `~/downloads` y no en `~/storage` | Android no concedió el almacenamiento. `termux-setup-storage` y acepta el diálogo |
 | La IP local no aparece en `net-tui` | Es normal: `ip` está bloqueado por Android dentro de Termux, y por eso se detecta con Python |
 | `ciber-update` no ve cambios nuevos | Corre `ciber-update --check`: dice cuántas entradas trae el manifest. Si son menos de 11, el origen está sirviendo una copia vieja. Se comprueba con `curl -fsSL https://codeload.github.com/Ciberbago/ciber-scripts/tar.gz/refs/heads/main \| tar -xzO --wildcards '*/scripts/termux/manifest'` |

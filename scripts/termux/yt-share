@@ -99,6 +99,50 @@ log_command() {
     log_rule
 }
 
+# ---------------------------------------------------------------------------
+# Media scanner
+# ---------------------------------------------------------------------------
+
+# Sin esto el archivo queda en disco pero no aparece en la galeria: escribirlo
+# no le dice nada al MediaStore, que es el indice que lee Android para mostrar
+# fotos y videos.
+#
+# El comando se llama termux-media-scan, NO termux-media-scanner. Y usa -r para
+# directorios enteros, que es lo que hace falta aqui.
+#
+# Detalle que importa: el scanner corre en el proceso de la app Termux:API, no
+# en el nuestro. Por eso hay que darle la ruta REAL y no la del simbolico:
+# ~/storage/shared es un enlace a /storage/emulated/0, y si se le pasa el
+# enlace el scanner no lo reconoce. realpath lo resuelve.
+scan_media() {
+    local path="$1"
+
+    command -v termux-media-scan >/dev/null 2>&1 || {
+        log_line 'AVISO: sin Termux:API no se escanea el archivo, no saldra en la galeria.'
+        return 1
+    }
+    [[ -e "$path" ]] || return 1
+
+    local real
+    real=$(realpath "$path" 2>/dev/null) || return 1
+    [[ -e "$real" ]] || return 1
+
+    if termux-media-scan "$real" >/dev/null 2>&1; then
+        log_line "Escaneado para la galeria: $real"
+        return 0
+    fi
+
+    # Con -r sobre el directorio suele funcionar cuando el fichero suelto no:
+    # algunos Android indexan la carpeta entera de golpe y no el archivo.
+    if [[ -d "$real" ]] && termux-media-scan -r "$real" >/dev/null 2>&1; then
+        log_line "Escaneado para la galeria (recursivo): $real"
+        return 0
+    fi
+
+    log_line "AVISO: termux-media-scan fallo con $real"
+    return 1
+}
+
 # Notificacion si hay Termux:API. Si no hay no es un error.
 notify() {
     local title="$1" content="$2" ongoing="${3:-}"
@@ -500,14 +544,22 @@ main() {
         # ahi seria mentir, asi que se distingue.
         if grep -q 'has already been downloaded' "$LOG_FILE"; then
             log_line "OK: ya estaba descargado: ${FINAL_FILE:-}"
+            # Se escanea tambien en este caso: si el fichero no estaba en la
+            # galeria, compartir el enlace otra vez es justo lo que lo mete.
+            [[ -n "$FINAL_FILE" ]] && scan_media "$FINAL_FILE" || true
             notify 'yt-share' "Ya estaba: ${FINAL_FILE##*/}"
             printf '%sYa estaba descargado:%s %s\n' "$AMAR" "$R" "${FINAL_FILE:-}"
         elif [[ -n "$FINAL_FILE" ]]; then
             log_line "OK: $FINAL_FILE"
+            scan_media "$FINAL_FILE" || true
             notify 'yt-share' "Listo: ${FINAL_FILE##*/}"
             printf '%sDescarga completada:%s %s\n' "$VERDE" "$R" "$FINAL_FILE"
         else
             log_line 'yt-dlp termino sin error.'
+            # Sin ruta conocida (yt-dlp no la imprimio), se escanea la carpeta
+            # entera: es peor que escanear un archivo de mas, pero es lo que
+            # hace que el video aparezca sin tener que abrir la terminal.
+            scan_media "$DOWNLOAD_DIR" || true
             notify 'yt-share' 'Terminado'
             printf '%sDescarga completada.%s\n' "$VERDE" "$R"
         fi

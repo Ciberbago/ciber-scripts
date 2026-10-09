@@ -16,3 +16,8 @@ fresh-editor
 ffmpeg
 python-yt-dlp
 yt-dlp-ejs
+# Aporta termux-media-scan, que mete lo descargado en la galeria. El comando
+# lo pone este paquete; la parte que de verdad indexa es la app Termux:API, que
+# es un APK aparte y hay que instalar del Play Store, de F-Droid o de GitHub.
+# Sin ella los scripts siguen funcionando, pero sin aviso y sin galeria.
+termux-api
