@@ -69,9 +69,10 @@ según el `manifest`. Es el que se usa para las actualizaciones.
 | `ssh-tui` | Conexiones SSH guardadas por alias |
 
 `ciber-help`, `ciber-update`, `ffm-tui` y `yt-tui` son menús: se ejecutan sin
-argumentos y eligen de una lista. `yt-share` y los dos de red no piden nada:
-`yt-share` porque Android lo lanza sin terminal, y los de red porque sus
-datos están de serie. `ciber-help`, `ciber-update` y `yt-share` leen banderas.
+argumentos y eligen de una lista. `yt-share` y los dos de red no preguntan
+nada: los de red porque sus datos están de serie, y `yt-share` porque Android
+lo lanza sin quien pueda contestar. `ciber-help`, `ciber-update` y `yt-share`
+leen banderas.
 
 ### `ciber-help` y `ciber-update`
 
@@ -178,9 +179,8 @@ porque Android **no deja elegir el nombre**: si no está, en vez de descargar
 sale un diálogo de error en pantalla. El archivo del repo del mismo nombre es
 un shim que delega en `yt-share`; todo el trabajo está ahí.
 
-Y aquí está la diferencia con `yt-tui`, que conviene tener clara: **ese flujo
-llega en segundo plano y sin terminal**. No hay menú, no hay preguntas, no hay
-`pkg install` que pregunte nada. Por eso:
+Y aquí está la diferencia con `yt-tui`, que conviene tener clara: **ese flujo no
+puede preguntar nada**. No hay menú, no hay `pkg install` que pregunte. Por eso:
 
 - Se descarga **el mejor formato disponible**, sin tope de resolución. Para
   elegir calidad, `yt-tui` a mano.
@@ -189,6 +189,32 @@ llega en segundo plano y sin terminal**. No hay menú, no hay preguntas, no hay
 - Los argumentos de `~/.config/yt-tui/config` se leen **después** de los
   valores por defecto del script, así que lo que pongas ahí gana. Cookies,
   cabeceras, tokens: los mismos que usa `yt-tui`.
+
+**La pantalla que sale al compartir.** Android no lo ejecuta en segundo plano
+invisible: abre una **terminal nueva** con la descarga dentro, y esa es la que
+se ve al compartir. Se queda en negro porque el script no escribía nada hasta
+el final, así que ahora escribe:
+
+```
+yt-share: descargando
+https://youtu.be/abc
+
+Cómo arreglar tu Router en 10 minutos
+Guardando en /storage/emulated/0/Download/yt-share
+
+ 42.1% ████████░░░░░░░░░░░ 3.10MiB/s ETA 00:18
+
+Descarga completada: /storage/emulated/0/Download/yt-share/....mp4
+```
+
+La barra se redibuja **en la misma línea**, con retorno de carro, en vez de
+ir sumando líneas. Cuando algo falla, sale el motivo en esa misma pantalla y no
+solo en la notificación.
+
+Todo eso se dibuja solo si `stdout` es una terminal. Si rediriges la salida, no
+se escribe ni un carácter de control, porque ahí serían ruido en el fichero.
+`NO_COLOR` apaga el color pero **no** el redibujo: son dos cosas distintas, y
+sin el retorno de carro la pantalla se llenaría de scroll.
 
 Banderas:
 

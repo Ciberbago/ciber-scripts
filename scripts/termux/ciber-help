@@ -77,7 +77,7 @@ item '~/.config/yt-tui/config' \
 
 section 'COMPARTIR A TERMUX'
 item 'yt-share' \
-    'Descarga el enlace que compartes a Termux. En YouTube: compartir, Termux.'
+    'Descarga el enlace que compartes a Termux. En YouTube: compartir, Termux. Muestra el progreso en esa pantalla.'
 item "yt-share --max 1080 'URL'" \
     'A mano, con tope de calidad, o con --audio, --dir RUTA y --dry-run.'
 item '~/bin/termux-url-opener' \

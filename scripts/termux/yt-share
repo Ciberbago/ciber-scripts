@@ -16,9 +16,10 @@
 # ejecuta desde otro sitio, y por eso se escribe distinto.
 #
 # Android llama a ~/bin/termux-url-opener con la URL compartida y ese archivo
-# es un shim que acaba aqui. Ese flujo llega en segundo plano y SIN terminal,
-# asi que no hay menu ni preguntas: se aplica el formato por defecto y todo lo
-# que se ve sale por ahi.
+# es un shim que acaba aqui. Lo lanza en una terminal NUEVA (ShellCreateMode
+# ALWAYS, en TermuxService.actionServiceExecute), que es la que se ve al
+# compartir: no hay nadie a quien preguntar, asi que no hay menu, y el formato
+# es el de por defecto.
 #
 # Salida en dos sitios, siempre: un log en
 # ${XDG_STATE_HOME:-$HOME/.local/state}/yt-share/ultimo.log, que se sobrescribe
@@ -64,19 +65,52 @@ DRY_RUN=0
 TYPE="video"
 
 NOTIFY_ID="yt-share"
+# Si se ha dibujado una linea de progreso, hay que cerrarla con un salto antes
+# de escribir el resultado, o el mensaje final sale pegado encima.
+PROGRESS_DRAWN=0
 # Segundos entre actualizaciones de la notificacion de progreso. Sin tope, una
 # descarga rapida manda cientos de avisos y la API se atasca.
 PROGRESS_INTERVAL=3
 
-if [[ -t 1 && -z "${NO_COLOR:-}" ]] && command -v tput >/dev/null 2>&1; then
+# Al compartir, Termux ejecuta este script en una terminal NUEVA, que es la que
+# se ve al compartir y se queda en negro hasta que el script acaba y se cierra.
+# Ahi stdout SI es una terminal, asi que en ese caso se dibuja el progreso ahi
+# en vez de dejar la pantalla vacia. Cuando se ejecuta desde una shell normal
+# tambien es terminal, y se ve igual, que es lo que se espera.
+#
+# Si stdout NO es terminal (redireccion, cron, otro script) no se dibuja nada:
+# ahi los caracteres de control serian ruido en un fichero.
+if [[ -t 1 ]]; then
+    TTY=1
+else
+    TTY=0
+fi
+
+# El color y el redibujo son cosas distintas. NO_COLOR apaga el color, pero no
+# el retorno de carro: sin el, cada avance del progreso se quedaria en su
+# propia linea y la pantalla se llenaria de scroll. El unico caso en que no se
+# redibuja es cuando stdout no es una terminal.
+if ((TTY)) && command -v tput >/dev/null 2>&1; then
+    CR=$(tput cr 2>/dev/null || printf '\r')
+    EL=$(tput el 2>/dev/null || printf '\033[K')
+else
+    CR=""; EL=""
+fi
+
+# Colores: solo si hay terminal y NO_COLOR no esta puesto. Es el bloque que
+# tienen todos los scripts del directorio. Va aparte del anterior a proposito:
+# se incumplieron al meterlos juntos y se desincronizaron, uno acababa
+# definiendo GRIS y el otro no, y con set -u eso tumba el script entero.
+if ((TTY)) && [[ -z "${NO_COLOR:-}" ]] && command -v tput >/dev/null 2>&1; then
     B=$(tput bold 2>/dev/null || true)
     R=$(tput sgr0 2>/dev/null || true)
     VERDE=$(tput setaf 2 2>/dev/null || true)
     AMAR=$(tput setaf 3 2>/dev/null || true)
     ROJO=$(tput setaf 1 2>/dev/null || true)
     CIAN=$(tput setaf 6 2>/dev/null || true)
+    GRIS=$(tput setaf 8 2>/dev/null || true)
 else
-    B=""; R=""; VERDE=""; AMAR=""; ROJO=""; CIAN=""
+    B=""; R=""; VERDE=""; AMAR=""; ROJO=""; CIAN=""; GRIS=""
 fi
 
 # ---------------------------------------------------------------------------
@@ -162,9 +196,9 @@ notify_error() {
     fi
 }
 
-# Sin terminal no hay a quien preguntar, asi que los errores graves se dicen
-# tambien por notificacion: si el script falla en silencio parece que no pasa
-# nada, y el enlace compartido se pierde.
+# Sin a quien preguntar, los errores graves se dicen tambien por notificacion:
+# si el script falla en silencio parece que no pasa nada, y el enlace
+# compartido se pierde.
 die() {
     log_line "ERROR: $1"
     notify_error 'yt-share' "$1"
@@ -257,9 +291,48 @@ build_command() {
     CMD+=("${YTDLP_EXTRA_ARGS[@]}" "$URL")
 }
 
+# Dibuja la linea de progreso en la pantalla, sobreescribiendola. Una sola
+# linea que se va actualizando: si se imprimiese una linea por actualizacion,
+# una descarga rapida llenaria la pantalla de scroll inútil.
+draw_progress() {
+    ((TTY)) || return 0
+    local percent="$1" speed="$2" eta="$3"
+
+    local bar=''
+    if [[ "$percent" =~ ^([0-9]+) ]]; then
+        local done_pct="${BASH_REMATCH[1]}"
+        ((done_pct > 100)) && done_pct=100
+        local cells=$((done_pct * 20 / 100))
+        local i filled
+        for ((i = 0; i < 20; i++)); do
+            ((i < cells)) && filled='█' || filled='░'
+            bar+="$filled"
+        done
+    fi
+
+    # SIN salto de linea final: el retorno de carro es lo que deja la linea
+    # siempre en el mismo sitio. Si cada actualizacion terminase con \n, se
+    # acumularian lineas y la pantalla se llenaria de scroll, que es justo lo
+    # que se quiere evitar. El salto se pone una vez, al terminar.
+    printf '%s%s%s %s %s%s ETA %s%s' \
+        "$CR" "$EL" "${CIAN}" "$percent" "$bar" "$speed" "$eta" "${R}"
+    PROGRESS_DRAWN=1
+}
+
+# Cierra la linea de progreso para que el mensaje final no acabe pegado encima.
+end_progress() {
+    ((TTY && PROGRESS_DRAWN)) || return 0
+    printf '\n'
+    PROGRESS_DRAWN=0
+}
+
 handle_progress() {
     local percent="${1:-}" speed="${2:-}" eta="${3:-}"
     [[ -n "$percent" ]] || return 0
+
+    # La pantalla va mas fino que la notificacion: se redibuja cada vez que
+    # hay dato, porque es local y no satura ninguna API.
+    draw_progress "$percent" "$speed" "$eta"
 
     local now
     now=$(date +%s)
@@ -282,6 +355,10 @@ handle_yt_output() {
             ;;
         CIBERTITLE:*)
             TITLE="${line#CIBERTITLE:}"
+            # En la pantalla del intent esta linea es lo primero que se ve:
+            # sin ella la pantalla queda en negro hasta el progreso.
+            ((TTY)) && printf '\n%s%s%s\n' "$B" "$TITLE" "$R"
+            ((TTY)) && printf 'Guardando en %s\n\n' "$DOWNLOAD_DIR"
             notify "$TITLE" 'Descargando...' 'ongoing'
             return 0
             ;;
@@ -452,8 +529,9 @@ usage() {
         '  --help       Esta ayuda' \
         '' \
         'El flujo de compartir es este: en YouTube, compartir, elegir Termux.' \
-        'No hay menu, porque Android lo lanza sin terminal: se descarga el mejor' \
-        'formato disponible. Para elegir calidad, usa yt-tui a mano.' \
+        'No hay menu, porque Android lo lanza sin quien pueda contestar:' \
+        'se descarga el mejor formato disponible sin preguntar nada.' \
+        'Para elegir calidad, usa yt-tui a mano.' \
         '' \
         'Si esta Termux:API instalada avisa con una notificacion al empezar, cada' \
         'pocos segundos con el progreso, y al terminar. Sin ella funciona igual,' \
@@ -536,9 +614,11 @@ main() {
         exit 0
     fi
 
-    notify 'yt-share' 'Iniciando la descarga...' 'ongoing'
+notify 'yt-share' 'Iniciando la descarga...' 'ongoing'
+((TTY)) && printf 'yt-share: descargando\n%s%s%s\n' "${GRIS}" "$URL" "${R}"
 
-    if run_download; then
+if run_download; then
+        end_progress
         # Con --no-overwrites, compartir dos veces el mismo enlace no vuelve a
         # bajar nada y yt-dlp sale con cero igual. Decir "descarga completada"
         # ahi seria mentir, asi que se distingue.
@@ -566,11 +646,13 @@ main() {
         exit 0
     fi
 
+    end_progress
     log_line 'ERROR: la descarga fallo.'
     diagnose_failure
     notify_error 'yt-share' "Falló. $HINT"
     printf '%sLa descarga falló.%s %s\n' "$ROJO" "$R" "$HINT" >&2
     printf 'Log: %s\n' "$LOG_FILE" >&2
+    ((TTY)) && printf 'Revisa el log o usa yt-share a mano para ver mas detalle.\n' >&2
     exit 1
 }
 
