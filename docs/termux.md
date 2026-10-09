@@ -221,6 +221,27 @@ caracteres de control serían ruido en un fichero.
 `NO_COLOR` apaga el color pero **no** el retorno de carro: son dos cosas
 distintas, y sin el retorno de carro la pantalla se llenaría de scroll.
 
+**Nada de la app Termux:API puede tumbar la descarga.** Eso ya pasó de verdad:
+`termux-notification` hace un broadcast a otra app y **espera su respuesta**, y
+si esa app no está, está ocupada o tiene las notificaciones bloqueadas, se
+queda esperando. El script se paraba ahí, antes de escribir nada, y la pantalla
+se quedaba negra. Ahora:
+
+- Todas las llamadas van con `timeout 3`. Tres segundos es de sobra para una
+  llamada local; si no ha contestado, no va a contestar.
+- El rótulo de arranque se escribe **antes de la primera llamada**, con lo que
+  sea. La pantalla no depende de ninguna app.
+- Se quitó el aviso de notificación inicial: duplicaba lo que ya se ve en
+  pantalla y costaba un tiempo de espera.
+
+Con la API colgada en todas partes, el caso peor medido son 9 segundos y la
+descarga se completa igual.
+
+**El bloqueo tampoco se queda puesto.** Si Android mata el proceso (pantalla
+apagada, el sistema mata la app), el `trap` no llega a ejecutarse y el bloqueo
+se queda ahí. Se comprueba el PID: si no hay nadie detrás, se retira al
+instante, sin esperar la hora que se esperaba antes.
+
 **Si la pantalla se queda en negro**, `~/bin/termux-url-opener` deja una marca
 en `~/.local/state/yt-share/compartido.log` **antes de hacer nada**, aunque no
 se vea nada por pantalla. Con ella se distinguen los tres casos de un vistazo:
@@ -295,8 +316,9 @@ que encaja; los demás quedan en el log, debajo.
 
 **Si se solapan dos descargas.** No se solapan: el script toma un bloqueo en
 `~/.local/state/yt-share/bloqueado` y el segundo enlace dice que ya hay una en
-marcha. Si el bloqueo se queda de una descarga que murió (se cerró la app, se
-fue la batería), se limpia solo pasado una hora, o a mano con `rm -rf`.
+marcha. Si el bloqueo se queda de una descarga que murió, se limpia solo: el
+bloqueo guarda el PID y si ese proceso ya no existe se retira al instante. A
+mano también vale: `rm -rf ~/.local/state/yt-share/bloqueado`.
 
 **Las dos limitaciones del flujo de compartir**, que vienen de Termux y no del
 script:
@@ -398,7 +420,7 @@ y el archivo en `scripts/termux/`.
 | Al compartir, `env: ... no such file or directory`, código 127 | Shebang con `/usr/bin/env`, que en Android no existe. Run y codeload ya lo traen con la ruta absoluta; si reaparece, es que alguien lo editó a mano. Comprobación: `sed -n 1p ~/bin/termux-url-opener` |
 | Al compartir, no suena la notificación | Falta la app Termux:API. La descarga funciona igual, y queda en el log |
 | El vídeo se descarga pero no sale en la galería | Falta la app Termux:API, que es la que indexa. Con ella puesta, `termux-media-scan ~/storage/downloads/yt-share/` a mano lo resuelve |
-| Al compartir, la pantalla se queda en negro sin decir nada | `cat ~/.local/state/yt-share/compartido.log`. Si la marca no aparece, el teléfono no tiene esta versión: `ciber-update --yes` |
+| Al compartir, la pantalla se queda en negro sin decir nada | `cat ~/.local/state/yt-share/compartido.log`. Si la marca no aparece, el teléfono no tiene esta versión: `ciber-update --yes`. Si aparece pero no la línea de `yt-share`, se quedó parado en una llamada a la API de Termux |
 | Al compartir, el vídeo sale en `~/downloads` y no en `~/storage` | Android no concedió el almacenamiento. `termux-setup-storage` y acepta el diálogo |
 | La IP local no aparece en `net-tui` | Es normal: `ip` está bloqueado por Android dentro de Termux, y por eso se detecta con Python |
 | `ciber-update` no ve cambios nuevos | Corre `ciber-update --check`: dice cuántas entradas trae el manifest. Si son menos de 11, el origen está sirviendo una copia vieja. Se comprueba con `curl -fsSL https://codeload.github.com/Ciberbago/ciber-scripts/tar.gz/refs/heads/main \| tar -xzO --wildcards '*/scripts/termux/manifest'` |

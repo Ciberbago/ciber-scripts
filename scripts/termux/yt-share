@@ -184,14 +184,22 @@ scan_media() {
     real=$(realpath "$path" 2>/dev/null) || return 1
     [[ -e "$real" ]] || return 1
 
-    if termux-media-scan "$real" >/dev/null 2>&1; then
+    # scan_media no usa api() porque necesita saber si fue bien o mal. Aun asi
+    # lleva limite: un termux-media-scan colgado dejaria el script parado
+    # DESPUES de descargar, con la pantalla a medias y sin decir nada.
+    local -a scan_cmd
+    if command -v timeout >/dev/null 2>&1; then
+        scan_cmd=(timeout "$API_TIMEOUT")
+    fi
+
+    if "${scan_cmd[@]}" termux-media-scan "$real" >/dev/null 2>&1; then
         log_line "Escaneado para la galeria: $real"
         return 0
     fi
 
     # Con -r sobre el directorio suele funcionar cuando el fichero suelto no:
     # algunos Android indexan la carpeta entera de golpe y no el archivo.
-    if [[ -d "$real" ]] && termux-media-scan -r "$real" >/dev/null 2>&1; then
+    if [[ -d "$real" ]] && "${scan_cmd[@]}" termux-media-scan -r "$real" >/dev/null 2>&1; then
         log_line "Escaneado para la galeria (recursivo): $real"
         return 0
     fi
@@ -200,22 +208,48 @@ scan_media() {
     return 1
 }
 
+# Todo lo que viene de la app Termux:API va por aqui. NADA de eso puede
+# colgarse, y si se cuelga no puede tumbar la descarga: estos comandos hacen un
+# broadcast a otra app y esperan su respuesta, y si esa app no esta, esta
+# ocupada o tiene la notificacion bloqueada, se quedan esperando.
+#
+# Pasaba de verdad: con termux-notification colgado, el script se quedaba
+# parado en el aviso inicial y no escribia nada mas, o sea, pantalla negra.
+# Por eso el rotulo de arranque va ANTES de la primera llamada, y todo lo
+# demas tiene este limite de tiempo.
+# Tres segundos. Con diez, una API colgada hacia la descarga esperar 40
+# segundos en cuatro timeouts, y el usuario ve la pantalla quieta sin saber si
+# esta trabajando. Tres es de sobra para una llamada local por broadcast, y si
+# no ha contestado en tres segundos no va a contestar.
+#
+# El rotulo de progreso de la pantalla es lo que de verdad informa: no depende
+# de la API y por eso va antes. La notificacion es el extra, no el aviso.
+API_TIMEOUT="${YT_SHARE_API_TIMEOUT:-3}"
+
+api() {
+    if command -v timeout >/dev/null 2>&1; then
+        timeout "$API_TIMEOUT" "$@" >/dev/null 2>&1 || true
+        return 0
+    fi
+    "$@" >/dev/null 2>&1 || true
+    return 0
+}
+
 # Notificacion si hay Termux:API. Si no hay no es un error.
 notify() {
     local title="$1" content="$2" ongoing="${3:-}"
     command -v termux-notification >/dev/null 2>&1 || return 0
     local args=(--id "$NOTIFY_ID" --title "$title" --content "$content" --alert-once)
     [[ -n "$ongoing" ]] && args+=(--ongoing)
-    termux-notification "${args[@]}" >/dev/null 2>&1 || true
+    api termux-notification "${args[@]}"
 }
 
 notify_error() {
     local title="$1" content="$2"
     if command -v termux-notification >/dev/null 2>&1; then
-        termux-notification --id "$NOTIFY_ID" --title "$title" --content "$content" \
-            --priority high >/dev/null 2>&1 || true
+        api termux-notification --id "$NOTIFY_ID" --title "$title" --content "$content" --priority high
     elif command -v termux-toast >/dev/null 2>&1; then
-        termux-toast "$title: $content" >/dev/null 2>&1 || true
+        api termux-toast "$title: $content"
     fi
 }
 
@@ -470,25 +504,27 @@ acquire_lock() {
         return 0
     fi
 
-    # Un bloqueo puede quedar de una corrida que murio (se cerro la app, se
-    # fue la bateria). Si el proceso ya no existe y es viejo, se limpia.
+    # Un bloqueo puede quedarse puesto de una corrida que murio. Y no solo si
+    # se agoto la hora: si Android mata el proceso (pantalla apagada, el
+    # sistema mata la app), el trap no llega a ejecutarse y el bloqueo se
+    # queda ahi, sin proceso detras. Comprobando el PID se ve al instante, sin
+    # tener que esperar.
     local lock_pid lock_start lock_age
     lock_pid=$(cut -d: -f1 "$LOCK_DIR/pid" 2>/dev/null || true)
     lock_start=$(cut -d: -f2 "$LOCK_DIR/pid" 2>/dev/null || true)
-    if [[ -n "$lock_pid" ]] && kill -0 "$lock_pid" 2>/dev/null; then
-        die "Ya hay una descarga en marcha. Espera a que termine antes de compartir otro enlace."
+
+    if [[ -z "$lock_pid" ]] || ! kill -0 "$lock_pid" 2>/dev/null; then
+        # No hay nadie detras del bloqueo. Se retira, sea viejo o no.
+        lock_age=$(( $(date +%s) - $(stat -c %Y "$LOCK_DIR" 2>/dev/null || echo 0) ))
+        rm -rf "$LOCK_DIR" 2>/dev/null || true
+        mkdir "$LOCK_DIR" 2>/dev/null || die "No se pudo tomar el bloqueo en $STATE_DIR"
+        write_lock_pid
+        LOCK_TAKEN=1
+        log_line "AVISO: habia un bloqueo sin proceso vivo (${lock_age}s), se ha retirado."
+        return 0
     fi
 
-    lock_age=$(( $(date +%s) - $(stat -c %Y "$LOCK_DIR" 2>/dev/null || echo 0) ))
-    if ((lock_age < 3600)); then
-        die "Hay un bloqueo de una descarga interrumpida${lock_start:+, de las $(date -d "@$lock_start" '+%H:%M' 2>/dev/null || echo '?')}. Si no es un error: rm -rf $LOCK_DIR"
-    fi
-
-    rm -rf "$LOCK_DIR" 2>/dev/null || true
-    mkdir "$LOCK_DIR" 2>/dev/null || die "No se pudo tomar el bloqueo en $STATE_DIR"
-    write_lock_pid
-    LOCK_TAKEN=1
-    log_line "AVISO: bloqueo de $lock_age segundos sin proceso vivo, se ha retirado."
+    die "Ya hay una descarga en marcha. Espera a que termine antes de compartir otro enlace."
 }
 
 release_lock() {
@@ -498,14 +534,14 @@ release_lock() {
 }
 
 take_wakelock() {
-    if command -v termux-wake-lock >/dev/null 2>&1 && termux-wake-lock >/dev/null 2>&1; then
+    if command -v termux-wake-lock >/dev/null 2>&1 && api termux-wake-lock; then
         WAKELOCK_TAKEN=1
     fi
 }
 
 release_wakelock() {
     if ((WAKELOCK_TAKEN)) && command -v termux-wake-unlock >/dev/null 2>&1; then
-        termux-wake-unlock >/dev/null 2>&1 || true
+        api termux-wake-unlock
     fi
 }
 
@@ -614,17 +650,24 @@ main() {
     : >"$LOG_FILE" 2>/dev/null || true
     chmod 600 "$LOG_FILE" 2>/dev/null || true
 
-    trap cleanup EXIT
-    acquire_lock
-    take_wakelock
+trap cleanup EXIT
+acquire_lock
+take_wakelock
 
-    if [[ -z "$url_arg" ]]; then
+if [[ -z "$url_arg" ]]; then
         usage
         exit 0
     fi
-    URL=$(extract_url "$url_arg") || die "No encontré ninguna URL en: $url_arg"
+URL=$(extract_url "$url_arg") || die "No encontré ninguna URL en: $url_arg"
 
-    check_dependencies
+# EL ROTULO VA AQUI, y no mas abajo. Todo lo que viene antes es stuff local:
+# mkdir, el bloqueo, el wakelock. Todo lo que va despues es ya sea la
+# descarga o la API de Termux, y eso puede tardar o colgarse. Si el rotulo
+# saliera despues de la primera llamada, un aviso colgado lo dejaria sin
+# escribirse nunca, que es exactamente la pantalla en negro que nos toca.
+printf 'yt-share %s: descargando\n%s%s%s\n' "$VERSION" "${GRIS}" "$URL" "${R}" >&"$SCREEN_FD"
+
+check_dependencies
     ensure_destination
     build_command
 
@@ -639,14 +682,9 @@ main() {
         exit 0
     fi
 
-notify 'yt-share' 'Iniciando la descarga...' 'ongoing'
-
-# Esto se escribe SIEMPRE, tenga o no pantalla, y va con la version dentro.
-# Dos motivos: si la pantalla se queda en negro por lo que sea, al menos esto
-# se ve y dice que el script arranco; y la version permite saber de un vistazo
-# si el telefono tiene la copia nueva o una que se quedo atrasada.
-printf 'yt-share %s: descargando\n%s%s%s\n' "$VERSION" "${GRIS}" "$URL" "${R}" >&"$SCREEN_FD"
-
+# Aviso inicial en la PANTALLA, no en la notificacion. La pantalla ya dice
+# que arranco y no puede colgarse; la notificacion si, y ademas duplicaba lo
+# que se esta viendo. La de notificaciones empieza con el progreso real.
 if run_download; then
         end_progress
         # Con --no-overwrites, compartir dos veces el mismo enlace no vuelve a
