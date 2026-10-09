@@ -89,7 +89,7 @@ item 'yt-share (log)' \
 item 'yt-share --version' \
     'La versión instalada. El log también la pone, y eso salva cuando la pantalla del compartir sale en negro.'
 item 'termux-media-scan RUTA' \
-    'Mete lo descargado en la galería. El nombre no es termux-media-scanner, y la ruta debe ser la real, no un symlink.'
+    'Mete lo descargado en la galería. Tarda unos segundos: indexar es asíncrono. Con -r escanea la carpeta entera.'
 
 section 'SSH'
 item 'termux-ssh' \
