@@ -1,0 +1,512 @@
+#!/usr/bin/env bash
+#
+# yt-share - descarga lo que compartes a Termux.
+#
+# Android llama a ~/bin/termux-url-opener con la URL compartida y ese archivo
+# es un shim que acaba aqui. Ese flujo llega en segundo plano y SIN terminal,
+# asi que no hay menu ni preguntas: se aplica el formato por defecto y todo lo
+# que se ve sale por ahi.
+#
+# Salida en dos sitios, siempre: un log en
+# ${XDG_STATE_HOME:-$HOME/.local/state}/yt-share/ultimo.log, que se sobrescribe
+# en cada corrida, y si existe la app Termux:API una notificacion. Sin
+# Termux:API el script funciona igual, solo que en silencio: compartir links
+# NO necesita esa app, solo el aviso es opcional.
+#
+# Lo que se ve va al log porque el log puede llevar dentro la linea de comando
+# completa, y esa puede llevar cookies. Por eso el directorio va a 700 y el
+# log a 600.
+
+set -u
+
+# El mismo archivo que usa yt-tui: las cookies que pongas ahi valen para los
+# dos. Se carga mas abajo, DESPUES de los valores por defecto, para que lo que
+# haya en el archivo se imponga sobre ellos.
+CONFIG_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/yt-tui/config"
+
+STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/yt-share"
+LOG_FILE="$STATE_DIR/ultimo.log"
+LOCK_DIR="$STATE_DIR/bloqueado"
+
+# Android mata los procesos en segundo plano que parece que no hacen nada.
+# El wakelock se pide solo si el comando existe y se suelta al salir.
+WAKELOCK_TAKEN=0
+LOCK_TAKEN=0
+
+# Mismo destino que yt-tui pero en su propia carpeta: lo que baja el boton de
+# compartir no se mezcla con lo que descargas a mano.
+DEFAULT_DOWNLOAD_DIR="$HOME/storage/downloads/yt-share"
+# Si Android no concedio el almacenamiento, ~/storage no existe. Es preferible
+# bajar en la carpeta interna de Termux que no bajar nada.
+FALLBACK_DOWNLOAD_DIR="$HOME/downloads/yt-share"
+DOWNLOAD_DIR="$DEFAULT_DOWNLOAD_DIR"
+DIR_IS_DEFAULT=1
+
+# El mismo formato que yt-tui llama "Mejor disponible".
+FORMAT_ARGS=(--format 'bestvideo*+bestaudio/best' --merge-output-format mp4)
+NO_PLAYLIST=1
+YTDLP_EXTRA_ARGS=()
+JS_RUNTIME=""
+DRY_RUN=0
+TYPE="video"
+
+NOTIFY_ID="yt-share"
+# Segundos entre actualizaciones de la notificacion de progreso. Sin tope, una
+# descarga rapida manda cientos de avisos y la API se atasca.
+PROGRESS_INTERVAL=3
+
+if [[ -t 1 && -z "${NO_COLOR:-}" ]] && command -v tput >/dev/null 2>&1; then
+    B=$(tput bold 2>/dev/null || true)
+    R=$(tput sgr0 2>/dev/null || true)
+    VERDE=$(tput setaf 2 2>/dev/null || true)
+    AMAR=$(tput setaf 3 2>/dev/null || true)
+    ROJO=$(tput setaf 1 2>/dev/null || true)
+    CIAN=$(tput setaf 6 2>/dev/null || true)
+else
+    B=""; R=""; VERDE=""; AMAR=""; ROJO=""; CIAN=""
+fi
+
+# ---------------------------------------------------------------------------
+# Log y avisos
+# ---------------------------------------------------------------------------
+
+log_line() {
+    printf '%s\n' "$1" >>"$LOG_FILE" 2>/dev/null || true
+}
+
+log_rule() {
+    log_line '------------------------------------------------------------'
+}
+
+log_command() {
+    log_line "$1"
+    log_line "URL: $URL"
+    log_line "Destino: $DOWNLOAD_DIR"
+    log_line "Comando: ${CMD[*]}"
+    log_rule
+}
+
+# Notificacion si hay Termux:API. Si no hay no es un error.
+notify() {
+    local title="$1" content="$2" ongoing="${3:-}"
+    command -v termux-notification >/dev/null 2>&1 || return 0
+    local args=(--id "$NOTIFY_ID" --title "$title" --content "$content" --alert-once)
+    [[ -n "$ongoing" ]] && args+=(--ongoing)
+    termux-notification "${args[@]}" >/dev/null 2>&1 || true
+}
+
+notify_error() {
+    local title="$1" content="$2"
+    if command -v termux-notification >/dev/null 2>&1; then
+        termux-notification --id "$NOTIFY_ID" --title "$title" --content "$content" \
+            --priority high >/dev/null 2>&1 || true
+    elif command -v termux-toast >/dev/null 2>&1; then
+        termux-toast "$title: $content" >/dev/null 2>&1 || true
+    fi
+}
+
+# Sin terminal no hay a quien preguntar, asi que los errores graves se dicen
+# tambien por notificacion: si el script falla en silencio parece que no pasa
+# nada, y el enlace compartido se pierde.
+die() {
+    log_line "ERROR: $1"
+    notify_error 'yt-share' "$1"
+    printf '%sError: %s%s\n' "$ROJO" "$1" "$R" >&2
+    exit 1
+}
+
+# ---------------------------------------------------------------------------
+# Dependencias
+# ---------------------------------------------------------------------------
+
+select_js_runtime() {
+    if command -v deno >/dev/null 2>&1; then
+        JS_RUNTIME=deno
+    elif command -v node >/dev/null 2>&1; then
+        JS_RUNTIME=node
+    else
+        return 1
+    fi
+}
+
+# A diferencia de yt-tui, aqui NO se instala nada. En un proceso en segundo
+# plano una pregunta de pkg se queda esperando a un teclado que no existe. Se
+# avisa de lo que falta y con que comando se arregla.
+check_dependencies() {
+    local missing=()
+
+    command -v yt-dlp >/dev/null 2>&1 || missing+=("falta yt-dlp: pkg install python-yt-dlp")
+    if [[ "$TYPE" != audio ]] && ! command -v ffmpeg >/dev/null 2>&1; then
+        missing+=("falta ffmpeg: pkg install ffmpeg")
+    fi
+    select_js_runtime || missing+=("falta el runtime de JavaScript: pkg install deno")
+
+    ((${#missing[@]} == 0)) && return 0
+
+    die "No se puede descargar: ${missing[*]}"
+}
+
+# ---------------------------------------------------------------------------
+# Destino
+# ---------------------------------------------------------------------------
+
+ensure_destination() {
+    mkdir -p "$DOWNLOAD_DIR" 2>/dev/null && return 0
+
+    # Solo tiene sentido caer a la carpeta interna si el destino no lo eligio
+    # el usuario. Si viene de ~/.config/yt-tui/config, hay que fallar.
+    if ((DIR_IS_DEFAULT)) && mkdir -p "$FALLBACK_DOWNLOAD_DIR" 2>/dev/null; then
+        log_line "AVISO: sin acceso al almacenamiento de Android, destino $FALLBACK_DOWNLOAD_DIR"
+        DOWNLOAD_DIR="$FALLBACK_DOWNLOAD_DIR"
+        return 0
+    fi
+
+    die "No se pudo crear la carpeta de destino: $DOWNLOAD_DIR"
+}
+
+# ---------------------------------------------------------------------------
+# La descarga
+# ---------------------------------------------------------------------------
+
+build_command() {
+    # Los marcadores CIBER van delante de cada linea que este script tiene que
+    # parsear. Son propios, asi que no colisionan con los [download] de yt-dlp.
+    #
+    # --print implica --quiet en yt-dlp, y --quiet apagaria el progreso salvo
+    # que se le pida --progress explicitamente. --newline hace que cada
+    # actualizacion de progreso salga en una linea propia, que es lo unico que
+    # se puede leer linea a linea.
+    CMD=(yt-dlp
+        --newline
+        --progress
+        --progress-template 'download:CIBERPROG|%(progress._percent_str)s|%(progress._speed_str)s|%(progress._eta_str)s'
+        --print 'before_dl:CIBERTITLE:%(title).70s'
+        --print 'after_move:CIBERFILE:%(filepath)s'
+        --no-overwrites
+        --output "$DOWNLOAD_DIR/%(title).180s [%(id)s].%(ext)s")
+
+    ((NO_PLAYLIST)) && CMD+=(--no-playlist)
+    [[ -n "$JS_RUNTIME" ]] && CMD+=(--js-runtimes "$JS_RUNTIME")
+    ((DRY_RUN)) && CMD+=(--simulate)
+
+    if [[ "$TYPE" == audio ]]; then
+        CMD+=(-x --audio-format mp3 --audio-quality 192K --embed-metadata)
+    else
+        CMD+=("${FORMAT_ARGS[@]}")
+    fi
+
+    # Los argumentos del usuario van al final a proposito: si pone un --format
+    # en ~/.config/yt-tui/config, el ultimo gana y es el suyo.
+    CMD+=("${YTDLP_EXTRA_ARGS[@]}" "$URL")
+}
+
+handle_progress() {
+    local percent="${1:-}" speed="${2:-}" eta="${3:-}"
+    [[ -n "$percent" ]] || return 0
+
+    local now
+    now=$(date +%s)
+    ((now - LAST_NOTIFY >= PROGRESS_INTERVAL)) || return 0
+    LAST_NOTIFY=$now
+
+    notify "${TITLE:-Descargando}" "$percent · $speed · ETA $eta" 'ongoing'
+}
+
+handle_yt_output() {
+    local line="$1"
+
+    case "$line" in
+        CIBERPROG\|*)
+            local rest="${line#CIBERPROG|}"
+            local percent speed eta
+            IFS='|' read -r percent speed eta <<<"$rest"
+            handle_progress "$percent" "$speed" "$eta"
+            return 0
+            ;;
+        CIBERTITLE:*)
+            TITLE="${line#CIBERTITLE:}"
+            notify "$TITLE" 'Descargando...' 'ongoing'
+            return 0
+            ;;
+        CIBERFILE:*)
+            FINAL_FILE="${line#CIBERFILE:}"
+            return 0
+            ;;
+    esac
+
+    log_line "$line"
+}
+
+# Traduce el fallo a algo accionable. Sin esto el unico sintoma es "no se
+# descargo", que no dice nada de por que.
+diagnose_failure() {
+    local hints=()
+
+    if grep -Eiq '429|too many requests|rate.?limit|temporarily blocked' "$LOG_FILE"; then
+        hints+=("El sitio esta limitando las peticiones. Cookies en $CONFIG_FILE")
+    fi
+    # Antes que lo de iniciar sesion: un video privado no se arregla con
+    # cookies, y mandar auki a iniciar sesion solo confunde.
+    if grep -Eiq 'private video|members-only|join this channel|not available in your country' "$LOG_FILE"; then
+        hints+=("El video es privado, es de miembros o no esta disponible aqui")
+    fi
+    if grep -Eiq 'sign in|login required|authentication|cookies|confirm you.re human|not a bot' "$LOG_FILE"; then
+        hints+=("Pide iniciar sesion o pasar el captcha. Cookies en $CONFIG_FILE")
+    fi
+    if grep -Eiq 'javascript runtime|js challenge|unable to extract' "$LOG_FILE"; then
+        hints+=("Problema con el runtime de JavaScript. Mira: command -v deno")
+    fi
+    if grep -Eiq 'unable to download webpage|HTTP Error 403|Failed to resolve' "$LOG_FILE"; then
+        hints+=("YouTube ha cortado la peticion. Suele ser cookies, o un yt-dlp viejo")
+    fi
+
+    ((${#hints[@]} > 0)) || hints+=("Revisa el log: $LOG_FILE")
+
+    local hint
+    for hint in "${hints[@]}"; do
+        log_line "  - $hint"
+    done
+    HINT="${hints[0]}"
+}
+
+run_download() {
+    local status
+
+    log_rule
+    log_command 'yt-share'
+    log_rule
+
+    # Un coproc para leer linea a linea y conservar a la vez el codigo de
+    # salida: un pipe a while lo pierde, porque el while corre en un subshell.
+    # 2>&1 mete los mensajes de yt-dlp en el mismo flujo; llegan mezclados con
+    # el progreso y se separan por los marcadores.
+    local ytdlp_pid
+    coproc YTDL { "${CMD[@]}" 2>&1; }
+    ytdlp_pid="$YTDL_PID"
+
+    local line
+    while IFS= read -r line; do
+        handle_yt_output "$line"
+    done <&"${YTDL[0]}"
+
+    wait "$ytdlp_pid"
+    status=$?
+    return "$status"
+}
+
+# ---------------------------------------------------------------------------
+# Bloqueo y wakelock
+# ---------------------------------------------------------------------------
+
+# mkdir es atomico: el que lo crea, lo tiene. Asi dos "compartir" seguidos no
+# solapan descargas ni se pisan las notificaciones.
+write_lock_pid() {
+    # PID primero, porque es lo que se comprueba con kill -0. El segundo campo
+    # es cuando empezo, para que se pueda leer a ojo un bloqueo puzzling.
+    printf '%s:%s\n' "$$" "$NOW_START" >"$LOCK_DIR/pid" 2>/dev/null || true
+}
+
+acquire_lock() {
+    if mkdir "$LOCK_DIR" 2>/dev/null; then
+        write_lock_pid
+        LOCK_TAKEN=1
+        return 0
+    fi
+
+    # Un bloqueo puede quedar de una corrida que murio (se cerro la app, se
+    # fue la bateria). Si el proceso ya no existe y es viejo, se limpia.
+    local lock_pid lock_start lock_age
+    lock_pid=$(cut -d: -f1 "$LOCK_DIR/pid" 2>/dev/null || true)
+    lock_start=$(cut -d: -f2 "$LOCK_DIR/pid" 2>/dev/null || true)
+    if [[ -n "$lock_pid" ]] && kill -0 "$lock_pid" 2>/dev/null; then
+        die "Ya hay una descarga en marcha. Espera a que termine antes de compartir otro enlace."
+    fi
+
+    lock_age=$(( $(date +%s) - $(stat -c %Y "$LOCK_DIR" 2>/dev/null || echo 0) ))
+    if ((lock_age < 3600)); then
+        die "Hay un bloqueo de una descarga interrumpida${lock_start:+, de las $(date -d "@$lock_start" '+%H:%M' 2>/dev/null || echo '?')}. Si no es un error: rm -rf $LOCK_DIR"
+    fi
+
+    rm -rf "$LOCK_DIR" 2>/dev/null || true
+    mkdir "$LOCK_DIR" 2>/dev/null || die "No se pudo tomar el bloqueo en $STATE_DIR"
+    write_lock_pid
+    LOCK_TAKEN=1
+    log_line "AVISO: bloqueo de $lock_age segundos sin proceso vivo, se ha retirado."
+}
+
+release_lock() {
+    ((LOCK_TAKEN)) || return 0
+    rm -rf "$LOCK_DIR" 2>/dev/null || true
+    LOCK_TAKEN=0
+}
+
+take_wakelock() {
+    if command -v termux-wake-lock >/dev/null 2>&1 && termux-wake-lock >/dev/null 2>&1; then
+        WAKELOCK_TAKEN=1
+    fi
+}
+
+release_wakelock() {
+    if ((WAKELOCK_TAKEN)) && command -v termux-wake-unlock >/dev/null 2>&1; then
+        termux-wake-unlock >/dev/null 2>&1 || true
+    fi
+}
+
+cleanup() {
+    release_lock
+    release_wakelock
+}
+
+# ---------------------------------------------------------------------------
+# URL
+# ---------------------------------------------------------------------------
+
+# Android pasa la URL entera como un solo argumento. Hay apps que comparten
+# texto con la URL dentro y otras palabras alrededor, asi que se saca la
+# primera que aparezca por si acaso.
+extract_url() {
+    local raw="$1" found
+
+    if [[ "$raw" =~ ^https?://[^[:space:]]+$ || "$raw" =~ ^magnet:\? ]]; then
+        printf '%s' "$raw"
+        return 0
+    fi
+
+    found=$(printf '%s' "$raw" | grep -oE '(https?://[^[:space:]]+|magnet:\?[^[:space:]]+)' | head -n 1)
+    [[ -n "$found" ]] || return 1
+    printf '%s' "$found"
+}
+
+# ---------------------------------------------------------------------------
+# Uso
+# ---------------------------------------------------------------------------
+
+usage() {
+    printf '%s\n' \
+        'Uso: yt-share [opción] URL' \
+        '' \
+        'Descarga el enlace que compartes a Termux. Sin URL, explica el flujo.' \
+        '' \
+        'Opciones:' \
+        '  --audio      Solo el audio, en MP3 a 192 kbps' \
+        '  --max N      Tope de altura en píxeles, por ejemplo --max 1080' \
+        '  --dir RUTA   Carpeta de destino. Por defecto ~/storage/downloads/yt-share' \
+        '  --dry-run    Lo comprueba todo y no descarga nada' \
+        '  --help       Esta ayuda' \
+        '' \
+        'El flujo de compartir es este: en YouTube, compartir, elegir Termux.' \
+        'No hay menu, porque Android lo lanza sin terminal: se descarga el mejor' \
+        'formato disponible. Para elegir calidad, usa yt-tui a mano.' \
+        '' \
+        'Si esta Termux:API instalada avisa con una notificacion al empezar, cada' \
+        'pocos segundos con el progreso, y al terminar. Sin ella funciona igual,' \
+        'solo que en silencio. El log de la ultima corrida esta en:' \
+        "  $LOG_FILE"
+}
+
+# ---------------------------------------------------------------------------
+
+main() {
+    local url_arg=""
+
+    while (($# > 0)); do
+        case "$1" in
+            --audio) TYPE=audio; shift ;;
+            --max)
+                [[ -n "${2:-}" ]] || die '--max necesita un número.'
+                FORMAT_ARGS=(--format "bv*[height<=$2]+ba/b[height<=$2]" --merge-output-format mp4)
+                shift 2
+                ;;
+            --dir)
+                [[ -n "${2:-}" ]] || die '--dir necesita una ruta.'
+                DOWNLOAD_DIR="$2"
+                DIR_IS_DEFAULT=0
+                shift 2
+                ;;
+            --dry-run) DRY_RUN=1; shift ;;
+            --help|-h) usage; exit 0 ;;
+            -*) die "Opción desconocida: $1" ;;
+            *) url_arg="$1"; shift ;;
+        esac
+    done
+
+    # Deliberadamente aqui y no arriba: lo que haya en este archivo tiene que
+    # ganarle a los valores por defecto de este script.
+    if [[ -f "$CONFIG_FILE" ]]; then
+        # shellcheck disable=SC1090
+        source "$CONFIG_FILE"
+    fi
+
+    # Si la config movio el destino, deja de ser un destino "de fabrica" y hay
+    # que fallar si no se puede crear, en vez de caer a la carpeta interna.
+    [[ "$DOWNLOAD_DIR" == "$DEFAULT_DOWNLOAD_DIR" ]] || DIR_IS_DEFAULT=0
+
+    NOW_START=$(date +%s)
+    LAST_NOTIFY=0
+    TITLE=''
+    FINAL_FILE=''
+    HINT=''
+
+    # 700 y 600 porque el log lleva la linea de comando entera, y esa puede
+    # llevar cookies de ~/.config/yt-tui/config.
+    mkdir -p "$STATE_DIR" 2>/dev/null || die "No se pudo crear $STATE_DIR"
+    chmod 700 "$STATE_DIR" 2>/dev/null || true
+    : >"$LOG_FILE" 2>/dev/null || true
+    chmod 600 "$LOG_FILE" 2>/dev/null || true
+
+    trap cleanup EXIT
+    acquire_lock
+    take_wakelock
+
+    if [[ -z "$url_arg" ]]; then
+        usage
+        exit 0
+    fi
+    URL=$(extract_url "$url_arg") || die "No encontré ninguna URL en: $url_arg"
+
+    check_dependencies
+    ensure_destination
+    build_command
+
+    if ((DRY_RUN)); then
+        log_rule
+        log_command 'yt-share --dry-run'
+        log_rule
+        log_line 'Todo correcto. Con --dry-run no se descarga nada.'
+        printf '%sTodo correcto.%s No se ha descargado nada.\n' "$VERDE" "$R"
+        printf 'Destino: %s\n' "$DOWNLOAD_DIR"
+        printf 'Log: %s\n' "$LOG_FILE"
+        exit 0
+    fi
+
+    notify 'yt-share' 'Iniciando la descarga...' 'ongoing'
+
+    if run_download; then
+        # Con --no-overwrites, compartir dos veces el mismo enlace no vuelve a
+        # bajar nada y yt-dlp sale con cero igual. Decir "descarga completada"
+        # ahi seria mentir, asi que se distingue.
+        if grep -q 'has already been downloaded' "$LOG_FILE"; then
+            log_line "OK: ya estaba descargado: ${FINAL_FILE:-}"
+            notify 'yt-share' "Ya estaba: ${FINAL_FILE##*/}"
+            printf '%sYa estaba descargado:%s %s\n' "$AMAR" "$R" "${FINAL_FILE:-}"
+        elif [[ -n "$FINAL_FILE" ]]; then
+            log_line "OK: $FINAL_FILE"
+            notify 'yt-share' "Listo: ${FINAL_FILE##*/}"
+            printf '%sDescarga completada:%s %s\n' "$VERDE" "$R" "$FINAL_FILE"
+        else
+            log_line 'yt-dlp termino sin error.'
+            notify 'yt-share' 'Terminado'
+            printf '%sDescarga completada.%s\n' "$VERDE" "$R"
+        fi
+        exit 0
+    fi
+
+    log_line 'ERROR: la descarga fallo.'
+    diagnose_failure
+    notify_error 'yt-share' "Falló. $HINT"
+    printf '%sLa descarga falló.%s %s\n' "$ROJO" "$R" "$HINT" >&2
+    printf 'Log: %s\n' "$LOG_FILE" >&2
+    exit 1
+}
+
+main "$@"

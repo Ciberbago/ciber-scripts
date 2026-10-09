@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+#
+# termux-url-opener - lo que llama Android al compartir un enlace con Termux.
+#
+# El nombre y la carpeta NO son eleccion nuestra: la app de Termux busca este
+# archivo en ~/bin y le pasa la URL como unico argumento. Si no existe, en vez
+# de descargar sale un dialogo de error en pantalla.
+#
+# Todo el trabajo esta en yt-share. Este archivo solo le delega.
+
+set -u
+
+exec "$HOME/bin/yt-share" "$@"

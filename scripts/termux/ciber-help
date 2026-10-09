@@ -73,6 +73,16 @@ item "yt-tui 'URL'" \
 item '~/.config/yt-tui/config' \
     'Configuración opcional para cookies, pausas, headers, tokens o API keys.'
 
+section 'COMPARTIR A TERMUX'
+item 'yt-share' \
+    'Descarga el enlace que compartes a Termux. En YouTube: compartir, Termux.'
+item "yt-share --max 1080 'URL'" \
+    'A mano, con tope de calidad, o con --audio, --dir RUTA y --dry-run.'
+item '~/bin/termux-url-opener' \
+    'Lo que Android llama al compartir. No se edita: delega en yt-share.'
+item 'yt-share (log)' \
+    'Sin Termux:API no hay notificación, pero todo queda en ~/.local/state/yt-share/ultimo.log'
+
 section 'SSH'
 item 'termux-ssh' \
     'Instala, configura, inicia y detiene el servidor SSH de Termux en el puerto 8022.'

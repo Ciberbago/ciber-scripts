@@ -1,6 +1,6 @@
 # Termux
 
-Las herramientas del teléfono: un bootstrap que deja Fish, SSH y siete
+Las herramientas del teléfono: un bootstrap que deja Fish, SSH y ocho
 comandos, y la explicación de qué hace cada uno.
 
 Esta es la parte del repo que **no** se instala con Ansible. Los otros sistemas
@@ -33,7 +33,7 @@ hace cinco cosas **en este orden**:
 4. **`~/.hushlogin`.** Un archivo vacío que oculta el MOTD de Termux, para que al
    abrir una sesión solo se vea la bienvenida propia.
 5. **Los scripts.** Clona el repo con `--depth 1` en un directorio temporal,
-   instala los siete comandos en `~/bin` con modo `700`, y los dos archivos de
+   instala los ocho comandos en `~/bin` con modo `700`, y los dos archivos de
    Fish en `~/.config/fish/conf.d/`. Luego borra el clon.
 
 Al terminar dice que **esta sesión sigue en Bash**. Para ver los cambios hay que
@@ -62,13 +62,16 @@ según el `manifest`. Es el que se usa para las actualizaciones.
 | `ciber-help` | Esta ayuda, en el teléfono. Acepta un filtro: `ciber-help ffm` |
 | `ciber-update` | Sincroniza los scripts desde GitHub sin clonar el repo, y asegura los paquetes |
 | `ffm-tui` | Vídeos: comprimir, quitar audio, copiar sin recodificar |
-| `yt-tui` | Descargas de vídeo o audio con `yt-dlp` |
+| `yt-tui` | Descargas de vídeo o audio con `yt-dlp`, con menú de calidad |
+| `yt-share` | Descarga el enlace que compartes a Termux |
 | `termux-ssh` | Instala, configura, inicia y detiene el servidor SSH, en el puerto **8022** |
 | `net-tui` | Red: resumen, ping, barrido de la red local, Wake-on-LAN, diagnóstico |
 | `ssh-tui` | Conexiones SSH guardadas por alias |
 
-Los cinco primeros son menús: se ejecutan sin argumentos y eligen de una lista.
-`ciber-help` y `ciber-update` son los únicos que leen banderas.
+`ciber-help`, `ciber-update`, `ffm-tui` y `yt-tui` son menús: se ejecutan sin
+argumentos y eligen de una lista. `yt-share` y los dos de red no piden nada:
+`yt-share` porque Android lo lanza sin terminal, y los de red porque sus
+datos están de serie. `ciber-help`, `ciber-update` y `yt-share` leen banderas.
 
 ### `ciber-help` y `ciber-update`
 
@@ -122,6 +125,77 @@ pueden acabar cookies, cabeceras o un token. Eso implica tres cosas:
 
 `yt-dlp-ejs` necesita un runtime de JavaScript. El script busca `deno` y luego
 `node`, y los ofrece instalar si faltan.
+
+### `yt-share`
+
+Compartir un enlace desde YouTube con Termux: botón de compartir, elegir
+Termux, y ya está descargando. Sin abrir la terminal y sin elegir nada.
+
+**El flujo real.** La app de Termux recibe el enlace y llama a
+`~/bin/termux-url-opener` con la URL como único argumento. Ese archivo existe
+porque Android **no deja elegir el nombre**: si no está, en vez de descargar
+sale un diálogo de error en pantalla. El archivo del repo del mismo nombre es
+un shim de cuatro líneas que delega en `yt-share`; todo el trabajo está ahí.
+
+Y aquí está la diferencia con `yt-tui`, que conviene tener clara: **ese flujo
+llega en segundo plano y sin terminal**. No hay menú, no hay preguntas, no hay
+`pkg install` que pregunte nada. Por eso:
+
+- Se descarga **el mejor formato disponible**, sin tope de resolución. Para
+  elegir calidad, `yt-tui` a mano.
+- Si falta una dependencia, **no se instala**: se avisa por notificación con
+  la línea exacta de `pkg install` que hay que correr.
+- Los argumentos de `~/.config/yt-tui/config` se leen **después** de los
+  valores por defecto del script, así que lo que pongas ahí gana. Cookies,
+  cabeceras, tokens: los mismos que usa `yt-tui`.
+
+Banderas:
+
+```bash
+yt-share --dry-run 'https://youtu.be/dQw4w9WgXcQ'  # comprueba sin descargar
+yt-share --max 1080 'https://youtu.be/dQw4w9WgXcQ'  # con tope de calidad
+yt-share --audio 'https://youtu.be/dQw4w9WgXcQ'     # MP3 a 192 kbps
+yt-share --dir ~/storage/downloads/videos 'URL'     # otra carpeta
+yt-share --help
+```
+
+**Dónde queda.** En `~/storage/downloads/yt-share/`, una subcarpeta aparte para
+que no se mezcle con lo que bajas a mano. Si Android no concedió el
+almacenamiento, `~/storage` no existe y cae a `~/downloads/yt-share/`,
+dejando nota en el log.
+
+**Cómo avisa.** En este orden, y siempre al log:
+
+| | |
+|---|---|
+| Log | `~/.local/state/yt-share/ultimo.log`, sobrescrito en cada corrida, permiso `600` |
+| Notificación | Si hay Termux:API: una fija mientras baja con título, porcentaje, velocidad y ETA, y otra al acabar |
+
+El log va a `600` a propósito: lleva la línea de comando completa, y esa puede
+llevar cookies de `~/.config/yt-tui/config`.
+
+**Sin Termux:API también funciona.** Compartir un enlace **no** necesita esa
+app, solo el aviso. Si no está instalada, el script calla y deja el log.
+
+**Cuando falla.** Detecta en el log los motivos habituales y los dice en la
+notificación: el sitio limitando peticiones (429), un vídeo privado o de
+miembros, pidiendo iniciar sesión o el captcha, un problema con el runtime de
+JavaScript, o YouTube cortando la petición. En la notificación sale el primero
+que encaja; los demás quedan en el log, debajo.
+
+**Si se solapan dos descargas.** No se solapan: el script toma un bloqueo en
+`~/.local/state/yt-share/bloqueado` y el segundo enlace dice que ya hay una en
+marcha. Si el bloqueo se queda de una descarga que murió (se cerró la app, se
+fue la batería), se limpia solo pasado una hora, o a mano con `rm -rf`.
+
+**Las dos limitaciones del flujo de compartir**, que vienen de Termux y no del
+script:
+
+- Si la app comparte **texto con la URL dentro** y otras palabras, Android no
+  lo reconoce como enlace y ofrece guardar el texto en vez de llamar al
+  script. YouTube comparte solo la URL, así que no pasa.
+- Si no hay `~/bin/termux-url-opener`, Android muestra un diálogo de error. Es
+  el aviso más claro que hay: si ves eso, falta el archivo.
 
 ### `termux-ssh` y `ssh-tui`
 
@@ -182,10 +256,12 @@ En el teléfono, todo bajo `$HOME`:
 
 | | |
 |---|---|
-| Los 7 comandos | `~/bin/`, modo `700` |
+| Los 8 comandos | `~/bin/`, modo `700` |
 | Fish: aliases y bienvenida | `~/.config/fish/conf.d/`, modo `644` |
 | Conexiones SSH | `~/.config/ssh-tui/hosts`, modo `600` |
 | Config de yt-dlp | `~/.config/yt-tui/config` |
+| Descargas de compartir | `~/storage/downloads/yt-share/` |
+| Log de compartir | `~/.local/state/yt-share/ultimo.log`, modo `600` |
 | Descargas y vídeos | `~/storage/downloads/` (el almacenamiento de Android) |
 
 El `manifest` del repo es lo que dice qué archivo va dónde y con qué permisos;
@@ -202,6 +278,9 @@ y el archivo en `scripts/termux/`.
 | La conexión SSH se corta sola | El bloqueo de suspensión. `termux-ssh`, opción 6 |
 | `yt-tui` avisa de 429 o "confirma que eres humano" | Cookies en `~/.config/yt-tui/config`, con `chmod 600` |
 | `yt-tui` dice que falta el runtime de JavaScript | `pkg install deno` o `pkg install nodejs` |
+| Al compartir, sale un diálogo de error en vez de descargar | Falta `~/bin/termux-url-opener`. Lo pone `ciber-update`; a mano: `ciber-update --yes` |
+| Al compartir, no suena la notificación | Falta la app Termux:API. La descarga funciona igual, y queda en el log |
+| Al compartir, el vídeo sale en `~/downloads` y no en `~/storage` | Android no concedió el almacenamiento. `termux-setup-storage` y acepta el diálogo |
 | La IP local no aparece en `net-tui` | Es normal: `ip` está bloqueado por Android dentro de Termux, y por eso se detecta con Python |
 | `ciber-update` no ve cambios nuevos | `CIBER_CACHE_BUST=0` para descartar la caché, o `--version` para ver qué tiene instalado |
 | El bootstrap no actualizó mis scripts | No es un fallo: conserva los que existen. Usa `ciber-update` |

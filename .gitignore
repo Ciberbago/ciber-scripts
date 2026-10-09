@@ -10,6 +10,12 @@
 # Logs que dejan el bootstrap y ciber-apply
 ciber*.log
 
+# Log de yt-share. Vive en ~/.local/state/yt-share/ultimo.log, fuera del arbol:
+# el mecanismo es ese, no esto. Va aqui por la misma razon que las configs de
+# abajo, y porque lleva la linea de comando de yt-dlp, que puede incluir
+# cookies de ~/.config/yt-tui/config.
+scripts/termux/*.log
+
 # Configuraciones de los scripts de Termux. VIVEN EN EL TELEFONO, en
 # ~/.config/yt-tui/ y ~/.config/ssh-tui/, fuera de este arbol: el mecanismo es
 # ese, no esto.

@@ -3,6 +3,8 @@ ciber-help|scripts/termux/ciber-help|700|bin/ciber-help
 ciber-update|scripts/termux/ciber-update|700|bin/ciber-update
 ffm-tui|scripts/termux/ffm-tui|700|bin/ffm-tui
 yt-tui|scripts/termux/yt-tui|700|bin/yt-tui
+yt-share|scripts/termux/yt-share|700|bin/yt-share
+termux-url-opener|scripts/termux/termux-url-opener|700|bin/termux-url-opener
 termux-ssh|scripts/termux/termux-ssh|700|bin/termux-ssh
 net-tui|scripts/termux/net-tui|700|bin/net-tui
 ssh-tui|scripts/termux/ssh-tui|700|bin/ssh-tui

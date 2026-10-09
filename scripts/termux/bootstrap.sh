@@ -133,7 +133,7 @@ install_user_scripts() {
     destination="$HOME/bin"
     mkdir -p "$destination" || die "No se pudo crear $destination."
 
-    for name in ciber-help ciber-update ffm-tui yt-tui termux-ssh net-tui ssh-tui; do
+    for name in ciber-help ciber-update ffm-tui yt-tui yt-share termux-url-opener termux-ssh net-tui ssh-tui; do
         if [[ -e "$destination/$name" ]]; then
             printf 'Conservando existente: %s\n' "$destination/$name"
             continue
@@ -203,6 +203,7 @@ show_summary() {
     printf '  %saliases%s       ls/ll/la/lt con eza en Fish\n' "$VERDE" "$R"
     printf '  %sffm-tui%s       compresión y operaciones con FFmpeg\n' "$VERDE" "$R"
     printf '  %syt-tui%s        descargas con yt-dlp\n' "$VERDE" "$R"
+    printf '  %syt-share%s      descargas al compartir un enlace con Termux\n' "$VERDE" "$R"
     printf '  %stermux-ssh%s    gestión del servidor SSH\n' "$VERDE" "$R"
     printf '  %snet-tui%s       utilidades rápidas de red\n' "$VERDE" "$R"
     printf '  %sssh-tui%s       conexiones SSH guardadas\n' "$VERDE" "$R"
