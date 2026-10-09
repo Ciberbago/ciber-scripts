@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/data/data/com.termux/files/usr/bin/bash
 #
 # termux-url-opener - lo que llama Android al compartir un enlace con Termux.
 #
@@ -6,8 +6,35 @@
 # archivo en ~/bin y le pasa la URL como unico argumento. Si no existe, en vez
 # de descargar sale un dialogo de error en pantalla.
 #
+# EL SHEBANG NO ES '#!/usr/bin/env bash' Y NO ES COSA QUE SE ELIJA. Al compartir,
+# Termux no ejecuta este archivo desde una shell: lo lanza por un intent y lee
+# la primera linea. Si esa linea empieza por /usr, la traduce a su propio env,
+# y queda el bucle 'env <este script>', que al volver a leer el shebang busca
+# /usr/bin/env, no lo encuentra porque en Android no existe, y muere con un
+# error de 'no such file or directory' y codigo 127. Ver setupShellCommandArguments
+# en TermuxShellUtils.java, que es donde se decide esto.
+#
+# Por eso va la ruta absoluta, que es ademas lo que ya hace bootstrap.sh.
+# Tambien existe 'termux-fix-shebang', pero eso modifica el archivo en el
+# telefono y se pierde en la siguiente actualizacion.
+#
 # Todo el trabajo esta en yt-share. Este archivo solo le delega.
 
 set -u
+
+# Si esto se ejecuta a mano, se avisa de por que y no se pierde el enlace.
+if (($# == 0)); then
+    printf 'Android me llama con la URL como unico argumento.\n' >&2
+    printf 'A mano se usa: %s\n' "$0 https://youtu.be/..." >&2
+    exit 2
+fi
+
+# yt-share vive al lado. No se busca en el PATH a proposito: si alguien lo
+# instala en otro sitio, el nombre del manifest manda, y avisar es mejor que
+# dejar un fallo raro en un intent del que no se ve la salida.
+if [[ ! -x "$HOME/bin/yt-share" ]]; then
+    printf 'Falta ~/bin/yt-share. Se instala con: ciber-update --yes\n' >&2
+    exit 127
+fi
 
 exec "$HOME/bin/yt-share" "$@"

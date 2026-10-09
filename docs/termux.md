@@ -151,11 +151,32 @@ pueden acabar cookies, cabeceras o un token. Eso implica tres cosas:
 Compartir un enlace desde YouTube con Termux: botón de compartir, elegir
 Termux, y ya está descargando. Sin abrir la terminal y sin elegir nada.
 
+**El detalle del shebang**, que no es menor. Los scripts de este directorio
+usan `#!/usr/bin/env bash` y funcionan, porque se ejecutan desde una shell de
+Termux y ahí `termux-exec` (una librería en `LD_PRELOAD`) reescribe las rutas
+por debajo. Al compartir, en cambio, Android lanza el script por un intent y
+esa librería **no está cargada**: Termux lee la primera línea del fichero y, si
+empieza por `/usr`, la lotraduce a su propio `env`. Con `#!/usr/bin/env bash`
+eso deja el bucle
+
+```
+<prefix>/bin/env  ~/bin/termux-url-opener  <url>
+```
+
+donde `env` vuelve a leer el shebang, busca `/usr/bin/env`, y como **en Android
+no existe ni `/usr` ni `/bin`**, muere con `env: ... no such file or directory`
+y código 127. Por eso `termux-url-opener` y `yt-share` llevan la ruta absoluta,
+igual que `bootstrap.sh`, y no el `env`.
+
+Alternativa que existe y aquí no sirve: `termux-fix-shebang` reescribe el
+shebang, pero modifica el fichero en el teléfono y se pierde en la siguiente
+actualización.
+
 **El flujo real.** La app de Termux recibe el enlace y llama a
 `~/bin/termux-url-opener` con la URL como único argumento. Ese archivo existe
 porque Android **no deja elegir el nombre**: si no está, en vez de descargar
 sale un diálogo de error en pantalla. El archivo del repo del mismo nombre es
-un shim de cuatro líneas que delega en `yt-share`; todo el trabajo está ahí.
+un shim que delega en `yt-share`; todo el trabajo está ahí.
 
 Y aquí está la diferencia con `yt-tui`, que conviene tener clara: **ese flujo
 llega en segundo plano y sin terminal**. No hay menú, no hay preguntas, no hay
@@ -299,6 +320,7 @@ y el archivo en `scripts/termux/`.
 | `yt-tui` avisa de 429 o "confirma que eres humano" | Cookies en `~/.config/yt-tui/config`, con `chmod 600` |
 | `yt-tui` dice que falta el runtime de JavaScript | `pkg install deno` o `pkg install nodejs` |
 | Al compartir, sale un diálogo de error en vez de descargar | Falta `~/bin/termux-url-opener`. Lo pone `ciber-update`; a mano: `ciber-update --yes` |
+| Al compartir, `env: ... no such file or directory`, código 127 | Shebang con `/usr/bin/env`, que en Android no existe. Run y codeload ya lo traen con la ruta absoluta; si reaparece, es que alguien lo editó a mano. Comprobación: `sed -n 1p ~/bin/termux-url-opener` |
 | Al compartir, no suena la notificación | Falta la app Termux:API. La descarga funciona igual, y queda en el log |
 | Al compartir, el vídeo sale en `~/downloads` y no en `~/storage` | Android no concedió el almacenamiento. `termux-setup-storage` y acepta el diálogo |
 | La IP local no aparece en `net-tui` | Es normal: `ip` está bloqueado por Android dentro de Termux, y por eso se detecta con Python |

@@ -1,6 +1,19 @@
-#!/usr/bin/env bash
+#!/data/data/com.termux/files/usr/bin/bash
 #
 # yt-share - descarga lo que compartes a Termux.
+#
+# La ruta absoluta del shebang no es decorativa. En Android no existe
+# /usr/bin/env, asi que '#!/usr/bin/env bash' solo funciona si quien ejecuta el
+# script lo arregla por su cuenta. Cuando Android lanza este script por el
+# intent de compartir, no lo hace: lee la primera linea, ve que empieza por
+# /usr, y ejecuta su propio env con el script como argumento. Ese env intenta
+# lanzarlo, el kernel lee otra vez el shebang, busca /usr/bin/env, no lo
+# encuentra y muere con codigo 127. El detalle esta en setupShellCommandArguments
+# de TermuxShellUtils.java.
+#
+# El resto de scripts de este directorio usan '#!/usr/bin/env bash' y funcionan
+# porque se ejecutan desde una shell de Termux, que si sabe resolverlos. Este se
+# ejecuta desde otro sitio, y por eso se escribe distinto.
 #
 # Android llama a ~/bin/termux-url-opener con la URL compartida y ese archivo
 # es un shim que acaba aqui. Ese flujo llega en segundo plano y SIN terminal,
