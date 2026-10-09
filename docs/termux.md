@@ -221,16 +221,25 @@ caracteres de control serían ruido en un fichero.
 `NO_COLOR` apaga el color pero **no** el retorno de carro: son dos cosas
 distintas, y sin el retorno de carro la pantalla se llenaría de scroll.
 
-**Si la pantalla se queda en negro**, el log dice qué pasó, porque escribe la
-versión y si ha encontrado pantalla antes de hacer nada:
+**Si la pantalla se queda en negro**, `~/bin/termux-url-opener` deja una marca
+en `~/.local/state/yt-share/compartido.log` **antes de hacer nada**, aunque no
+se vea nada por pantalla. Con ella se distinguen los tres casos de un vistazo:
 
 ```bash
-cat ~/.local/state/yt-share/ultimo.log
-yt-share --version          # la versión instalada
+cat ~/.local/state/yt-share/compartido.log   # ¿llegó a arrancar el shim?
+yt-share --version                          # ¿qué copia hay instalada?
+cat ~/.local/state/yt-share/ultimo.log      # ¿qué hizo después?
 ```
 
-Si el log está viejo, el script ni llegó a arrancar. Si dice una versión
-distinta de la que esperabas, el teléfono tiene una copia atrasada.
+| Lo que ves | Qué significa |
+|---|---|
+| El log `compartido.log` no existe o está viejo | El teléfono no tiene esta versión. `ciber-update --yes` |
+| La marca existe pero `ultimo.log` no se actualiza | `yt-share` está viejo o falló nada más empezar |
+| Los dos están al día y aun así negro | La sesión no tiene terminal. Hay que mirarlo con logs de Termux |
+
+Ese último caso es el raro, y por eso los tres datos van en el log: sin ellos,
+"pantalla negra" no distingue entre "no se ha actualizado" y "falla al
+arrancar".
 
 Banderas:
 
@@ -363,6 +372,7 @@ En el teléfono, todo bajo `$HOME`:
 | Config de yt-dlp | `~/.config/yt-tui/config` |
 | Descargas de compartir | `~/storage/downloads/yt-share/` |
 | Log de compartir | `~/.local/state/yt-share/ultimo.log`, modo `600` |
+| Marcas de compartir | `~/.local/state/yt-share/compartido.log`: una línea por enlace compartido |
 | Descargas y vídeos | `~/storage/downloads/` (el almacenamiento de Android) |
 
 `scripts/termux/packages` incluye `termux-api`, que pone el comando
@@ -388,7 +398,7 @@ y el archivo en `scripts/termux/`.
 | Al compartir, `env: ... no such file or directory`, código 127 | Shebang con `/usr/bin/env`, que en Android no existe. Run y codeload ya lo traen con la ruta absoluta; si reaparece, es que alguien lo editó a mano. Comprobación: `sed -n 1p ~/bin/termux-url-opener` |
 | Al compartir, no suena la notificación | Falta la app Termux:API. La descarga funciona igual, y queda en el log |
 | El vídeo se descarga pero no sale en la galería | Falta la app Termux:API, que es la que indexa. Con ella puesta, `termux-media-scan ~/storage/downloads/yt-share/` a mano lo resuelve |
-| Al compartir, la pantalla se queda en negro sin decir nada | `cat ~/.local/state/yt-share/ultimo.log`: pone la versión y si encontró pantalla. Si el log está viejo, el script ni llegó a arrancar |
+| Al compartir, la pantalla se queda en negro sin decir nada | `cat ~/.local/state/yt-share/compartido.log`. Si la marca no aparece, el teléfono no tiene esta versión: `ciber-update --yes` |
 | Al compartir, el vídeo sale en `~/downloads` y no en `~/storage` | Android no concedió el almacenamiento. `termux-setup-storage` y acepta el diálogo |
 | La IP local no aparece en `net-tui` | Es normal: `ip` está bloqueado por Android dentro de Termux, y por eso se detecta con Python |
 | `ciber-update` no ve cambios nuevos | Corre `ciber-update --check`: dice cuántas entradas trae el manifest. Si son menos de 11, el origen está sirviendo una copia vieja. Se comprueba con `curl -fsSL https://codeload.github.com/Ciberbago/ciber-scripts/tar.gz/refs/heads/main \| tar -xzO --wildcards '*/scripts/termux/manifest'` |

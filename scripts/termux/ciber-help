@@ -82,6 +82,8 @@ item "yt-share --max 1080 'URL'" \
     'A mano, con tope de calidad, o con --audio, --dir RUTA y --dry-run.'
 item '~/bin/termux-url-opener' \
     'Lo que Android llama al compartir. No se edita: delega en yt-share.'
+item '~/.local/state/yt-share/compartido.log' \
+    'Una línea por enlace compartido, escrita aunque la pantalla salga en negro. Es lo primero que hay que mirar si no se ve nada.'
 item 'yt-share (log)' \
     'Sin Termux:API no hay notificación, pero todo queda en ~/.local/state/yt-share/ultimo.log'
 item 'yt-share --version' \

@@ -18,14 +18,37 @@
 # Tambien existe 'termux-fix-shebang', pero eso modifica el archivo en el
 # telefono y se pierde en la siguiente actualizacion.
 #
-# Todo el trabajo esta en yt-share. Este archivo solo le delega.
+# Este archivo ademas deja constancia de que ha corrido. Cuando la pantalla se
+# queda en negro no hay forma de saber si fallo el shim, fallo yt-share, o no
+# se ha actualizado el telefono: con la marca se distinguen los tres casos de
+# un vistazo, sin depender de que se vea nada.
 
 set -u
 
-# Si esto se ejecuta a mano, se avisa de por que y no se pierde el enlace.
+SHIM_VERSION="2026.10.09-1"
+BREADCRUMB_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/yt-share"
+BREADCRUMB="$BREADCRUMB_DIR/compartido.log"
+
+# Escribe en la pantalla y, a la vez, deja la marca en el log. La marca va
+# primero: si la escritura en pantalla falla, al menos queda eso.
+mkdir -p "$BREADCRUMB_DIR" 2>/dev/null || true
+printf '%s shim %s pid %s url %s\n' \
+    "$(date '+%Y-%m-%d %H:%M:%S')" "$SHIM_VERSION" "$$" "${1:-NINGUNA}" \
+    >>"$BREADCRUMB" 2>/dev/null || true
+
+if [[ -t 1 ]]; then
+    SCREEN=1
+elif [[ -c /dev/tty ]] && { exec 3>/dev/tty; } 2>/dev/null; then
+    SCREEN=3
+else
+    SCREEN=1
+fi
+
+printf 'termux-url-opener %s: %s\n' "$SHIM_VERSION" "${1:-sin URL}" >&"$SCREEN"
+
 if (($# == 0)); then
-    printf 'Android me llama con la URL como unico argumento.\n' >&2
-    printf 'A mano se usa: %s\n' "$0 https://youtu.be/..." >&2
+    printf 'Android me llama con la URL como unico argumento.\n' >&"$SCREEN"
+    printf 'A mano se usa: %s URL\n' "$0" >&"$SCREEN"
     exit 2
 fi
 
@@ -33,7 +56,7 @@ fi
 # instala en otro sitio, el nombre del manifest manda, y avisar es mejor que
 # dejar un fallo raro en un intent del que no se ve la salida.
 if [[ ! -x "$HOME/bin/yt-share" ]]; then
-    printf 'Falta ~/bin/yt-share. Se instala con: ciber-update --yes\n' >&2
+    printf 'Falta ~/bin/yt-share. Se instala con: ciber-update --yes\n' >&"$SCREEN"
     exit 127
 fi
 
