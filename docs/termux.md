@@ -91,6 +91,18 @@ ejecutarlo cuando no hay cambios no hace nada. Añade un parámetro aleatorio a
 las URLs para no comerse la caché del CDN de GitHub; `CIBER_CACHE_BUST=0` lo
 desactiva, que es lo que hay que poner para probar en local.
 
+Cada corrida dice **cuántas entradas trae el manifest y su hash**. Eso es lo que
+distingue un móvil al día de un CDN sirviendo una copia vieja: los dos dicen
+"todo actualizado", pero solo el segundo repite el mismo hash, y sale el aviso
+`es el mismo manifiesto que la ultima vez`. El hash se guarda en
+`~/.local/state/ciber-update/manifest.hash`, y solo cuando no había nada que
+instalar, para no dar por visto un manifiesto que nunca se aplicó.
+
+El propio `ciber-update` se reinstala **el último de todos**. Va en su propio
+manifest, así que está en la lista de cambios, pero se salta en el bucle y se
+pone al final cuando todo lo demás ya está en su sitio: un actualizador que se
+rompe a sí mismo a media instalación no tiene forma de repararse.
+
 ### `ffm-tui`
 
 Sin argumentos busca vídeos en el directorio actual y en
@@ -283,4 +295,5 @@ y el archivo en `scripts/termux/`.
 | Al compartir, el vídeo sale en `~/downloads` y no en `~/storage` | Android no concedió el almacenamiento. `termux-setup-storage` y acepta el diálogo |
 | La IP local no aparece en `net-tui` | Es normal: `ip` está bloqueado por Android dentro de Termux, y por eso se detecta con Python |
 | `ciber-update` no ve cambios nuevos | `CIBER_CACHE_BUST=0` para descartar la caché, o `--version` para ver qué tiene instalado |
+| `ciber-update` dice "todo actualizado" y no es verdad | El `Aviso: es el mismo manifiesto` de arriba es la pista. Dice cuántas entradas trae el manifest; si son menos de las esperadas, GitHub está sirviendo una copia vieja. Se rodea con `CIBER_CACHE_BUST=1 curl -fsSL "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts/termux/manifest"` |
 | El bootstrap no actualizó mis scripts | No es un fallo: conserva los que existen. Usa `ciber-update` |

@@ -4,12 +4,22 @@
 
 set -u
 
-VERSION="2026.09.11-1"
+# VERSION se sube con CADA cambio del propio script, no con los de los demas.
+# Sirve para diagnosticar un update atascado: si dice la misma version que el
+# repo y aun asi no ve cambios, lo que esta viejo es la cache del CDN, no el
+# telefono.
+VERSION="2026.10.09-1"
+# Nombre con el que este archivo aparece en el manifest. Se reinstala el ultimo
+# de todos: ver el bucle de instalacion.
+SELF_NAME="ciber-update"
 
 BASE_URL="https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main"
 MANIFEST_URL="$BASE_URL/scripts/termux/manifest"
 PACKAGES_URL="$BASE_URL/scripts/termux/packages"
 BIN_DIR="$HOME/bin"
+# Solo para recordar que manifiesto se vio la ultima vez. No lleva nada
+# sensible: es un sha256 del manifest, que es publico.
+STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/ciber-update"
 TEMP_DIR=""
 AUTO_YES=0
 CHECK_ONLY=0
@@ -119,6 +129,8 @@ command -v sha256sum >/dev/null 2>&1 || die 'Necesitas sha256sum. Ejecuta: pkg i
 
 mkdir -p "$BIN_DIR" || die "No se pudo crear $BIN_DIR"
 
+mkdir -p "$STATE_DIR" 2>/dev/null || true
+
 # Oculta el MOTD por defecto de Termux para dejar solo la bienvenida propia.
 # No se toca en modo --check para no modificar nada al solo comprobar.
 if ((CHECK_ONLY == 0)); then
@@ -131,6 +143,27 @@ TEMP_DIR=$(mktemp -d "${TMPDIR:-/tmp}/ciber-update.XXXXXX") || die 'No se pudo c
 printf 'Descargando manifiesto...\n'
 curl -fsSL "$MANIFEST_URL$CACHE_Q" -o "$TEMP_DIR/manifest" || \
     die 'No se pudo descargar el manifiesto desde GitHub.'
+
+# Cuantas entradas trae el manifest, y cuantas veces se ha visto este mismo.
+# Sin esto, un CDN que sirve una copia vieja se ve IGUAL que un telefono al
+# dia: los dos dicen "todo actualizado" y no hay forma de distinguirlos.
+manifest_entries=$(grep -cvE '^[[:space:]]*(#|$)' "$TEMP_DIR/manifest")
+manifest_hash=$(sha256sum "$TEMP_DIR/manifest" | cut -d' ' -f1)
+seen_file="$STATE_DIR/manifest.hash"
+
+if [[ -f "$seen_file" && "$(cat "$seen_file" 2>/dev/null)" == "$manifest_hash" ]]; then
+    MANIFEST_SAME=1
+else
+    MANIFEST_SAME=0
+fi
+
+printf 'Manifiesto: %s entradas, %s\n' "$manifest_entries" "${manifest_hash:0:12}"
+if ((MANIFEST_SAME)); then
+    printf '%sAviso: es el mismo manifiesto que la ultima vez.%s\n' "$AMAR" "$R"
+    printf '  Si esperabas cambios y no aparecen, el CDN de GitHub esta sirviendo\n'
+    printf '  una copia vieja. Se rodea con:\n'
+    printf '    CIBER_CACHE_BUST=1 curl -fsSL "%s"\n' "$MANIFEST_URL"
+fi
 
 changed=()
 while IFS='|' read -r name remote_path mode target; do
@@ -168,6 +201,12 @@ while IFS='|' read -r name remote_path mode target; do
     fi
 done < "$TEMP_DIR/manifest"
 
+# Solo si no se instala nada: guardar el hash despues dejaria el proximo
+# --check mirando un manifiesto que nunca llego a aplicarse.
+if ((CHECK_ONLY == 0)) && ((${#changed[@]} == 0)); then
+    printf '%s\n' "$manifest_hash" >"$seen_file" 2>/dev/null || true
+fi
+
 if ((${#changed[@]} == 0)); then
     printf '\nArchivos: %stodo actualizado%s.\n' "$VERDE" "$R"
 else
@@ -186,10 +225,34 @@ else
                 IFS='|' read -r manifest_name remote_path mode target < <(grep -F "${name}|" "$TEMP_DIR/manifest")
                 destination="$HOME/$target"
                 mkdir -p "$(dirname "$destination")" || die "No se pudo crear el destino de $name"
+
+                # instalar por encima del fichero que se esta ejecutando: bash
+                # ya lo leio entero, asi que no se rompe la corrida. Pero si
+                # install se muere a mitad, el actualizador queda corrupto y no
+                # hay forma de arreglarlo sin volver a descargar. Por eso este
+                # se instala SIEMPRE el ultimo, cuando todo lo demas ya esta
+                # bien, y pasando antes por un temporal.
+                if [[ "$name" == "$SELF_NAME" ]]; then
+                    continue
+                fi
                 install -m "$mode" "$TEMP_DIR/$name" "$destination" || \
                     die "No se pudo instalar $name"
                 printf '%sInstalado: %s%s\n' "$VERDE" "$destination" "$R"
             done
+
+            # El actualizador, ahora. install escribe encima del destino sin
+            # poder fallar a medias como un cp directo: o esta entero nuevo, o
+            # el temporal se borra y se avisa.
+            IFS='|' read -r _ self_path self_mode self_target < <(grep -F "${SELF_NAME}|" "$TEMP_DIR/manifest")
+            if [[ -n "${self_target:-}" ]]; then
+                self_destination="$HOME/$self_target"
+                if install -m "$self_mode" "$TEMP_DIR/$SELF_NAME" "$self_destination"; then
+                    printf '%sInstalado: %s%s\n' "$VERDE" "$self_destination" "$R"
+                else
+                    printf '%sAviso: no se pudo actualizar el propio %s.%s\n' "$AMAR" "$SELF_NAME" "$R" >&2
+                    printf '  Sigue funcionando la copia actual. Reintenta: %s --yes\n' "$SELF_NAME" >&2
+                fi
+            fi
         fi
     fi
 fi
