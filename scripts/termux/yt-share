@@ -218,6 +218,10 @@ scan_media() {
             log_line 'Media: ya esta en el MediaStore (content call).'
             return 0
         fi
+    else
+        # Se dice explicitamente, porque si no el "no indexado" final parece
+        # un fallo del escaneo cuando en realidad no habia con que escanear.
+        log_line 'Media: no hay comando content ni en el PATH ni en /system/bin.'
     fi
 
     # 3. El broadcast clasico. En theory dejo de hacer efecto en Android 10,
@@ -233,7 +237,11 @@ scan_media() {
         fi
     fi
 
-    log_line "AVISO: el archivo NO aparece en el MediaStore con ninguna via. Va a salir en la galeria cuando Android decida reindexar, o con: content call --uri content://media --method scan_volume --arg external_primary"
+    log_line "AVISO: el archivo NO aparece en el MediaStore. Ninguna via lo indexo. Como va el:"
+    log_line "  - el log de arriba dice que se llego a lanzar el escaneo"
+    log_line "  - si no lo dice, en este Android no hay forma de dispararlo desde Termux"
+    log_line "  - se indexa solo al reiniciar el movil, o forzando con:"
+    log_line "    content call --uri content://media --method scan_volume --arg external_primary"
     return 1
 }
 
