@@ -164,48 +164,110 @@ log_command() {
 # no le dice nada al MediaStore, que es el indice que lee Android para mostrar
 # fotos y videos.
 #
-# El comando se llama termux-media-scan, NO termux-media-scanner. Y usa -r para
-# directorios enteros, que es lo que hace falta aqui.
+# No hay UNA via que_valga en todos los Android, asi que se prueban varias y se
+# anota cual llego a lanzarse. Y ADEMAS se comprueba si el archivo acabo en el
+# MediaStore, porque sin esa comprobacion no hay manera de saber si funciono:
 #
-# Detalle que importa: el scanner corre en el proceso de la app Termux:API, no
-# en el nuestro. Por eso hay que darle la ruta REAL y no la del simbolico:
-# ~/storage/shared es un enlace a /storage/emulated/0, y si se le pasa el
-# enlace el scanner no lo reconoce. realpath lo resuelve.
+#   - termux-media-scan sale con 0 SIEMPRE. Su callback en Java solo escribe en
+#     el log interno de Android y no lo devuelve, y la wiki del propio Termux
+#     dice que su salida es un "informational message". Antes este script
+#     decia "Escaneado para la galeria" solo porque el comando no fallaba, y
+#     eso es mentira: no fallo ni cuando no indexaba nada.
+#   - content call y el broadcast dependen de la version de Android y de los
+#     permisos del usuario.
+#
+# El orden va de la mas especifica a la mas general, y al final se pregunta al
+# MediaStore si el archivo esta ahi. Esa respuesta es la unica fiable.
+#
+# Detalle que importa en todas: hay que darle la ruta REAL y no la del
+# simbolico. ~/storage/shared es un enlace a /storage/emulated/0 y si se le pasa
+# el enlace no lo reconoce.
 scan_media() {
     local path="$1"
-
-    command -v termux-media-scan >/dev/null 2>&1 || {
-        log_line 'AVISO: sin Termux:API no se escanea el archivo, no saldra en la galeria.'
-        return 1
-    }
     [[ -e "$path" ]] || return 1
 
     local real
     real=$(realpath "$path" 2>/dev/null) || return 1
     [[ -e "$real" ]] || return 1
 
-    # scan_media no usa api() porque necesita saber si fue bien o mal. Aun asi
-    # lleva limite: un termux-media-scan colgado dejaria el script parado
-    # DESPUES de descargar, con la pantalla a medias y sin decir nada.
-    local -a scan_cmd
-    if command -v timeout >/dev/null 2>&1; then
-        scan_cmd=(timeout "$API_TIMEOUT")
+    log_line "Media: destino $real"
+
+    # 1. Termux:API. Es la via "de verdad" pero necesita el APK aparte.
+    if command -v termux-media-scan >/dev/null 2>&1; then
+        log_line 'Media: se lanza termux-media-scan (Termux:API)'
+        api termux-media-scan "$real"
+        if media_in_store "$real"; then
+            log_line 'Media: ya esta en el MediaStore.'
+            return 0
+        fi
+    else
+        log_line 'Media: no hay termux-media-scan, se continua con las otras vias.'
     fi
 
-    if "${scan_cmd[@]}" termux-media-scan "$real" >/dev/null 2>&1; then
-        log_line "Escaneado para la galeria: $real"
-        return 0
+    # 2. El call de MediaStore que el propio Android expone. ContentScannerAPI
+    #    define SCAN_FILE_CALL y SCAN_VOLUME_CALL, y asi se pueden pedir:
+    #    content call --uri content://media --method scan_file --arg RUTA
+    #    En Android 9 y anteriores esto da UnsupportedOperationException, y en
+    #    algunos Android 10+ lo deniega como usuario normal.
+    if media_content_cmd; then
+        log_line 'Media: se lanza content call --method scan_file'
+        "$CONTENT_CMD" call --uri content://media --method scan_file --arg "$real" \
+            >/dev/null 2>&1 || true
+        sleep 1
+        if media_in_store "$real"; then
+            log_line 'Media: ya esta en el MediaStore (content call).'
+            return 0
+        fi
     fi
 
-    # Con -r sobre el directorio suele funcionar cuando el fichero suelto no:
-    # algunos Android indexan la carpeta entera de golpe y no el archivo.
-    if [[ -d "$real" ]] && "${scan_cmd[@]}" termux-media-scan -r "$real" >/dev/null 2>&1; then
-        log_line "Escaneado para la galeria (recursivo): $real"
-        return 0
+    # 3. El broadcast clasico. En theory dejo de hacer efecto en Android 10,
+    #    pero hay informes de que sigue funcionando en 10, 11 y 15.
+    if command -v am >/dev/null 2>&1; then
+        log_line 'Media: se lanza broadcast MEDIA_SCANNER_SCAN_FILE'
+        api am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE \
+            --user 0 --receiver-include-background -d "file://$real"
+        sleep 1
+        if media_in_store "$real"; then
+            log_line 'Media: ya esta en el MediaStore (broadcast).'
+            return 0
+        fi
     fi
 
-    log_line "AVISO: termux-media-scan fallo con $real"
+    log_line "AVISO: el archivo NO aparece en el MediaStore con ninguna via. Va a salir en la galeria cuando Android decida reindexar, o con: content call --uri content://media --method scan_volume --arg external_primary"
     return 1
+}
+
+# El comando 'content' no viene en Termux, pero si en /system/bin.
+media_content_cmd() {
+    if command -v content >/dev/null 2>&1; then
+        CONTENT_CMD="$(command -v content)"
+        return 0
+    fi
+    if [[ -x /system/bin/content ]]; then
+        CONTENT_CMD="/system/bin/content"
+        return 0
+    fi
+    return 1
+}
+
+# La unica comprobacion que vale: preguntar al MediaStore si lo tiene. Se
+# busca por nombre de archivo, que es lo unico que se sabe seguro, y con un
+# limite de filas porque en un movil con mil fotos la consulta sin WHERE puede
+# ser enorme.
+media_in_store() {
+    local path="$1" base
+    base="${path##*/}"
+    # Las comillas y el % romperian el WHERE. Los archivos de yt-dlp no los
+    # traen, pero un nombre a mano si.
+    base="${base//\'/}"
+    base="${base//\%/}"
+    [[ -n "$base" ]] || return 1
+
+    media_content_cmd || return 1
+
+    "$CONTENT_CMD" query --uri content://media/external/file \
+        --projection _display_name --where "_display_name LIKE '%$base%'" \
+        2>/dev/null | grep -qF "$base"
 }
 
 # Todo lo que viene de la app Termux:API va por aqui. NADA de eso puede
@@ -642,6 +704,7 @@ main() {
     TITLE=''
     FINAL_FILE=''
     HINT=''
+    SCANNED=0
 
     # 700 y 600 porque el log lleva la linea de comando entera, y esa puede
     # llevar cookies de ~/.config/yt-tui/config.
@@ -699,9 +762,19 @@ if run_download; then
             printf '%sYa estaba descargado:%s %s\n' "$AMAR" "$R" "${FINAL_FILE:-}"
         elif [[ -n "$FINAL_FILE" ]]; then
             log_line "OK: $FINAL_FILE"
-            scan_media "$FINAL_FILE" || true
+            if scan_media "$FINAL_FILE"; then
+                SCANNED=1
+            fi
             notify 'yt-share' "Listo: ${FINAL_FILE##*/}"
             printf '%sDescarga completada:%s %s\n' "$VERDE" "$R" "$FINAL_FILE"
+            # Se dice en pantalla si la galeria se entero o no. Antes el script
+            # lo daba por bueno sin comprobar y el video se quedaba fuera sin
+            # que nadie dijera nada, que es peor que no intentarlo.
+            if ((!SCANNED)); then
+                printf '%sAviso: el video no sale todavia en la galeria.%s\n' "$AMAR" "$R"
+                printf '  Sale solo en cuanto Android reindexe. Para forzarlo:\n'
+                printf '    content call --uri content://media --method scan_volume --arg external_primary\n'
+            fi
         else
             log_line 'yt-dlp termino sin error.'
             # Sin ruta conocida (yt-dlp no la imprimio), se escanea la carpeta

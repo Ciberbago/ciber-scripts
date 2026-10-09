@@ -287,10 +287,36 @@ dejando nota en el log.
 El log va a `600` a propósito: lleva la línea de comando completa, y esa puede
 llevar cookies de `~/.config/yt-tui/config`.
 
-**Que salga en la galería.** Al terminar, `yt-share` pasa el archivo por
-`termux-media-scan`, que es lo que avisa al `MediaStore`. Sin eso el vídeo queda
-en disco pero Android no lo muestra en la galería, porque escribir un archivo no
-registra nada en el índice.
+**Que salga en la galería.** Al terminar, `yt-share` pasa el archivo por el
+scanner de medios, que es lo que avisa al `MediaStore`. Sin eso el vídeo queda
+en disco pero Android no lo muestra, porque escribir un archivo no registra
+nada en el índice.
+
+**Y aquí está lo importante: no se puede dar por hecho que funcionó.**
+`termux-media-scan` sale con código 0 **siempre**. Su callback en Java solo
+escribe en el log interno de Android y no lo devuelve, y la wiki del propio
+Termux dice que su salida es un "informational message". Este script antes
+decía "Escaneado para la galería" solo porque el comando no fallaba, y eso es
+mentira: no fallaba tampoco cuando no indexaba nada.
+
+Por eso ahora se hacen tres cosas:
+
+1. Se prueban varias vías, de la más específica a la más general:
+   `termux-media-scan` (necesita la app), el `call` que el propio Android expone
+   en `MediaStore` (`content call --uri content://media --method scan_file
+   --arg RUTA`), y el broadcast clásico `MEDIA_SCANNER_SCAN_FILE`. Cuál funciona
+   depende de la versión de Android.
+2. Después se **pregunta al `MediaStore` si el archivo está ahí**, con
+   `content query`. Esa es la única respuesta fiable, y por eso el log ya no
+   dice "escaneado" sino lo que de verdad se sabe.
+3. Si no está, **se avisa en la pantalla** y se da el comando para forzarlo:
+
+```bash
+content call --uri content://media --method scan_volume --arg external_primary
+```
+
+Eso reindexa el almacenamiento entero. Tarda unos segundos y es de grano fino,
+así que es la opción de manual, no la de cada descarga.
 
 Dos detalles que no son evidentes:
 
@@ -299,9 +325,8 @@ Dos detalles que no son evidentes:
   symlink a `/storage/emulated/0`, y el scanner corre en el proceso de la app
   Termux:API, no en el nuestro: si le pasas el symlink no lo reconoce. El
   script lo resuelve con `realpath` antes de llamar.
-
-Si `yt-dlp` no consigue la ruta final, escanea la carpeta entera con `-r`, que
-en algunos Android funciona cuando escanear el archivo suelto no.
+- `content` no viene en Termux, pero sí en `/system/bin`, que es donde lo
+  busca el script.
 
 **Sin Termux:API también funciona.** Compartir un enlace **no** necesita esa
 app: ni para los avisos ni para el escaneo a la galería. Lo único que se pierde
@@ -419,7 +444,7 @@ y el archivo en `scripts/termux/`.
 | Al compartir, sale un diálogo de error en vez de descargar | Falta `~/bin/termux-url-opener`. Lo pone `ciber-update`; a mano: `ciber-update --yes` |
 | Al compartir, `env: ... no such file or directory`, código 127 | Shebang con `/usr/bin/env`, que en Android no existe. Run y codeload ya lo traen con la ruta absoluta; si reaparece, es que alguien lo editó a mano. Comprobación: `sed -n 1p ~/bin/termux-url-opener` |
 | Al compartir, no suena la notificación | Falta la app Termux:API. La descarga funciona igual, y queda en el log |
-| El vídeo se descarga pero no sale en la galería | Falta la app Termux:API, que es la que indexa. Con ella puesta, `termux-media-scan ~/storage/downloads/yt-share/` a mano lo resuelve |
+| El vídeo se descarga pero no sale en la galería | El script lo avisa y lo apunta en el log. Para forzarlo: `content call --uri content://media --method scan_volume --arg external_primary`. Si tampoco, `~/storage/downloads` no es la ruta que indexa tu galería y conviene usar `--dir` a `~/storage/dcim` |
 | Al compartir, la pantalla se queda en negro sin decir nada | `cat ~/.local/state/yt-share/compartido.log`. Si la marca no aparece, el teléfono no tiene esta versión: `ciber-update --yes`. Si aparece pero no la línea de `yt-share`, se quedó parado en una llamada a la API de Termux |
 | Al compartir, el vídeo sale en `~/downloads` y no en `~/storage` | Android no concedió el almacenamiento. `termux-setup-storage` y acepta el diálogo |
 | La IP local no aparece en `net-tui` | Es normal: `ip` está bloqueado por Android dentro de Termux, y por eso se detecta con Python |
