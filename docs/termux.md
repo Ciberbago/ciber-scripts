@@ -86,15 +86,23 @@ ciber-update --version # la versión instalada; para diagnosticar un update ator
 ciber-update --help   # las cuatro banderas, sin hacer nada
 ```
 
-`ciber-update` compara por `sha256` antes de instalar, así que volver a
-ejecutarlo cuando no hay cambios no hace nada. Añade un parámetro aleatorio a
-las URLs para no comerse la caché del CDN de GitHub; `CIBER_CACHE_BUST=0` lo
-desactiva, que es lo que hay que poner para probar en local.
+`ciber-update` descarga el repo entero de una vez desde
+`codeload.github.com` y compara por `sha256` antes de instalar, así que volver
+a ejecutarlo cuando no hay cambios no hace nada.
 
-Cada corrida dice **cuántas entradas trae el manifest y su hash**. Eso es lo que
-distingue un móvil al día de un CDN sirviendo una copia vieja: los dos dicen
-"todo actualizado", pero solo el segundo repite el mismo hash, y sale el aviso
-`es el mismo manifiesto que la ultima vez`. El hash se guarda en
+Lo de `raw.githubusercontent.com` con un `?t=` al final era un intento de
+saltarse la caché del CDN, y **no funcionaba**: esa caché se ha visto servir
+un fichero viejo durante horas, con `x-cache: HIT` y el `etag` del contenido
+viejo, y pedírselo con parámetros distintos daba exactamente lo mismo. Por eso
+la fuente es el tarball de `codeload`, que no usa esa caché. De paso, el
+manifest y los ficheros salen de la misma descarga, así que no pueden
+desincronizarse: antes iban por separado y podía pasar que el manifest fuera
+nuevo y el fichero no.
+
+Cada corrida dice **cuántas entradas trae el manifest y con qué hash**. Eso es
+lo que distingue un móvil al día de un origen que sirve una copia vieja: los
+dos dicen "todo actualizado", pero solo el segundo repite el mismo hash, y sale
+el aviso `es el mismo manifiesto que la ultima vez`. El hash se guarda en
 `~/.local/state/ciber-update/manifest.hash`, y solo cuando no había nada que
 instalar, para no dar por visto un manifiesto que nunca se aplicó.
 
@@ -294,6 +302,6 @@ y el archivo en `scripts/termux/`.
 | Al compartir, no suena la notificación | Falta la app Termux:API. La descarga funciona igual, y queda en el log |
 | Al compartir, el vídeo sale en `~/downloads` y no en `~/storage` | Android no concedió el almacenamiento. `termux-setup-storage` y acepta el diálogo |
 | La IP local no aparece en `net-tui` | Es normal: `ip` está bloqueado por Android dentro de Termux, y por eso se detecta con Python |
-| `ciber-update` no ve cambios nuevos | `CIBER_CACHE_BUST=0` para descartar la caché, o `--version` para ver qué tiene instalado |
-| `ciber-update` dice "todo actualizado" y no es verdad | El `Aviso: es el mismo manifiesto` de arriba es la pista. Dice cuántas entradas trae el manifest; si son menos de las esperadas, GitHub está sirviendo una copia vieja. Se rodea con `CIBER_CACHE_BUST=1 curl -fsSL "https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main/scripts/termux/manifest"` |
+| `ciber-update` no ve cambios nuevos | Corre `ciber-update --check`: dice cuántas entradas trae el manifest. Si son menos de 11, el origen está sirviendo una copia vieja. Se comprueba con `curl -fsSL https://codeload.github.com/Ciberbago/ciber-scripts/tar.gz/refs/heads/main \| tar -xzO --wildcards '*/scripts/termux/manifest'` |
+| `ciber-update` dice "todo actualizado" y no es verdad | Sale el `Aviso: es el mismo manifiesto que la ultima vez` en la línea siguiente. Ver arriba |
 | El bootstrap no actualizó mis scripts | No es un fallo: conserva los que existen. Usa `ciber-update` |

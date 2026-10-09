@@ -57,7 +57,7 @@ item 'ciber-update --yes' \
 item 'ciber-update --version' \
     'Muestra la versión instalada; sirve para diagnosticar un update atorado.'
 item 'Aviso: es el mismo manifiesto' \
-    'GitHub está sirviendo una copia vieja del manifest. La entrada del manifest dice cuántas trae.'
+    'El origen sirvió dos veces el mismo manifest. Suele ser una copia vieja en caché.'
 
 section 'FFMPEG'
 item 'ffm-tui' \

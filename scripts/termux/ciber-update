@@ -13,9 +13,8 @@ VERSION="2026.10.09-1"
 # de todos: ver el bucle de instalacion.
 SELF_NAME="ciber-update"
 
-BASE_URL="https://raw.githubusercontent.com/Ciberbago/ciber-scripts/main"
-MANIFEST_URL="$BASE_URL/scripts/termux/manifest"
-PACKAGES_URL="$BASE_URL/scripts/termux/packages"
+REPO_SLUG="Ciberbago/ciber-scripts"
+REPO_BRANCH="main"
 BIN_DIR="$HOME/bin"
 # Solo para recordar que manifiesto se vio la ultima vez. No lleva nada
 # sensible: es un sha256 del manifest, que es publico.
@@ -23,13 +22,8 @@ STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/ciber-update"
 TEMP_DIR=""
 AUTO_YES=0
 CHECK_ONLY=0
-# Anti-caché del CDN de GitHub: cada corrida pide URLs distintas.
-# Pon CIBER_CACHE_BUST=0 para desactivarlo (útil en pruebas locales).
-CACHE_BUST="${CIBER_CACHE_BUST:-1}"
-CACHE_Q=""
-if ((CACHE_BUST)); then
-    CACHE_Q="?t=$(date +%s)"
-fi
+MANIFEST=""
+PACKAGES=""
 if [[ -t 1 && -z "${NO_COLOR:-}" ]] && command -v tput >/dev/null 2>&1; then
     B=$(tput bold 2>/dev/null || true)
     R=$(tput sgr0 2>/dev/null || true)
@@ -71,14 +65,14 @@ ensure_packages() {
         printf '\n%sSin pkg, se omite la revisión de paquetes.%s\n' "$AMAR" "$R"
         return 0
     fi
-    if ! curl -fsSL --max-time 15 "$PACKAGES_URL$CACHE_Q" -o "$TEMP_DIR/packages" 2>/dev/null; then
-        printf '\n%sNo se pudo descargar la lista de paquetes.%s\n' "$AMAR" "$R"
+    if [[ ! -f "$PACKAGES" ]]; then
+        printf '\nNo se encontró la lista de paquetes en el repo descargado.\n'
         return 0
     fi
     while read -r pkg; do
         [[ -z "$pkg" ]] && continue
         package_covered "$pkg" || missing+=("$pkg")
-    done < <(grep -vE '^[[:space:]]*(#|$)' "$TEMP_DIR/packages" | awk '{print $1}')
+    done < <(grep -vE '^[[:space:]]*(#|$)' "$PACKAGES" | awk '{print $1}')
 
     if ((${#missing[@]} == 0)); then
         printf '\nPaquetes: %stodo instalado%s.\n' "$VERDE" "$R"
@@ -140,15 +134,45 @@ fi
 
 TEMP_DIR=$(mktemp -d "${TMPDIR:-/tmp}/ciber-update.XXXXXX") || die 'No se pudo crear un directorio temporal.'
 
-printf 'Descargando manifiesto...\n'
-curl -fsSL "$MANIFEST_URL$CACHE_Q" -o "$TEMP_DIR/manifest" || \
-    die 'No se pudo descargar el manifiesto desde GitHub.'
+# raw.githubusercontent.com IGNORA el parametro anti-cache: se ha visto
+# servir un fichero viejo durante horas con x-cache: HIT y un etag del
+# contenido viejo, y con ?t= distintos daba exactamente el mismo resultado.
+# El CDN no invalida la entrada al cambiar el repo, y sin cache invalidada no
+# hay forma de pedirlo por la via buena. Por eso el parametro se quito: no
+# hacia nada y hacia creer que si.
+#
+# La fuente es el tarball de codeload.github.com, que no usa esa cache: cada
+# peticion es fresca. Se descarga una vez y de ahi se saca TODO, el manifest
+# incluido, de modo que los ficheros que se comparan y el manifest que los
+# lista vienen de la misma foto. Antes iban por separado y solo podian
+# desincronizarse.
+TARBALL_URL="https://codeload.github.com/$REPO_SLUG/tar.gz/refs/heads/$REPO_BRANCH"
+REMOTE_DIR="$TEMP_DIR/repo"
+
+fetch_repo() {
+    printf 'Descargando el repo (%s)...\n' "$REPO_BRANCH"
+    if ! curl -fsSL "$TARBALL_URL" -o "$TEMP_DIR/repo.tar.gz"; then
+        return 1
+    fi
+    # --strip-components=1 quita la carpeta raiz del tarball, que lleva el
+    # nombre del repo y la fecha: cambia en cada push y no sirve para nada.
+    mkdir -p "$REMOTE_DIR" || return 1
+    tar -xzf "$TEMP_DIR/repo.tar.gz" -C "$REMOTE_DIR" --strip-components=1 2>/dev/null || return 1
+    [[ -f "$REMOTE_DIR/scripts/termux/manifest" ]]
+}
+
+if ! fetch_repo; then
+    die "No se pudo descargar el repo desde $TARBALL_URL"
+fi
+
+MANIFEST="$REMOTE_DIR/scripts/termux/manifest"
+PACKAGES="$REMOTE_DIR/scripts/termux/packages"
 
 # Cuantas entradas trae el manifest, y cuantas veces se ha visto este mismo.
 # Sin esto, un CDN que sirve una copia vieja se ve IGUAL que un telefono al
 # dia: los dos dicen "todo actualizado" y no hay forma de distinguirlos.
-manifest_entries=$(grep -cvE '^[[:space:]]*(#|$)' "$TEMP_DIR/manifest")
-manifest_hash=$(sha256sum "$TEMP_DIR/manifest" | cut -d' ' -f1)
+manifest_entries=$(grep -cvE '^[[:space:]]*(#|$)' "$MANIFEST")
+manifest_hash=$(sha256sum "$MANIFEST" | cut -d' ' -f1)
 seen_file="$STATE_DIR/manifest.hash"
 
 if [[ -f "$seen_file" && "$(cat "$seen_file" 2>/dev/null)" == "$manifest_hash" ]]; then
@@ -160,9 +184,9 @@ fi
 printf 'Manifiesto: %s entradas, %s\n' "$manifest_entries" "${manifest_hash:0:12}"
 if ((MANIFEST_SAME)); then
     printf '%sAviso: es el mismo manifiesto que la ultima vez.%s\n' "$AMAR" "$R"
-    printf '  Si esperabas cambios y no aparecen, el CDN de GitHub esta sirviendo\n'
-    printf '  una copia vieja. Se rodea con:\n'
-    printf '    CIBER_CACHE_BUST=1 curl -fsSL "%s"\n' "$MANIFEST_URL"
+    printf '  Si esperabas cambios y no aparecen, el origen esta sirviendo una\n'
+    printf '  copia vieja. Comprueba con:\n'
+    printf '    curl -fsSL %s | tar -xzO --wildcards "*/scripts/termux/manifest"\n' "$TARBALL_URL"
 fi
 
 changed=()
@@ -170,18 +194,21 @@ while IFS='|' read -r name remote_path mode target; do
     [[ -z "${name:-}" || "$name" == \#* ]] && continue
     [[ -n "${remote_path:-}" && -n "${mode:-}" && -n "${target:-}" ]] || continue
 
-    remote_url="$BASE_URL/$remote_path$CACHE_Q"
-    downloaded="$TEMP_DIR/$name"
+    downloaded="$REMOTE_DIR/$remote_path"
     destination="$HOME/$target"
 
     printf '%sComprobando %-18s%s ' "$B" "$name" "$R"
-    if ! curl -fsSL "$remote_url" -o "$downloaded"; then
-        printf '%sERROR%s\n' "$ROJO" "$R"
-        printf '  No se pudo descargar %s\n' "$remote_url" >&2
+    # El manifest y el fichero salen del MISMO tarball, asi que no pueden
+    # desincronizarse: antes cada uno iba por su cuenta y podia pasar que el
+    # manifest fuera nuevo y el fichero no, o al reves.
+    if [[ ! -f "$downloaded" ]]; then
+        printf '%sFALTA%s\n' "$ROJO" "$R"
+        printf '  El manifest lista %s, que no esta en el repo.\n' "$remote_path" >&2
         continue
     fi
 
-    chmod "$mode" "$downloaded"
+    # No se toca el modo del fichero descargado: el destino lo pone install con
+    # el modo del manifest, que es lo que importa.
     remote_hash=$(sha256sum "$downloaded" | cut -d' ' -f1)
     if [[ -f "$destination" ]]; then
         local_hash=$(sha256sum "$destination" | cut -d' ' -f1)
@@ -199,7 +226,7 @@ while IFS='|' read -r name remote_path mode target; do
         fi
         changed+=("$name")
     fi
-done < "$TEMP_DIR/manifest"
+done < "$MANIFEST"
 
 # Solo si no se instala nada: guardar el hash despues dejaria el proximo
 # --check mirando un manifiesto que nunca llego a aplicarse.
@@ -222,7 +249,7 @@ else
         fi
         if ((AUTO_YES == 1)) || [[ "${answer:-}" =~ ^[sS]$ ]]; then
             for name in "${changed[@]}"; do
-                IFS='|' read -r manifest_name remote_path mode target < <(grep -F "${name}|" "$TEMP_DIR/manifest")
+                IFS='|' read -r manifest_name remote_path mode target < <(grep -F "${name}|" "$MANIFEST")
                 destination="$HOME/$target"
                 mkdir -p "$(dirname "$destination")" || die "No se pudo crear el destino de $name"
 
@@ -235,7 +262,7 @@ else
                 if [[ "$name" == "$SELF_NAME" ]]; then
                     continue
                 fi
-                install -m "$mode" "$TEMP_DIR/$name" "$destination" || \
+                install -m "$mode" "$REMOTE_DIR/$remote_path" "$destination" || \
                     die "No se pudo instalar $name"
                 printf '%sInstalado: %s%s\n' "$VERDE" "$destination" "$R"
             done
@@ -243,10 +270,10 @@ else
             # El actualizador, ahora. install escribe encima del destino sin
             # poder fallar a medias como un cp directo: o esta entero nuevo, o
             # el temporal se borra y se avisa.
-            IFS='|' read -r _ self_path self_mode self_target < <(grep -F "${SELF_NAME}|" "$TEMP_DIR/manifest")
+            IFS='|' read -r _ self_path self_mode self_target < <(grep -F "${SELF_NAME}|" "$MANIFEST")
             if [[ -n "${self_target:-}" ]]; then
                 self_destination="$HOME/$self_target"
-                if install -m "$self_mode" "$TEMP_DIR/$SELF_NAME" "$self_destination"; then
+                if install -m "$self_mode" "$REMOTE_DIR/$self_path" "$self_destination"; then
                     printf '%sInstalado: %s%s\n' "$VERDE" "$self_destination" "$R"
                 else
                     printf '%sAviso: no se pudo actualizar el propio %s.%s\n' "$AMAR" "$SELF_NAME" "$R" >&2
