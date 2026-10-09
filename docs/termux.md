@@ -211,10 +211,26 @@ La barra se redibuja **en la misma línea**, con retorno de carro, en vez de
 ir sumando líneas. Cuando algo falla, sale el motivo en esa misma pantalla y no
 solo en la notificación.
 
-Todo eso se dibuja solo si `stdout` es una terminal. Si rediriges la salida, no
-se escribe ni un carácter de control, porque ahí serían ruido en el fichero.
-`NO_COLOR` apaga el color pero **no** el redibujo: son dos cosas distintas, y
-sin el retorno de carro la pantalla se llenaría de scroll.
+Todo eso se dibuja solo si hay una terminal. Se busca en este orden: `stdout`
+si es terminal, y si no, **`/dev/tty`**. Ese segundo caso es el que importaba:
+la sesión de compartir puede tener `stdout` redirigido, y ahí `-t 1` da falso,
+así que sin el respaldo la pantalla se quedaba igual de negra aunque hubiera
+código de dibujo. Sin terminal de ninguna clase no se dibuja nada, porque los
+caracteres de control serían ruido en un fichero.
+
+`NO_COLOR` apaga el color pero **no** el retorno de carro: son dos cosas
+distintas, y sin el retorno de carro la pantalla se llenaría de scroll.
+
+**Si la pantalla se queda en negro**, el log dice qué pasó, porque escribe la
+versión y si ha encontrado pantalla antes de hacer nada:
+
+```bash
+cat ~/.local/state/yt-share/ultimo.log
+yt-share --version          # la versión instalada
+```
+
+Si el log está viejo, el script ni llegó a arrancar. Si dice una versión
+distinta de la que esperabas, el teléfono tiene una copia atrasada.
 
 Banderas:
 
@@ -372,6 +388,7 @@ y el archivo en `scripts/termux/`.
 | Al compartir, `env: ... no such file or directory`, código 127 | Shebang con `/usr/bin/env`, que en Android no existe. Run y codeload ya lo traen con la ruta absoluta; si reaparece, es que alguien lo editó a mano. Comprobación: `sed -n 1p ~/bin/termux-url-opener` |
 | Al compartir, no suena la notificación | Falta la app Termux:API. La descarga funciona igual, y queda en el log |
 | El vídeo se descarga pero no sale en la galería | Falta la app Termux:API, que es la que indexa. Con ella puesta, `termux-media-scan ~/storage/downloads/yt-share/` a mano lo resuelve |
+| Al compartir, la pantalla se queda en negro sin decir nada | `cat ~/.local/state/yt-share/ultimo.log`: pone la versión y si encontró pantalla. Si el log está viejo, el script ni llegó a arrancar |
 | Al compartir, el vídeo sale en `~/downloads` y no en `~/storage` | Android no concedió el almacenamiento. `termux-setup-storage` y acepta el diálogo |
 | La IP local no aparece en `net-tui` | Es normal: `ip` está bloqueado por Android dentro de Termux, y por eso se detecta con Python |
 | `ciber-update` no ve cambios nuevos | Corre `ciber-update --check`: dice cuántas entradas trae el manifest. Si son menos de 11, el origen está sirviendo una copia vieja. Se comprueba con `curl -fsSL https://codeload.github.com/Ciberbago/ciber-scripts/tar.gz/refs/heads/main \| tar -xzO --wildcards '*/scripts/termux/manifest'` |

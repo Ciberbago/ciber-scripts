@@ -33,6 +33,11 @@
 
 set -u
 
+# Se sube con cada cambio del propio script. Se imprime al arrancar porque al
+# compartir la sesion puede quedarse en negro, y entonces la unica forma de
+# saber que copia esta corriendo es leerla en pantalla.
+VERSION="2026.10.09-1"
+
 # El mismo archivo que usa yt-tui: las cookies que pongas ahi valen para los
 # dos. Se carga mas abajo, DESPUES de los valores por defecto, para que lo que
 # haya en el archivo se imponga sobre ellos.
@@ -73,17 +78,30 @@ PROGRESS_DRAWN=0
 PROGRESS_INTERVAL=3
 
 # Al compartir, Termux ejecuta este script en una terminal NUEVA, que es la que
-# se ve al compartir y se queda en negro hasta que el script acaba y se cierra.
-# Ahi stdout SI es una terminal, asi que en ese caso se dibuja el progreso ahi
-# en vez de dejar la pantalla vacia. Cuando se ejecuta desde una shell normal
-# tambien es terminal, y se ve igual, que es lo que se espera.
+# se ve al compartir y se quedaba en negro hasta que el script acababa.
 #
-# Si stdout NO es terminal (redireccion, cron, otro script) no se dibuja nada:
-# ahi los caracteres de control serian ruido en un fichero.
+# Donde se dibuja, en este orden:
+#   1. stdout, si es una terminal. Es lo normal.
+#   2. /dev/tty, si stdout NO es terminal pero /dev/tty si lo es. Cubre el caso
+#      en que la sesion de Termux redirecciona stdout: ahi -t 1 daria falso y
+#      sin este respaldo la pantalla se quedaria en negro igual, que es
+#      justamente lo que paso.
+#   3. nada. Sin terminal de ningun tipo (redireccion a fichero, cron, otro
+#      script): no se dibuja nada, porque los caracteres de control serian
+#      ruido en un fichero.
+TTY=0
+SCREEN_FD=1
 if [[ -t 1 ]]; then
     TTY=1
-else
-    TTY=0
+elif [[ -c /dev/tty ]]; then
+    # El exec va dentro de un bloque con su propia redireccion de error. Fuera de
+    # ella, bash avisa igualmente aunque el 2>/dev/tty este puesto, y ese aviso
+    # sale justo en la salida que se quiere limpia.
+    if { exec 3>/dev/tty; } 2>/dev/null; then
+        # stdout no es terminal pero /dev/tty si. Se dibuja ahi.
+        TTY=1
+        SCREEN_FD=3
+    fi
 fi
 
 # El color y el redibujo son cosas distintas. NO_COLOR apaga el color, pero no
@@ -127,6 +145,11 @@ log_rule() {
 
 log_command() {
     log_line "$1"
+    # La version va en el log por lo mismo que va en pantalla: si la sesion de
+    # compartir se queda en negro, el log es lo unico que queda para saber que
+    # copia corrio y si fallo antes de escribir nada.
+    log_line "yt-share $VERSION"
+    log_line "Pantalla: $( ((TTY)) && echo 'si' || echo 'no')  (terminal: ${SCREEN_FD})"
     log_line "URL: $URL"
     log_line "Destino: $DOWNLOAD_DIR"
     log_line "Comando: ${CMD[*]}"
@@ -315,14 +338,14 @@ draw_progress() {
     # acumularian lineas y la pantalla se llenaria de scroll, que es justo lo
     # que se quiere evitar. El salto se pone una vez, al terminar.
     printf '%s%s%s %s %s%s ETA %s%s' \
-        "$CR" "$EL" "${CIAN}" "$percent" "$bar" "$speed" "$eta" "${R}"
+        "$CR" "$EL" "${CIAN}" "$percent" "$bar" "$speed" "$eta" "${R}" >&"$SCREEN_FD"
     PROGRESS_DRAWN=1
 }
 
 # Cierra la linea de progreso para que el mensaje final no acabe pegado encima.
 end_progress() {
     ((TTY && PROGRESS_DRAWN)) || return 0
-    printf '\n'
+    printf '\n' >&"$SCREEN_FD"
     PROGRESS_DRAWN=0
 }
 
@@ -357,8 +380,8 @@ handle_yt_output() {
             TITLE="${line#CIBERTITLE:}"
             # En la pantalla del intent esta linea es lo primero que se ve:
             # sin ella la pantalla queda en negro hasta el progreso.
-            ((TTY)) && printf '\n%s%s%s\n' "$B" "$TITLE" "$R"
-            ((TTY)) && printf 'Guardando en %s\n\n' "$DOWNLOAD_DIR"
+            ((TTY)) && printf '\n%s%s%s\n' "$B" "$TITLE" "$R" >&"$SCREEN_FD"
+            ((TTY)) && printf 'Guardando en %s\n\n' "$DOWNLOAD_DIR" >&"$SCREEN_FD"
             notify "$TITLE" 'Descargando...' 'ongoing'
             return 0
             ;;
@@ -526,6 +549,7 @@ usage() {
         '  --max N      Tope de altura en píxeles, por ejemplo --max 1080' \
         '  --dir RUTA   Carpeta de destino. Por defecto ~/storage/downloads/yt-share' \
         '  --dry-run    Lo comprueba todo y no descarga nada' \
+        '  --version    La version de este script, sin hacer nada' \
         '  --help       Esta ayuda' \
         '' \
         'El flujo de compartir es este: en YouTube, compartir, elegir Termux.' \
@@ -559,6 +583,7 @@ main() {
                 shift 2
                 ;;
             --dry-run) DRY_RUN=1; shift ;;
+            --version|-V) printf 'yt-share %s\n' "$VERSION"; exit 0 ;;
             --help|-h) usage; exit 0 ;;
             -*) die "Opción desconocida: $1" ;;
             *) url_arg="$1"; shift ;;
@@ -615,7 +640,12 @@ main() {
     fi
 
 notify 'yt-share' 'Iniciando la descarga...' 'ongoing'
-((TTY)) && printf 'yt-share: descargando\n%s%s%s\n' "${GRIS}" "$URL" "${R}"
+
+# Esto se escribe SIEMPRE, tenga o no pantalla, y va con la version dentro.
+# Dos motivos: si la pantalla se queda en negro por lo que sea, al menos esto
+# se ve y dice que el script arranco; y la version permite saber de un vistazo
+# si el telefono tiene la copia nueva o una que se quedo atrasada.
+printf 'yt-share %s: descargando\n%s%s%s\n' "$VERSION" "${GRIS}" "$URL" "${R}" >&"$SCREEN_FD"
 
 if run_download; then
         end_progress
